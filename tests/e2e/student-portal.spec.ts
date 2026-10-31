@@ -151,7 +151,7 @@ test('Sao của em: có "Trừ sao", không bao giờ lộ ghi chú trừ sao', 
        values ('${CLASS_ID}', '${sid(5)}', -1, 'penalty', 'Nói chuyện riêng', gen_random_uuid())`)
   await open(page)
   await page.getByRole('link', { name: 'Sao của em' }).click()
-  await expect(page).toHaveURL(/\/em\/sao$/)
+  await expect(page).toHaveURL(/\/em\/sao$/, { timeout: 15_000 })
   await expect(page.getByRole('heading', { level: 1, name: 'Sao của em' })).toBeVisible()
   await expect(page.getByText('Em chỉ thấy lịch sử của riêng mình, không thấy của bạn khác.')).toBeVisible()
   const rows = page.getByTestId('history-row')

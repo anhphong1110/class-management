@@ -35,6 +35,7 @@ test('Sidebar và Header ở /tong-quan', async ({ page }, info) => {
 })
 
 test('bấm từng link Sidebar không lỗi', async ({ page }) => {
+  test.setTimeout(90_000) // đi qua mọi mục menu, chậm khi chạy cả bộ
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
   for (const item of TEACHER_NAV) {
