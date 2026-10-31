@@ -30,6 +30,8 @@ export type RewardRequestView = {
   createdAt: string
 }
 
+// Chỉ dùng với phiên giáo viên: `held` đếm reward_requests đang chờ, mà RLS của học sinh chỉ trả yêu cầu
+// của chính em đó, nên số "còn" sẽ sai. Trang học sinh cần một hàm/view definer riêng (xem việc chuyển tiếp đợt 3).
 export async function getRewards(classId: string, opts: { includeHidden: boolean }): Promise<RewardView[]> {
   const supabase = await createServerSupabase()
   let rewardsQuery = supabase

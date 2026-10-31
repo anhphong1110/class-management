@@ -46,3 +46,36 @@ Kết quả: 283 test cơ sở dữ liệu, 156 unit test, 189 test trình duy�
 19. **Đợt 5:** học sinh xem bảng xếp hạng chỉ theo tên kỳ (tuần, tháng…), không được truyền ngày tùy ý. Nếu cho truyền ngày tùy ý, một em có thể dò ra bạn mình bị trừ sao lúc nào.
 20. **Đợt 6:** khi làm "Màu chủ đạo" trong Cài đặt, phải đổi các màu xanh tím đang viết cứng sang dùng biến màu chung. Hiện gần như không có phần giao diện nào dùng biến này, nên đổi màu sẽ hầu như không thay đổi gì.
 21. Danh sách đầy đủ cho đợt 3 trở đi: `docs/superpowers/plans/2026-10-31-dot-2-viec-chuyen-tiep.md`.
+
+## Đợt 3: Trạm đổi quà (xong, đã merge vào `main`)
+
+Kết quả: 372 test cơ sở dữ liệu, 171 unit test, 225 test trình duyệt, kịch bản đua `scripts/db/reward-race.sh` 12/12. Các tình huống đã thử:
+- hai bạn cùng đổi món quà cuối cùng;
+- đổi quà trùng lúc cô trừ sao;
+- cô bấm "Duyệt" và "Từ chối" cùng lúc.
+
+### Quy tắc nghiệp vụ
+22. **Khi "Giữ trước sao" bật (mặc định), học sinh luôn phải đủ sao mới gửi được yêu cầu**, kể cả khi cô tắt "Chỉ đổi khi đủ sao". Lý do: nếu không, sao khả dụng của em bị âm, trái với HANDOFF.md ("không bao giờ âm"). *Hệ quả:* công tắc "Chỉ đổi khi đủ sao" chỉ còn tác dụng khi "Giữ trước sao" tắt. Màn Cài đặt ở đợt 6 sẽ ghi rõ điều này. **Đây là quyết định bạn nên xem kỹ nhất.**
+23. **Khi cô tắt "Cần cô duyệt", yêu cầu được duyệt tự động và cột "người duyệt" để trống**, không ghi tên học sinh, vì học sinh không bao giờ tự duyệt quà.
+24. **Tồn kho tính như thiết kế.** Quà "đang giữ" là quà có yêu cầu chờ duyệt; tồn kho chỉ giảm khi cô duyệt. Không cho đặt tồn kho thấp hơn số đang giữ, kể cả khi sửa thẳng trong cơ sở dữ liệu (có trigger chặn).
+25. **Lưu trữ học sinh đang có yêu cầu chờ thì yêu cầu bị từ chối tự động** và em được trả lại số sao đang giữ.
+26. **Số lượt đổi trong tuần** tính từ 0 giờ thứ Hai giờ Việt Nam. Yêu cầu bị từ chối không tính.
+27. **Mã yêu cầu sai hoặc của lớp khác đều báo "Bạn không có quyền làm việc này."**, để không lộ việc mã đó có tồn tại.
+
+### Giao diện `/doi-qua`
+28. **Thêm những phần thiết kế không có:**
+    - ô "Số lượng trong kho", hiện kèm "Đang giữ N";
+    - ô "Mô tả";
+    - nút "Hủy" (phím Esc cũng đóng khung sửa);
+    - nút "Ẩn"/"Hiện", quà đã ẩn mờ đi và có nhãn "Đã ẩn";
+    - dòng "Chưa có yêu cầu đổi quà nào." khi chưa có yêu cầu.
+29. **Quà mới bắt buộc nhập số lượng trong kho**, để không có quà vừa tạo đã "Hết quà".
+30. **"Bookmark tên lửa" dùng hình "Sách"** (cùng màu hồng), vì bộ 8 hình có sẵn của thiết kế không có hình kẹp sách.
+31. **Quà mẫu:** 5 quà mẫu lấy từ thiết kế, đánh dấu là dữ liệu mẫu.
+
+### Việc để sang đợt sau
+32. **Trước khi mở trang học sinh (đợt 5)** cần làm 3 việc:
+    - Thêm hàm riêng trả số quà còn lại cho học sinh. Hàm hiện tại chỉ đúng với cô: học sinh sẽ thấy "Còn 1" dù bạn khác đã giữ món đó.
+    - Giữ được tên quà trong lịch sử của học sinh khi quà đã bị ẩn.
+    - Bảng xếp hạng cho học sinh chỉ xem theo tên kỳ.
+33. Danh sách đầy đủ: `docs/superpowers/plans/2026-11-01-dot-3-viec-chuyen-tiep.md`.
