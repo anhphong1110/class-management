@@ -72,7 +72,14 @@ export function StarsClient({
   const critList = criteria.filter((c) => c.kind === (isAdd ? 'award' : 'penalty'))
   const crit = critList.find((c) => c.id === critId) ?? null
   const reasonText = [crit?.label, note.trim()].filter(Boolean).join(' – ')
-  const nameList = (ids: string[]) => joinNames(ids.map((id) => byId.get(id)?.fullName ?? '').filter(Boolean))
+  const nameList = (ids: string[]) =>
+    joinNames(
+      ids
+        .map((id) => byId.get(id))
+        .filter((s): s is StudentWithStars => !!s)
+        .sort((a, b) => a.rollNo - b.rollNo)
+        .map((s) => s.fullName),
+    )
 
   function validate(): string {
     if (!selected.length) return 'Cô hãy chọn ít nhất một học sinh.'
@@ -362,7 +369,8 @@ export function StarsClient({
                 value={custom}
                 placeholder="Số khác"
                 onChange={(e) => {
-                  setCustom(e.target.value)
+                  const n = Number.parseInt(e.target.value, 10)
+                  setCustom(e.target.value === '' || Number.isNaN(n) ? '' : String(Math.min(100, Math.max(1, n))))
                   setErr('')
                 }}
                 className="min-h-12 w-[100px] rounded-[14px] border-2 border-[#D9D5F2] px-3 text-base font-bold text-ink"

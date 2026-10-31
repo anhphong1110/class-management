@@ -1,36 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
-import { execFileSync } from 'node:child_process'
 import { login } from './helpers'
+import { resetStars, seedStars } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
-
-const CLASS_ID = '00000000-0000-0000-0000-000000000058'
-const sid = (n: number) => `00000000-0000-0000-0000-0000000b${String(n).padStart(4, '0')}`
-const DB_CONTAINER = 'supabase_db_MaiKhanh-WebQua_nLy'
-
-/** Sổ sao là append-only (trigger chặn DELETE), nên test tắt trigger trong một giao dịch để dọn. */
-function sql(statement: string) {
-  execFileSync('docker', ['exec', '-i', DB_CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', statement], {
-    stdio: 'pipe',
-  })
-}
-
-function resetStars() {
-  sql(`
-    begin;
-    alter table public.star_transactions disable trigger star_transactions_immutable;
-    delete from public.star_transactions where class_id = '${CLASS_ID}';
-    alter table public.star_transactions enable trigger star_transactions_immutable;
-    delete from public.star_criteria where class_id = '${CLASS_ID}' and label in ('Đọc sách', 'Đọc sách nhiều');
-    update public.star_criteria set archived_at = null where class_id = '${CLASS_ID}';
-    commit;
-  `)
-}
-
-function seedStars(studentNo: number, points: number) {
-  sql(`insert into public.star_transactions (class_id, student_id, delta, kind, note, batch_id)
-       values ('${CLASS_ID}', '${sid(studentNo)}', ${points}, 'award', 'seed', gen_random_uuid())`)
-}
 
 async function open(page: Page) {
   await login(page, 'Giáo viên', 'co.khanh')
@@ -56,9 +28,19 @@ test('chọn Tổ 1, cộng 2 sao theo tiêu chí Giúp đỡ bạn bè', async 
   await expect(card(page, 'Lê Khánh Chi')).toContainText('2 sao khả dụng')
   await expect(card(page, 'Phạm Đức Dũng')).toContainText('0 sao khả dụng')
   await expect(history(page)).toContainText('+2')
+  await expect(history(page).getByTestId('history-row').first()).toContainText('Nguyễn Minh Anh, Trần Gia Bảo và 1 bạn khác')
   await expect(history(page)).toContainText('Giúp đỡ bạn bè')
   await expect(page.getByTestId('star-burst')).toBeAttached()
   await page.screenshot({ path: `test-results/stars-${info.project.name}.png`, fullPage: true })
+})
+
+test('số sao tùy chỉnh bị giới hạn trong 1 đến 100', async ({ page }) => {
+  await open(page)
+  await card(page, 'Nguyễn Minh Anh').click()
+  const input = page.getByLabel('Tùy chỉnh')
+  await input.fill('150')
+  await expect(input).toHaveValue('100')
+  await expect(page.getByText('Cộng 100 sao cho 1 học sinh')).toBeVisible()
 })
 
 test('báo lỗi khi chưa chọn học sinh hoặc chưa có lý do', async ({ page }) => {
