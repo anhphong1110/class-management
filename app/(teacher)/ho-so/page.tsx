@@ -1,6 +1,5 @@
 import { Header } from '@/components/layout/Header'
-import type { AvatarValue } from '@/components/avatar/AvatarImage'
-import type { AvatarPreset } from '@/components/avatar/presets'
+import { signAvatarPaths, toAvatarValue } from '@/lib/avatars/resolve'
 import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { ProfileClient, type LibraryItem, type Person } from './ProfileClient'
@@ -31,22 +30,15 @@ export default async function Page() {
   ])
 
   const rows = lib ?? []
-  const paths = rows.filter((r) => r.kind === 'upload' && r.image_path).map((r) => r.image_path as string)
-  const urls = new Map<string, string>()
-  if (paths.length) {
-    const { data: signed } = await supabase.storage.from('class-media').createSignedUrls(paths, 3600)
-    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl)
-  }
-  const library: LibraryItem[] = rows.map((r) => {
-    let avatar: AvatarValue = null
-    if (r.kind === 'upload') {
-      const url = r.image_path ? urls.get(r.image_path) : undefined
-      avatar = url ? { kind: 'upload', url } : null
-    } else if (r.preset) {
-      avatar = { kind: 'preset', preset: r.preset as AvatarPreset }
-    }
-    return { id: r.id, label: r.label, avatar }
-  })
+  const urls = await signAvatarPaths(
+    supabase,
+    rows.filter((r) => r.kind === 'upload' && r.image_path).map((r) => r.image_path as string),
+  )
+  const library: LibraryItem[] = rows.map((r) => ({
+    id: r.id,
+    label: r.label,
+    avatar: toAvatarValue(r, urls),
+  }))
 
   const people: Person[] = [
     { key: 'teacher', target: { kind: 'teacher' }, name: user.displayName, role: 'Giáo viên – Admin', avatarId: user.avatarId },

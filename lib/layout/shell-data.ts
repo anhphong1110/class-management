@@ -2,8 +2,7 @@ import 'server-only'
 import { cache } from 'react'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/session'
-import type { AvatarValue } from '@/components/avatar/AvatarImage'
-import type { AvatarPreset } from '@/components/avatar/presets'
+import { resolveAvatar } from '@/lib/avatars/resolve'
 
 export type ShellClass = {
   school_name: string
@@ -13,24 +12,6 @@ export type ShellClass = {
   slogan: string
   class_logo_path: string | null
   theme: 'indigo' | 'pink' | 'mint' | 'gold'
-}
-
-export async function resolveAvatar(avatarId: string | null): Promise<AvatarValue> {
-  if (!avatarId) return null
-  const supabase = await createServerSupabase()
-  const { data } = await supabase
-    .from('avatar_library')
-    .select('kind, preset, image_path')
-    .eq('id', avatarId)
-    .maybeSingle()
-  if (!data) return null
-  if (data.kind === 'upload' && data.image_path) {
-    const { data: signed } = await supabase.storage
-      .from('class-media')
-      .createSignedUrl(data.image_path, 3600)
-    return signed?.signedUrl ? { kind: 'upload', url: signed.signedUrl } : null
-  }
-  return data.preset ? { kind: 'preset', preset: data.preset as AvatarPreset } : null
 }
 
 export const getShellData = cache(async () => {
