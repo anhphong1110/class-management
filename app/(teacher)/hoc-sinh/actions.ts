@@ -36,20 +36,19 @@ export async function createStudent(input: { fullName: string; rollNo: number | 
   if (!parsed.success) return { error: firstError(parsed.error) }
   const supabase = await createServerSupabase()
 
-  let roll = parsed.data.rollNo
-  if (roll === null) {
-    const { data: last } = await supabase
-      .from('students')
-      .select('roll_no')
-      .eq('class_id', user.classId)
-      .order('roll_no', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    roll = (last?.roll_no ?? 0) + 1
-  }
-
-  // Hai lần thêm cùng lúc có thể sinh trùng mã; ràng buộc duy nhất sẽ chặn, nên thử lại vài lần.
+  // Hai lần thêm cùng lúc có thể sinh trùng mã hoặc số thứ tự; ràng buộc duy nhất sẽ chặn, nên tính lại và thử vài lần.
   for (let attempt = 0; attempt < 3; attempt++) {
+    let roll = parsed.data.rollNo
+    if (roll === null) {
+      const { data: last } = await supabase
+        .from('students')
+        .select('roll_no')
+        .eq('class_id', user.classId)
+        .order('roll_no', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      roll = (last?.roll_no ?? 0) + 1
+    }
     const { data: code, error: codeError } = await supabase.rpc('next_student_code', { p_class_id: user.classId })
     if (codeError || !code) return { error: toVietnameseMessage(codeError?.message ?? 'not_allowed') }
     const { error } = await supabase
@@ -59,7 +58,7 @@ export async function createStudent(input: { fullName: string; rollNo: number | 
       refresh()
       return {}
     }
-    if (error.code !== '23505') return { error: toVietnameseMessage('not_allowed') }
+    if (error.code !== '23505') return { error: toVietnameseMessage('unknown') }
   }
   return { error: toVietnameseMessage('unknown') }
 }
@@ -93,8 +92,51 @@ export async function archiveStudent(id: string): Promise<Result> {
     .is('archived_at', null)
     .select('id')
   if (error || !data?.length) return { error: toVietnameseMessage('student_not_found') }
+  // Học sinh đã lưu trữ không còn xuất hiện trong thẻ tổ.
+  const { error: memberError } = await supabase.from('group_members').delete().eq('class_id', user.classId).eq('student_id', id)
+  if (memberError) {
+    refresh()
+    return { error: toVietnameseMessage('unknown') }
+  }
   refresh()
   return {}
+}
+
+const groupRoleInput = z.enum(['leader', 'deputy', 'member'])
+const groupName = z.string().trim().min(1).max(200)
+
+async function groupRpc(fn: 'set_group_role' | 'move_student_to_group' | 'delete_group' | 'create_group', args: Record<string, unknown>): Promise<Result> {
+  const supabase = await createServerSupabase()
+  const { error } = await supabase.rpc(fn, args as never)
+  if (error) return { error: toVietnameseMessage(error.message) }
+  revalidatePath('/hoc-sinh')
+  revalidatePath('/thi-dua')
+  return {}
+}
+
+export async function setGroupRole(studentId: string, role: 'leader' | 'deputy' | 'member'): Promise<Result> {
+  await requireTeacher()
+  if (!uuid.safeParse(studentId).success || !groupRoleInput.safeParse(role).success) return { error: toVietnameseMessage('student_not_found') }
+  return groupRpc('set_group_role', { p_student_id: studentId, p_role: role })
+}
+
+export async function moveStudent(studentId: string, groupId: string): Promise<Result> {
+  await requireTeacher()
+  if (!uuid.safeParse(studentId).success || !uuid.safeParse(groupId).success) return { error: toVietnameseMessage('student_not_found') }
+  return groupRpc('move_student_to_group', { p_student_id: studentId, p_group_id: groupId })
+}
+
+export async function createGroup(name: string): Promise<Result> {
+  await requireTeacher()
+  const parsed = groupName.safeParse(name)
+  if (!parsed.success) return { error: toVietnameseMessage('name_required') }
+  return groupRpc('create_group', { p_name: parsed.data })
+}
+
+export async function deleteGroup(groupId: string): Promise<Result> {
+  await requireTeacher()
+  if (!uuid.safeParse(groupId).success) return { error: toVietnameseMessage('not_allowed') }
+  return groupRpc('delete_group', { p_group_id: groupId })
 }
 
 export type ProfileDetail = {
@@ -146,7 +188,7 @@ export async function loadProfile(id: string): Promise<{ error?: string; detail?
       .order('created_at', { ascending: false })
       .limit(8),
   ])
-  if (lb.error) return { error: toVietnameseMessage('unknown') }
+  if (lb.error || att.error || tx.error || badges.error || gifts.error) return { error: toVietnameseMessage('unknown') }
 
   const rankRow = ((lb.data ?? []) as { student_id: string; rank: number | string }[]).find((r) => r.student_id === id)
 
@@ -160,13 +202,15 @@ export async function loadProfile(id: string): Promise<{ error?: string; detail?
     (x) => !have.has(x),
   )
   if (missing.length) {
-    const { data: originals } = await supabase.from('star_transactions').select(TX_COLUMNS).eq('class_id', user.classId).in('id', missing)
+    const { data: originals, error: origError } = await supabase.from('star_transactions').select(TX_COLUMNS).eq('class_id', user.classId).in('id', missing)
+    if (origError) return { error: toVietnameseMessage('unknown') }
     rows = [...rows, ...((originals ?? []) as TxRow[])]
   }
   const criterionIds = [...new Set(rows.map((r) => r.criterion_id).filter((x): x is string => !!x))]
-  const { data: crit } = criterionIds.length
+  const { data: crit, error: critError } = criterionIds.length
     ? await supabase.from('star_criteria').select('id, label').in('id', criterionIds)
-    : { data: [] as { id: string; label: string }[] }
+    : { data: [] as { id: string; label: string }[], error: null }
+  if (critError) return { error: toVietnameseMessage('unknown') }
   const labels = new Map((crit ?? []).map((c) => [c.id, c.label]))
   const shownIds = new Set((tx.data ?? []).map((r) => r.batch_id as string))
   const history = groupBatches(rows, labels, new Map())

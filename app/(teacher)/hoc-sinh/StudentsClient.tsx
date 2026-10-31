@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { givenNameKey, matchesSearch } from '@/lib/domain/vn-text'
+import type { StarGroup } from '@/lib/stars/queries'
 import type { StudentCard, TodayStatus } from '@/lib/students/queries'
 import { archiveStudent, loadProfile, type ProfileDetail } from './actions'
+import { GroupsView } from './GroupsView'
 import { ProfilePanel } from './ProfilePanel'
 import { StudentForm, type EditTarget } from './StudentForm'
 
@@ -50,7 +52,7 @@ function groupLabel(s: StudentCard): string {
   return role ? `${s.groupName} · ${role}` : s.groupName
 }
 
-export function StudentsClient({ students }: { students: StudentCard[] }) {
+export function StudentsClient({ students, groups }: { students: StudentCard[]; groups: StarGroup[] }) {
   const [q, setQ] = useState('')
   const [sort, setSort] = useState<Sort>('name')
   const [filter, setFilter] = useState<Filter>('all')
@@ -185,8 +187,7 @@ export function StudentsClient({ students }: { students: StudentCard[] }) {
 
       {error && !confirming && <Notice tone="error">{error}</Notice>}
 
-      {/* Khối chia tổ được nối ở Task 9. */}
-      {view === 'groups' && <div data-testid="groups-view" />}
+      {view === 'groups' && <GroupsView students={students} groups={groups} />}
 
       {sel && (
         <ProfilePanel
@@ -202,7 +203,7 @@ export function StudentsClient({ students }: { students: StudentCard[] }) {
         />
       )}
 
-      {list.length === 0 && (
+      {view === 'all' && list.length === 0 && (
         <div className="rounded-[26px] bg-white px-6 py-10 text-center shadow-[0_6px_20px_rgba(102,117,232,.10)]">
           <div className="font-display text-[22px] font-extrabold">Chưa tìm thấy phi hành gia nào</div>
           <div className="text-[15px] text-[#5B5890]">Cô thử đổi từ khóa hoặc bộ lọc nhé.</div>

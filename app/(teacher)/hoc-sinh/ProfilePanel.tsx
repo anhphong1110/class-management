@@ -48,7 +48,7 @@ export function ProfilePanel({
             {detail?.badges.length ? (
               detail.badges.map((b) => (
                 <span key={b.id} className="rounded-full bg-[#FFF1CC] px-3 py-1 text-[12.5px] font-extrabold text-[#6E4700]">
-                  {b.icon} {b.name}
+                  {b.name}
                 </span>
               ))
             ) : (
@@ -92,7 +92,7 @@ export function ProfilePanel({
                 className="min-w-10 rounded-[10px] px-2 py-1 text-center font-extrabold"
                 style={h.delta >= 0 ? { background: '#FFF1CC', color: '#6E4700' } : { background: '#FFE3EE', color: '#8E1B3B' }}
               >
-                {h.delta > 0 ? `+${h.delta}` : `−${Math.abs(h.delta)}`}
+                {h.delta > 0 ? `+${h.delta}` : `-${Math.abs(h.delta)}`}
               </span>
               <span className="text-[14.5px] font-semibold">
                 {h.text}

@@ -65,3 +65,23 @@ export function seedAttendance(studentNo: number, status: 'present' | 'late' | '
   const d = `(now() at time zone 'Asia/Ho_Chi_Minh')::date - ${Math.floor(daysAgo)}`
   sql(`insert into public.attendance (class_id, student_id, date, status) values ('${CLASS_ID}', '${sid(studentNo)}', ${d}, '${status}')`)
 }
+
+/** Khôi phục tổ như seed (xóa tổ thêm trong test, trả vai và thành viên, bỏ lưu trữ học sinh demo). */
+export function resetGroups() {
+  const g = (n: number) => `00000000-0000-0000-0000-0000000c${String(n).padStart(4, '0')}`
+  const members: [number, number, string][] = [
+    [1, 1, 'leader'], [1, 2, 'deputy'], [1, 3, 'member'],
+    [2, 4, 'deputy'], [2, 5, 'leader'], [2, 6, 'member'],
+    [3, 7, 'deputy'], [3, 8, 'leader'],
+    [4, 9, 'deputy'], [4, 10, 'leader'],
+  ]
+  sql(`
+    begin;
+    update public.students set archived_at = null where class_id = '${CLASS_ID}' and is_demo = true;
+    delete from public.group_members where class_id = '${CLASS_ID}';
+    delete from public.groups where class_id = '${CLASS_ID}' and id not in (${[1, 2, 3, 4].map((n) => `'${g(n)}'`).join(',')});
+    insert into public.group_members (class_id, group_id, student_id, role, is_demo) values
+    ${members.map(([gn, sn, role]) => `('${CLASS_ID}', '${g(gn)}', '${sid(sn)}', '${role}', true)`).join(',\n')};
+    commit;
+  `)
+}
