@@ -86,8 +86,9 @@ test('theme pink đổi --primary và bg-primary', async ({ page }) => {
     await login(page, 'Giáo viên', 'co.khanh')
     await expect(page).toHaveURL(/\/tong-quan$/)
     const shell = page.getByTestId('teacher-shell')
-    const accent = page.getByTestId('primary-accent')
-    const bg = () => accent.evaluate((el) => getComputedStyle(el).backgroundColor)
+    // Ô cửa tên lửa ở hero /tong-quan dùng utility text-primary (fill=currentColor).
+    const accent = page.getByTestId('hero-window')
+    const bg = () => accent.evaluate((el) => getComputedStyle(el).fill)
     const before = await bg()
     expect(before).toBe('rgb(102, 117, 232)')
     const { error } = await a.from('classes').update({ theme: 'pink' }).eq('id', CLASS_ID)

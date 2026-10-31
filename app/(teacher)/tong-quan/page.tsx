@@ -110,7 +110,7 @@ function Hero({ greeting, coverUrl }: { greeting: string; coverUrl: string | nul
           />
           <g transform="translate(236 30) rotate(35)">
             <path d="M0 -34 C14 -22 14 6 8 22 L-8 22 C-14 6 -14 -22 0 -34Z" fill="url(#mr1)" />
-            <circle cx="0" cy="-8" r="7" fill="#6675E8" />
+            <circle data-testid="hero-window" cx="0" cy="-8" r="7" fill="currentColor" className="text-primary" />
             <circle cx="-2" cy="-10" r="2.2" fill="#fff" opacity=".8" />
             <path d="M-8 14 L-18 28 L-6 22Z M8 14 L18 28 L6 22Z" fill="#F46FA5" />
             <path d="M-5 22 L0 40 L5 22Z" fill="#FFC857" />
