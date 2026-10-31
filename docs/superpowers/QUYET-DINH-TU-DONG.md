@@ -79,3 +79,32 @@ Kết quả: 372 test cơ sở dữ liệu, 171 unit test, 225 test trình duy�
     - Giữ được tên quà trong lịch sử của học sinh khi quà đã bị ẩn.
     - Bảng xếp hạng cho học sinh chỉ xem theo tên kỳ.
 33. Danh sách đầy đủ: `docs/superpowers/plans/2026-11-01-dot-3-viec-chuyen-tiep.md`.
+
+## Đợt 4: Điểm danh, Thời khóa biểu, Thông báo (xong, đã merge vào `main`)
+
+Kết quả: 401 test cơ sở dữ liệu, 194 unit test, 291 test trình duyệt, kịch bản đua 12/12.
+
+### Điểm danh
+34. **Khi lưu, gửi toàn bộ lớp đúng như đang thấy trên màn hình.** Nếu hai tab (hay hai máy) cùng lưu một ngày, lần lưu sau đè lần trước. Ban đầu chỉ gửi những bạn đã đổi, nhưng Opus phát hiện cách đó có thể báo "Đã lưu" trong khi cơ sở dữ liệu khác với màn hình. *Nếu sai:* cô sửa ở máy này có thể đè thay đổi vừa làm ở máy khác.
+35. **Bỏ chọn trạng thái rồi lưu thì xóa điểm danh của bạn đó cho ngày đó.** Bạn đó trở về "Chưa điểm danh", không bao giờ tự thành "Có mặt".
+36. **Học sinh đã lưu trữ không tính vào mọi con số điểm danh**: thẻ, Tổng kết, lịch sử, lịch tháng, file CSV, Tổng quan. *Nếu sai:* lịch sử của những ngày cũ không còn hiện các bạn đã lưu trữ.
+37. **"Có mặt" trong mọi con số tổng hợp = có mặt + đi trễ**: lịch tháng, Tổng quan, tỉ lệ chuyên cần. Riêng bảng Tổng kết vẫn tách cột "Đi trễ" như thiết kế.
+38. **Thêm lịch tháng và nút "Xuất CSV".** Spec có yêu cầu nhưng thiết kế chưa vẽ. File CSV dùng ký hiệu C (có mặt), K (vắng không phép), P (vắng có phép), T (đi trễ), và chặn kiểu tên học sinh bắt đầu bằng dấu "=" có thể bị Excel chạy như công thức.
+39. **Không cho điểm danh ngày trong tương lai.** Ngày tính theo giờ Việt Nam. Xem ngày khác hôm nay thì tiêu đề là "Tổng kết ngày dd/mm" (thiết kế chỉ có "Tổng kết hôm nay").
+40. **Có thay đổi chưa lưu mà rời trang thì hỏi lại trước khi rời.**
+
+### Thời khóa biểu
+41. **Môn đang dùng không xóa được.** Chặn ngay trong cơ sở dữ liệu, kèm đúng câu báo của thiết kế. Tên môn không trùng trong một lớp, không phân biệt hoa thường.
+42. **Thêm lựa chọn "— Trống —"** để bỏ môn khỏi một tiết.
+43. **"In / Xuất" có hai lựa chọn:** in (khổ ngang, chỉ in lưới) và tải Excel.
+44. **Thứ Bảy:** đã có cột trong cơ sở dữ liệu, mặc định tắt; công tắc bật/tắt làm ở Cài đặt (đợt 6). Khi tắt thì không cho ghi tiết thứ Bảy, kèm câu "Lớp chưa bật học thứ Bảy.".
+45. **Nút "Sao chép thời khóa biểu" đang ẩn** cho tới khi có lớp của năm trước (đợt 6).
+
+### Thông báo
+46. **"Xóa" (bấm hai lần) chỉ lưu trữ thông báo**, không xóa hẳn trong cơ sở dữ liệu.
+47. **Thêm nút "Bỏ hình".**
+48. **Chuông ở Header không hiện số.** Cô là người đăng thông báo, nên con số "thông báo mới" không có nghĩa với cô.
+
+### Việc để sang đợt sau
+49. **Đợt 5 phải sửa đầu tiên, trước khi có trang học sinh:** hiện học sinh đọc được ảnh của thông báo đã xóa và ảnh của quà đã ẩn, vì quyền đọc kho ảnh còn quá rộng.
+50. Danh sách đầy đủ: `docs/superpowers/plans/2026-11-01-dot-4-viec-chuyen-tiep.md`.
