@@ -114,3 +114,33 @@ export async function resetRewards() {
     sql(`update public.rewards set stock = ${stock}, hidden = false, image_path = null, name = '${name}', description = '${description}', cost = ${cost}, icon = '${icon}' where id = '00000000-0000-0000-0000-0000000${id}'`)
   }
 }
+
+const SEED_SUBJECTS: [string, string][] = [
+  ['Toán', '#2C37A8'], ['Tiếng Việt', '#8E1B3B'], ['Tiếng Anh', '#0B5A4D'], ['Khoa học', '#0F5E8F'],
+  ['Lịch sử – Địa lý', '#6E4700'], ['Đạo đức', '#5E35B1'], ['Thể dục', '#7A3510'], ['Mĩ thuật', '#7E1D69'],
+  ['Âm nhạc', '#4A33A8'], ['Tin học', '#2B6110'], ['HĐ trải nghiệm', '#3A3769'], ['Sinh hoạt lớp', '#3A3769'],
+]
+
+/** Xóa mọi tiết của lớp, bỏ môn thêm/đổi tên, khôi phục 12 môn seed (tên, màu, thứ tự). */
+export function resetTimetable() {
+  const names = SEED_SUBJECTS.map(([n]) => `'${n}'`).join(',')
+  const values = SEED_SUBJECTS.map(([n, c], i) => `('${n}', '${c}', ${i + 1})`).join(',')
+  sql(`
+    begin;
+    delete from public.timetable_slots where class_id = '${CLASS_ID}';
+    delete from public.subjects where class_id = '${CLASS_ID}' and name not in (${names});
+    update public.subjects s set color = v.color, sort_order = v.ord
+      from (values ${values}) as v(name, color, ord) where s.class_id = '${CLASS_ID}' and s.name = v.name;
+    insert into public.subjects (class_id, name, color, sort_order, is_demo)
+      select '${CLASS_ID}', v.name, v.color, v.ord, true from (values ${values}) as v(name, color, ord)
+      where not exists (select 1 from public.subjects s where s.class_id = '${CLASS_ID}' and s.name = v.name);
+    update public.class_settings set timetable_saturday = false where class_id = '${CLASS_ID}';
+    commit;
+  `)
+}
+
+export function seedSlot(weekday: number, session: 'morning' | 'afternoon', period: number, subjectName: string) {
+  sql(`insert into public.timetable_slots (class_id, weekday, session, period, subject_id)
+       select '${CLASS_ID}', ${weekday}, '${session}', ${period}, id from public.subjects
+       where class_id = '${CLASS_ID}' and name = '${subjectName}'`)
+}

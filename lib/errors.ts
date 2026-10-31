@@ -34,6 +34,7 @@ const MESSAGES: Record<string, string> = {
   subject_in_use: 'Môn này đang có trong thời khóa biểu. Cô hãy đổi các tiết đó sang môn khác trước khi xóa.',
   subject_exists: 'Môn này đã có trong danh sách.',
   subject_name_required: 'Cô hãy nhập tên môn học.',
+  subject_not_found: 'Môn này không còn trong danh sách.',
   announcement_required: 'Cô hãy nhập tiêu đề và nội dung.',
   invalid_input: 'Thông tin chưa hợp lệ, cô kiểm tra lại nhé.',
 }
