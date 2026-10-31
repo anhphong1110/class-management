@@ -52,7 +52,8 @@ select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-
 select lives_ok($$select public.set_avatar_for('00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000f1')$$, 'T đổi avatar cho học sinh');
 
 reset role;
-select is((select count(*)::int from public.audit_logs where action = 'avatar.set'), 2, 'audit_logs ghi avatar.set');
+select is((select count(*)::int from public.audit_logs where action = 'avatar.set'
+  and entity_id in ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000d2')), 2, 'audit_logs ghi avatar.set');
 
 -- Storage: policy theo thư mục lớp
 set local role authenticated;

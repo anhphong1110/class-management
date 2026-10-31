@@ -111,7 +111,7 @@ test('tải ảnh lên thư viện và từ chối ảnh quá 5 MB', async ({ pa
 })
 
 test('tải ảnh PNG ~2 MB lên được nhờ nén phía trình duyệt', async ({ page }) => {
-  const buffer = noisePng(800)
+  const buffer = noisePng(1000)
   expect(buffer.length).toBeGreaterThan(1024 * 1024)
   expect(buffer.length).toBeLessThan(5 * 1024 * 1024)
   await open(page)
@@ -121,6 +121,9 @@ test('tải ảnh PNG ~2 MB lên được nhờ nén phía trình duyệt', asyn
   await expect(page.getByRole('status').filter({ hasText: 'Đã thêm avatar vào thư viện của lớp.' })).toBeVisible()
   await expect(tiles).toHaveCount(13)
   await expect(tiles.nth(12)).toHaveText('anh-lon')
+  const { data: uploaded } = await admin().from('avatar_library').select('image_path').eq('class_id', CLASS_ID).eq('kind', 'upload')
+  expect(uploaded).toHaveLength(1)
+  expect(uploaded![0].image_path).toMatch(/\.(webp|jpg)$/)
 })
 
 test('công tắc quyền đổi avatar của học sinh', async ({ page }) => {
