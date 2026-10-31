@@ -1,9 +1,47 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+type Token = { overlay: HTMLElement | null };
+
+// Open modals, oldest first. Only the last one reacts to Esc and stays interactive.
+const stack: Token[] = [];
+const inerted = new Set<Element>();
+let savedOverflow = "";
+
+function syncInert() {
+  const top = stack[stack.length - 1];
+  for (const child of Array.from(document.body.children)) {
+    const isTop = !!top?.overlay && child === top.overlay;
+    if (!top || isTop) {
+      if (inerted.delete(child)) child.removeAttribute("inert");
+    } else if (!child.hasAttribute("inert")) {
+      child.setAttribute("inert", "");
+      inerted.add(child);
+    }
+  }
+  if (!top) inerted.clear();
+}
+
+function pushModal(token: Token) {
+  if (stack.length === 0) {
+    savedOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+  }
+  stack.push(token);
+  syncInert();
+}
+
+function popModal(token: Token) {
+  const i = stack.indexOf(token);
+  if (i >= 0) stack.splice(i, 1);
+  if (stack.length === 0) document.body.style.overflow = savedOverflow;
+  syncInert();
+}
 
 export function Modal({
   open,
@@ -18,19 +56,25 @@ export function Modal({
 }) {
   const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
   });
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !mounted) return;
+    const token: Token = { overlay: overlayRef.current };
+    pushModal(token);
     const previous = document.activeElement as HTMLElement | null;
     const dialog = ref.current;
     const items = () => Array.from(dialog?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
     (items()[0] ?? dialog)?.focus();
 
     const onKey = (e: KeyboardEvent) => {
+      if (stack[stack.length - 1] !== token) return;
       if (e.key === "Escape") {
         e.preventDefault();
         onCloseRef.current();
@@ -57,13 +101,16 @@ export function Modal({
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
+      popModal(token);
       previous?.focus();
     };
-  }, [open]);
+  }, [open, mounted]);
 
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(35,31,77,0.45)] p-4">
+  if (!open || !mounted) return null;
+  return createPortal(
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(35,31,77,0.45)] p-4">
       <div
         ref={ref}
         role="dialog"
@@ -77,6 +124,7 @@ export function Modal({
         </h2>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -3,7 +3,7 @@ export function normalizeVn(text: string): string {
     .toLowerCase()
     .replace(/đ/g, 'd')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
 }
 
 export function matchesSearch(query: string, fields: string[]): boolean {

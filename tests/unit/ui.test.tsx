@@ -85,6 +85,49 @@ describe("Modal", () => {
     expect(document.activeElement).toBe(opener);
     opener.remove();
   });
+  it("locks body scroll, restoring the previous value on close", () => {
+    document.body.style.overflow = "scroll";
+    const { rerender } = render(<Modal open onClose={() => {}} title="T">x</Modal>);
+    expect(document.body.style.overflow).toBe("hidden");
+    rerender(<Modal open={false} onClose={() => {}} title="T">x</Modal>);
+    expect(document.body.style.overflow).toBe("scroll");
+    document.body.style.overflow = "";
+  });
+  it("renders through a portal outside the render container and inerts siblings", () => {
+    const { container, rerender } = render(<Modal open onClose={() => {}} title="T">x</Modal>);
+    const dialog = screen.getByRole("dialog");
+    expect(container.contains(dialog)).toBe(false);
+    expect(document.body.contains(dialog)).toBe(true);
+    const portalNode = Array.from(document.body.children).find((c) => c.contains(dialog))!;
+    expect(portalNode.hasAttribute("inert")).toBe(false);
+    expect(container.hasAttribute("inert")).toBe(true);
+    rerender(<Modal open={false} onClose={() => {}} title="T">x</Modal>);
+    expect(container.hasAttribute("inert")).toBe(false);
+  });
+  it("Esc only closes the topmost of stacked modals; unlock only after the last", () => {
+    const a = vi.fn();
+    const b = vi.fn();
+    const { container } = render(
+      <>
+        <Modal open onClose={a} title="A"><button>a</button></Modal>
+        <Modal open onClose={b} title="B"><button>b</button></Modal>
+      </>,
+    );
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(b).toHaveBeenCalledTimes(1);
+    expect(a).not.toHaveBeenCalled();
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(container.hasAttribute("inert")).toBe(true);
+  });
+  it("keeps focus inside a dialog with no focusable children on Tab", () => {
+    render(<Modal open onClose={() => {}} title="T"><p>chỉ chữ</p></Modal>);
+    const dialog = screen.getByRole("dialog");
+    expect(document.activeElement).toBe(dialog);
+    fireEvent.keyDown(dialog, { key: "Tab" });
+    expect(document.activeElement).toBe(dialog);
+    fireEvent.keyDown(dialog, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(dialog);
+  });
 });
 
 describe("Notice", () => {
