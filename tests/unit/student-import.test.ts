@@ -53,6 +53,11 @@ describe('parseStudentSheet', () => {
 })
 
 describe('parse bổ sung', () => {
+  it('báo mã sai định dạng', () => {
+    const { rows } = parseStudentSheet(enc('Họ và tên,Mã học sinh\nAn,HS 1!\nBình,' + 'A'.repeat(21)), existing)
+    expect(rows.map((r) => r.error)).toEqual(['Mã không hợp lệ', 'Mã không hợp lệ'])
+  })
+
   it('mã trùng mã đã lưu trữ (có trong existing) bị báo, mã chuẩn hóa chữ hoa', () => {
     const { rows } = parseStudentSheet(enc('Họ và tên,Mã học sinh\nAn, hs11 \nBình,HS11'), new Set([...existing, 'HS11']))
     expect(rows.map((r) => [r.code, r.error])).toEqual([

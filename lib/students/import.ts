@@ -57,6 +57,7 @@ export function parseStudentSheet(data: ArrayBuffer, existingCodes: Set<string>)
       if (existingCodes.has(code)) error ??= 'Mã đã có trong lớp'
       else if (seen.has(code)) error ??= 'Mã bị trùng trong file'
     }
+    if (code && !/^[A-Z0-9]{1,20}$/.test(code)) error ??= 'Mã không hợp lệ'
     if (code && !error) seen.add(code)
     rows.push({ line: i + 1, rollNo, fullName, code, error })
   }
