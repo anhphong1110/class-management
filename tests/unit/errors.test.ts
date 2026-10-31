@@ -27,6 +27,11 @@ describe('toVietnameseMessage', () => {
     ['group_name_required', 'Cô hãy nhập tên tổ.'],
     ['not_in_group', 'Học sinh này chưa ở tổ nào.'],
     ['group_not_empty', 'Tổ còn thành viên, cô chuyển các bạn sang tổ khác trước nhé.'],
+    ['future_date', 'Chưa thể điểm danh cho ngày trong tương lai.'],
+    ['subject_in_use', 'Môn này đang có trong thời khóa biểu. Cô hãy đổi các tiết đó sang môn khác trước khi xóa.'],
+    ['subject_exists', 'Môn này đã có trong danh sách.'],
+    ['subject_name_required', 'Cô hãy nhập tên môn học.'],
+    ['announcement_required', 'Cô hãy nhập tiêu đề và nội dung.'],
     ['khong_biet', 'Có lỗi xảy ra, vui lòng thử lại.'],
   ]
   it.each(cases)('%s', (key, msg) => {

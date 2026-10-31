@@ -30,6 +30,11 @@ const MESSAGES: Record<string, string> = {
   weekly_limit: 'Em đã đổi đủ số lượt trong tuần này.',
   already_processed: 'Yêu cầu này đã được xử lý.',
   stock_below_held: 'Số quà không được ít hơn số yêu cầu đang chờ.',
+  future_date: 'Chưa thể điểm danh cho ngày trong tương lai.',
+  subject_in_use: 'Môn này đang có trong thời khóa biểu. Cô hãy đổi các tiết đó sang môn khác trước khi xóa.',
+  subject_exists: 'Môn này đã có trong danh sách.',
+  subject_name_required: 'Cô hãy nhập tên môn học.',
+  announcement_required: 'Cô hãy nhập tiêu đề và nội dung.',
   invalid_input: 'Thông tin chưa hợp lệ, cô kiểm tra lại nhé.',
 }
 
