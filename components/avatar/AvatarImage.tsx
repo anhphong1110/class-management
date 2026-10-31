@@ -6,7 +6,7 @@ export type AvatarValue =
   | { kind: "upload"; url: string }
   | null;
 
-export function AvatarImage({ avatar, size }: { avatar: AvatarValue; size: number }) {
+export function AvatarImage({ avatar, size, crown = false }: { avatar: AvatarValue; size: number; crown?: boolean }) {
   if (avatar?.kind === "upload") {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -20,5 +20,5 @@ export function AvatarImage({ avatar, size }: { avatar: AvatarValue; size: numbe
       />
     );
   }
-  return <Avatar preset={avatar?.preset ?? DEFAULT_AVATAR_PRESET} size={size} />;
+  return <Avatar preset={avatar?.preset ?? DEFAULT_AVATAR_PRESET} size={size} crown={crown} />;
 }

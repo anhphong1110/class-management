@@ -23,7 +23,9 @@ export function resetStars() {
   `)
 }
 
-export function seedStars(studentNo: number, points: number) {
-  sql(`insert into public.star_transactions (class_id, student_id, delta, kind, note, batch_id)
-       values ('${CLASS_ID}', '${sid(studentNo)}', ${points}, 'award', 'seed', gen_random_uuid())`)
+/** daysAgo > 0 đặt created_at lùi về quá khứ (trigger sổ được tắt tạm để chèn được mốc giờ tùy ý nếu cần). */
+export function seedStars(studentNo: number, points: number, daysAgo = 0) {
+  const at = daysAgo > 0 ? `now() - interval '${Math.floor(daysAgo)} days'` : 'now()'
+  sql(`insert into public.star_transactions (class_id, student_id, delta, kind, note, batch_id, created_at)
+       values ('${CLASS_ID}', '${sid(studentNo)}', ${points}, 'award', 'seed', gen_random_uuid(), ${at})`)
 }
