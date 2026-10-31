@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { toVietnameseMessage } from '@/lib/errors'
-import { MAX_IMPORT_BYTES, MAX_IMPORT_ROWS, parseStudentSheet, type ImportRow } from '@/lib/students/import'
+import { MAX_IMPORT_BYTES, MAX_IMPORT_ROWS } from '@/lib/students/import-limits'
+import type { ImportRow } from '@/lib/students/import'
 import { importStudents } from './actions'
 
 export function ImportDialog({
@@ -44,8 +45,10 @@ function Body({ existingCodes, onClose, onDone }: { existingCodes: Set<string>; 
     }
     const reader = new FileReader()
     reader.onerror = () => setError('Chưa đọc được file này, cô thử lại nhé.')
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
+        // Nạp bộ đọc file khi cần để xlsx không nằm trong gói tải đầu của trang.
+        const { parseStudentSheet } = await import('@/lib/students/import')
         const { rows: parsed } = parseStudentSheet(reader.result as ArrayBuffer, existingCodes)
         if (parsed.length > MAX_IMPORT_ROWS) setError(`File có hơn ${MAX_IMPORT_ROWS} dòng, cô chia nhỏ file rồi nhập từng phần nhé.`)
         else if (parsed.length === 0) setError('File chưa có dòng học sinh nào.')

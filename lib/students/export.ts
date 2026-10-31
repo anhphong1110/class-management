@@ -17,12 +17,16 @@ export function buildStudentWorkbook(rows: ExportRow[]): ArrayBuffer {
   return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
 }
 
-/** "5/8" -> "lop-5-8" */
+/** "5/8" -> "danh-sach-hoc-sinh-lop-5-8.xlsx"; "Lớp 5A" -> "...-lop-5a.xlsx"; không còn ký tự nào thì "lop". */
 export function exportFileName(classShort: string): string {
   const slug = normalizeVn(classShort)
     .replace(/[\s/]+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
-  return `danh-sach-hoc-sinh-lop-${slug}.xlsx`
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .replace(/^lop(-|$)/, '')
+    .replace(/^-|-$/g, '')
+  return `danh-sach-hoc-sinh-lop-${slug || 'lop'}.xlsx`
 }
 
 export function buildTemplateWorkbook(): ArrayBuffer {

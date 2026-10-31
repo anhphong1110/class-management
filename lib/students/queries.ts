@@ -31,3 +31,11 @@ export async function getStudentCards(classId: string): Promise<StudentCard[]> {
     groupRole: roles.get(s.id) ?? null,
   }))
 }
+
+/** Mọi mã học sinh trong lớp, kể cả đã lưu trữ (mã là duy nhất theo lớp). */
+export async function getAllStudentCodes(classId: string): Promise<string[]> {
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase.from('students').select('code').eq('class_id', classId)
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((r) => (r.code as string).toUpperCase())
+}

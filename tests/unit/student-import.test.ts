@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import * as XLSX from 'xlsx'
 import { parseStudentSheet } from '@/lib/students/import'
-import { buildStudentWorkbook } from '@/lib/students/export'
+import { classShortName } from '@/lib/classes/short-name'
+import { buildStudentWorkbook, exportFileName } from '@/lib/students/export'
 
 const enc = (s: string, bom = false) => {
   const body = new TextEncoder().encode(s)
@@ -48,6 +49,40 @@ describe('parseStudentSheet', () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
     const { rows } = parseStudentSheet(XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer, existing)
     expect(rows).toEqual([{ line: 2, rollNo: 5, fullName: 'Bé Na', code: null, error: null }])
+  })
+})
+
+describe('parse bổ sung', () => {
+  it('mã trùng mã đã lưu trữ (có trong existing) bị báo, mã chuẩn hóa chữ hoa', () => {
+    const { rows } = parseStudentSheet(enc('Họ và tên,Mã học sinh\nAn, hs11 \nBình,HS11'), new Set([...existing, 'HS11']))
+    expect(rows.map((r) => [r.code, r.error])).toEqual([
+      ['HS11', 'Mã đã có trong lớp'],
+      ['HS11', 'Mã đã có trong lớp'],
+    ])
+  })
+
+  it('đọc CSV windows-1258 khi không phải UTF-8', () => {
+    // "Họ và tên" bằng windows-1258: ọ = o + dấu nặng (U+0323 -> 0xF2), à = 0xE0
+    const bytes = new Uint8Array([0x48, 0x6f, 0xf2, 0x20, 0x76, 0xe0, 0x20, 0x74, 0xea, 0x6e, 0x0a, 0x41, 0x6e])
+    const { rows } = parseStudentSheet(bytes.buffer, existing)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].fullName).toBe('An')
+  })
+
+  it('chuẩn hóa NFC cho tên', () => {
+    const { rows } = parseStudentSheet(enc('Họ và tên\nLy\u0301 Thu Ha\u0323'), existing)
+    expect(rows[0].fullName).toBe('Lý Thu Hạ')
+  })
+})
+
+describe('exportFileName', () => {
+  it.each([
+    ['Năm 8 (5/8)', 'danh-sach-hoc-sinh-lop-5-8.xlsx'],
+    ['Lớp 5A', 'danh-sach-hoc-sinh-lop-5a.xlsx'],
+    ['5A - Chiều', 'danh-sach-hoc-sinh-lop-5a-chieu.xlsx'],
+    ['***', 'danh-sach-hoc-sinh-lop-lop.xlsx'],
+  ])('%s', (name, expected) => {
+    expect(exportFileName(classShortName(name))).toBe(expected)
   })
 })
 

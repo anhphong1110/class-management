@@ -3,8 +3,16 @@ import { normalizeVn } from '@/lib/domain/vn-text'
 
 export type ImportRow = { line: number; rollNo: number | null; fullName: string; code: string | null; error: string | null }
 
-export const MAX_IMPORT_BYTES = 2 * 1024 * 1024
-export const MAX_IMPORT_ROWS = 500
+export { MAX_IMPORT_BYTES, MAX_IMPORT_ROWS } from './import-limits'
+
+/** UTF-8 (TextDecoder bỏ BOM); nếu không phải UTF-8 hợp lệ thì thử windows-1258 (Excel cũ lưu CSV tiếng Việt). */
+function decodeCsv(data: ArrayBuffer): string {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(data)
+  } catch {
+    return new TextDecoder('windows-1258').decode(data)
+  }
+}
 
 /** Chỉ chạy được ở trình duyệt lẫn máy chủ: không import gì chỉ dành cho server. */
 function readSheet(data: ArrayBuffer): unknown[][] {
@@ -12,13 +20,13 @@ function readSheet(data: ArrayBuffer): unknown[][] {
   const isZip = head[0] === 0x50 && head[1] === 0x4b
   const isOle = head[0] === 0xd0 && head[1] === 0xcf
   // CSV: giải mã UTF-8 (TextDecoder bỏ BOM) rồi đọc dạng chuỗi để không hỏng dấu tiếng Việt.
-  const wb = isZip || isOle ? XLSX.read(data, { type: 'array' }) : XLSX.read(new TextDecoder('utf-8').decode(data), { type: 'string' })
+  const wb = isZip || isOle ? XLSX.read(data, { type: 'array' }) : XLSX.read(decodeCsv(data), { type: 'string' })
   const sheet = wb.Sheets[wb.SheetNames[0]]
   if (!sheet) return []
   return XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: null, blankrows: true })
 }
 
-const text = (v: unknown): string => (v === null || v === undefined ? '' : String(v).trim())
+const text = (v: unknown): string => (v === null || v === undefined ? '' : String(v).normalize('NFC').trim())
 
 export function parseStudentSheet(data: ArrayBuffer, existingCodes: Set<string>): { rows: ImportRow[] } {
   const grid = readSheet(data)
@@ -35,7 +43,7 @@ export function parseStudentSheet(data: ArrayBuffer, existingCodes: Set<string>)
     if (cells.every((c) => text(c) === '')) continue
     const fullName = text(cells[nameCol])
     const rollText = rollCol >= 0 ? text(cells[rollCol]) : ''
-    const code = (codeCol >= 0 ? text(cells[codeCol]) : '') || null
+    const code = (codeCol >= 0 ? text(cells[codeCol]).toUpperCase() : '') || null
 
     let rollNo: number | null = null
     let error: string | null = null

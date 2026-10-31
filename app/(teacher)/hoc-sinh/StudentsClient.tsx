@@ -53,7 +53,7 @@ function groupLabel(s: StudentCard): string {
   return role ? `${s.groupName} · ${role}` : s.groupName
 }
 
-export function StudentsClient({ students, groups }: { students: StudentCard[]; groups: StarGroup[] }) {
+export function StudentsClient({ students, groups, allCodes }: { students: StudentCard[]; groups: StarGroup[]; allCodes: string[] }) {
   const [q, setQ] = useState('')
   const [sort, setSort] = useState<Sort>('name')
   const [filter, setFilter] = useState<Filter>('all')
@@ -79,7 +79,7 @@ export function StudentsClient({ students, groups }: { students: StudentCard[]; 
     return out
   }, [students, q, sort, filter])
 
-  const existingCodes = useMemo(() => new Set(students.map((s) => s.code)), [students])
+  const existingCodes = useMemo(() => new Set(allCodes), [allCodes])
   const sel = students.find((s) => s.id === selId) ?? null
 
   useEffect(() => {

@@ -67,14 +67,18 @@ export async function createStudent(input: { fullName: string; rollNo: number | 
 }
 
 const importInput = z
-  .array(z.object({ rollNo: rollNo.nullable(), fullName: name, code: z.string().trim().max(200).nullable() }))
+  .array(z.object({ rollNo: rollNo.nullable(), fullName: name, code: z.string().trim().max(20).nullable() }))
   .min(1, 'invalid_rows')
   .max(500, 'invalid_rows')
 
 export async function importStudents(rows: { rollNo: number | null; fullName: string; code: string | null }[]): Promise<{ error?: string; created?: number }> {
   await requireTeacher()
   const parsed = importInput.safeParse(rows)
-  if (!parsed.success) return { error: toVietnameseMessage(parsed.error.issues[0]?.message === 'invalid_rows' ? 'invalid_rows' : 'name_required') }
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]
+    const field = issue?.path[1]
+    return { error: toVietnameseMessage(field === 'rollNo' ? 'invalid_roll_no' : field === 'fullName' ? 'name_required' : 'invalid_rows') }
+  }
   const supabase = await createServerSupabase()
   const { data, error } = await supabase.rpc('import_students', {
     p_rows: parsed.data.map((r) => ({ roll_no: r.rollNo, full_name: r.fullName, code: r.code || null })),

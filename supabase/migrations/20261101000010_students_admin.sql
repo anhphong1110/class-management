@@ -11,10 +11,10 @@ begin
   if not private.is_teacher() or p_class_id is distinct from private.my_class_id() then
     raise exception 'not_allowed';
   end if;
-  select coalesce(max(substring(s.code from '^HS(\d+)$')::int), 0) + 1 into v_n
+  select coalesce(max(substring(s.code from '^HS([0-9]{1,6})$')::int), 0) + 1 into v_n
     from public.students s
-   where s.class_id = p_class_id and s.code ~ '^HS\d+$';
-  return 'HS' || lpad(v_n::text, 2, '0');
+   where s.class_id = p_class_id and s.code ~ '^HS[0-9]{1,6}$';
+  return 'HS' || lpad(v_n::text, greatest(2, length(v_n::text)), '0');
 end
 $$;
 
@@ -23,7 +23,7 @@ grant execute on function public.next_student_code(uuid) to authenticated;
 
 -- Nhập hàng loạt học sinh từ file. Cả lô trong một câu lệnh: một dòng lỗi (vd. trùng mã, 23505) thì không dòng nào được thêm.
 -- p_rows: [{ "roll_no": int|null, "full_name": text, "code": text|null }, ...]
--- Dòng thiếu mã được sinh mã tiếp theo số HS lớn nhất (tính cả học sinh đã lưu trữ và mã ghi rõ trong lô); dòng thiếu số thứ tự cũng tiếp nối.
+-- Mã được chuẩn hóa upper(btrim()). Dòng thiếu mã được sinh mã tiếp theo số HS lớn nhất (tính cả học sinh đã lưu trữ và mã ghi rõ trong lô); dòng thiếu số thứ tự cũng tiếp nối.
 create function public.import_students(p_rows jsonb) returns int
 language plpgsql
 security definer
@@ -41,10 +41,12 @@ begin
   if p_rows is null or jsonb_typeof(p_rows) <> 'array' or jsonb_array_length(p_rows) not between 1 and 500 then
     raise exception 'invalid_rows';
   end if;
+  if exists (select 1 from jsonb_array_elements(p_rows) e where jsonb_typeof(e) <> 'object') then
+    raise exception 'invalid_rows';
+  end if;
   if exists (
     select 1 from jsonb_array_elements(p_rows) e
-     where jsonb_typeof(e) <> 'object'
-        or length(btrim(coalesce(e->>'full_name', ''))) not between 1 and 200
+     where length(btrim(coalesce(e->>'full_name', ''))) not between 1 and 200
   ) then
     raise exception 'name_required';
   end if;
@@ -55,15 +57,29 @@ begin
   ) then
     raise exception 'invalid_roll_no';
   end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_rows) e
+     where nullif(btrim(e->>'code'), '') is not null and upper(btrim(e->>'code')) !~ '^[A-Z0-9]{1,20}$'
+  ) then
+    raise exception 'invalid_rows';
+  end if;
 
   -- Khóa theo lớp để hai lần nhập cùng lúc không sinh trùng mã.
   perform pg_advisory_xact_lock(hashtextextended('import_students:' || v_class::text, 0));
 
+  -- Mã đã có trong lớp (kể cả học sinh đã lưu trữ).
+  if exists (
+    select 1 from jsonb_array_elements(p_rows) e
+      join public.students s on s.class_id = v_class and upper(s.code) = upper(btrim(e->>'code'))
+  ) then
+    raise exception 'code_exists';
+  end if;
+
   select greatest(
-           coalesce((select max(substring(s.code from '^HS(\d+)$')::int) from public.students s
-                      where s.class_id = v_class and s.code ~ '^HS\d+$'), 0),
-           coalesce((select max(substring(btrim(e->>'code') from '^HS(\d+)$')::int)
-                       from jsonb_array_elements(p_rows) e where btrim(e->>'code') ~ '^HS\d+$'), 0)),
+           coalesce((select max(substring(upper(s.code) from '^HS([0-9]{1,6})$')::int) from public.students s
+                      where s.class_id = v_class and upper(s.code) ~ '^HS[0-9]{1,6}$'), 0),
+           coalesce((select max(substring(upper(btrim(e->>'code')) from '^HS([0-9]{1,6})$')::int)
+                       from jsonb_array_elements(p_rows) e where upper(btrim(e->>'code')) ~ '^HS[0-9]{1,6}$'), 0)),
          greatest(
            coalesce((select max(s.roll_no) from public.students s where s.class_id = v_class), 0),
            coalesce((select max((e->>'roll_no')::int) from jsonb_array_elements(p_rows) e where nullif(e->>'roll_no', '') is not null), 0))
@@ -71,8 +87,9 @@ begin
 
   insert into public.students (class_id, code, roll_no, full_name)
   select v_class,
-         coalesce(nullif(btrim(r.e->>'code'), ''),
-                  'HS' || lpad((v_code_base + count(*) filter (where nullif(btrim(r.e->>'code'), '') is null) over (order by r.ord))::text, 2, '0')),
+         coalesce(nullif(upper(btrim(r.e->>'code')), ''),
+                  'HS' || lpad((v_code_base + count(*) filter (where nullif(btrim(r.e->>'code'), '') is null) over (order by r.ord))::text,
+                               greatest(2, length((v_code_base + count(*) filter (where nullif(btrim(r.e->>'code'), '') is null) over (order by r.ord))::text)), '0')),
          coalesce(nullif(r.e->>'roll_no', '')::int,
                   v_roll_base + count(*) filter (where nullif(r.e->>'roll_no', '') is null) over (order by r.ord)),
          btrim(r.e->>'full_name')
