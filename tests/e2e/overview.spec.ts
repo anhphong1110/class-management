@@ -11,13 +11,18 @@ async function open(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: 'Tổng quan' })).toBeVisible()
 }
 
-async function teacherAward(studentNo: number, points: number, note: string) {
+async function teacherSession() {
   const c = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const email = `co.khanh@${process.env.AUTH_EMAIL_DOMAIN ?? 'tram58.local'}`
   const { error: e1 } = await c.auth.signInWithPassword({ email, password: pw('co.khanh') })
   if (e1) throw e1
+  return c
+}
+
+async function teacherAward(studentNo: number, points: number, note: string) {
+  const c = await teacherSession()
   const { error } = await c.rpc('award_stars', { p_student_ids: [sid(studentNo)], p_points: points, p_criterion_id: null, p_note: note })
   if (error) throw error
 }
@@ -116,4 +121,23 @@ test('yêu cầu đổi quà chờ duyệt hiện trong hoạt động', async (
     resetRequests()
     sql(`delete from public.rewards where id = '00000000-0000-0000-0000-0000000d9901'`)
   }
+})
+
+test('cộng rồi hoàn tác: thẻ sao tuần này về +0', async ({ page }) => {
+  const c = await teacherSession()
+  const { data: batch, error } = await c.rpc('award_stars', { p_student_ids: [sid(1)], p_points: 2, p_criterion_id: null, p_note: 'x' })
+  if (error) throw error
+  const { error: e2 } = await c.rpc('reverse_batch', { p_batch_id: batch })
+  if (e2) throw e2
+  await open(page)
+  const card = page.getByTestId('stat').filter({ hasText: 'Sao thi đua tuần này' })
+  await expect(card).toContainText('+0')
+  await expect(card).toContainText('đã trừ 0 sao')
+})
+
+test('lớp chưa có sao: không ai đội vương miện ở Top 3', async ({ page }) => {
+  await open(page)
+  const crowns = page.getByTestId('top3').locator('[data-part="crown"]')
+  await expect(crowns).toHaveCount(3)
+  for (let i = 0; i < 3; i++) await expect(crowns.nth(i)).toHaveAttribute('opacity', '0')
 })

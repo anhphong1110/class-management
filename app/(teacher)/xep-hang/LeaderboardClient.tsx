@@ -59,7 +59,7 @@ export function LeaderboardClient({ rows, period, showAll }: { rows: RankRow[]; 
             const p = POD[r.rank as 1 | 2 | 3] ?? POD[3]
             return (
               <div key={r.id} data-testid="podium-step" className="flex min-w-0 flex-1 flex-col items-center">
-                <AvatarImage avatar={r.avatar} size={p.size} crown={r.rank === 1} />
+                <AvatarImage avatar={r.avatar} size={p.size} crown={r.rank === 1 && r.stars > 0} />
                 <div className="mt-1 text-center font-display text-[17px] font-bold leading-tight text-white">{r.name}</div>
                 <div className="mb-2 flex items-center gap-1 text-base font-extrabold text-[#FFE08A]">
                   <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">

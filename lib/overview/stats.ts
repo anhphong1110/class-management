@@ -36,8 +36,27 @@ export function buildOverviewStats(i: OverviewStatsInput): OverviewStat[] {
   ]
 }
 
-/** "Cô Khanh" -> "cô Khanh"; tên không có "Cô" ở đầu vẫn ghép "cô " phía trước. */
+export type WeekRow = { kind: string; delta: number; originalKind?: string | null }
+
+/** Cộng/trừ ròng trong tuần: dòng hoàn tác trừ ngược vào nhóm (cộng/trừ) của dòng gốc. */
+export function sumWeekStars(rows: WeekRow[]): { awarded: number; penalized: number } {
+  let awarded = 0
+  let penalized = 0
+  for (const r of rows) {
+    const bucket = r.kind === 'reversal' ? r.originalKind : r.kind
+    if (bucket === 'award') awarded += r.delta
+    else if (bucket === 'penalty') penalized -= r.delta
+  }
+  return { awarded: Math.max(0, awarded), penalized: Math.max(0, penalized) }
+}
+
+const TITLES = new Set(['cô', 'thầy'])
+
+/** "Cô Khanh" -> "cô Khanh", "Thầy Nam" -> "thầy Nam"; không có danh xưng thì ghép "cô " phía trước. */
 export function teacherGreetingName(teacherName: string): string {
-  const rest = teacherName.trim().replace(/^cô(?=\s|$)\s*/i, '').trim()
-  return rest ? `cô ${rest}` : 'cô'
+  const name = teacherName.normalize('NFC').trim().replace(/\s+/g, ' ')
+  if (!name) return 'cô'
+  const [first, ...rest] = name.split(' ')
+  if (TITLES.has(first.toLowerCase())) return [first.toLowerCase(), ...rest].join(' ')
+  return `cô ${name}`
 }

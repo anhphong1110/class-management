@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildOverviewStats, teacherGreetingName } from '@/lib/overview/stats'
+import { buildOverviewStats, sumWeekStars, teacherGreetingName } from '@/lib/overview/stats'
 
 const base = {
   studentCount: 10,
@@ -42,10 +42,35 @@ describe('buildOverviewStats', () => {
 })
 
 describe('teacherGreetingName', () => {
-  it('lowercases the Cô prefix', () => {
+  it('keeps the title, lowercased', () => {
     expect(teacherGreetingName('Cô Khanh')).toBe('cô Khanh')
+    expect(teacherGreetingName('Thầy Nam')).toBe('thầy Nam')
+    expect(teacherGreetingName('  CÔ  Mai Khanh ')).toBe('cô Mai Khanh')
+  })
+  it('handles NFD input', () => {
+    expect(teacherGreetingName('Cô Khanh'.normalize('NFD'))).toBe('cô Khanh')
+  })
+  it('prepends cô without a title', () => {
     expect(teacherGreetingName('Khanh')).toBe('cô Khanh')
-    expect(teacherGreetingName('  Cô  Mai Khanh ')).toBe('cô Mai Khanh')
     expect(teacherGreetingName('')).toBe('cô')
+  })
+})
+
+describe('sumWeekStars', () => {
+  it('sums awards and penalties', () => {
+    expect(sumWeekStars([{ kind: 'award', delta: 3 }, { kind: 'award', delta: 2 }, { kind: 'penalty', delta: -4 }])).toEqual({ awarded: 5, penalized: 4 })
+  })
+  it('undo cancels the original bucket', () => {
+    expect(
+      sumWeekStars([
+        { kind: 'award', delta: 2 },
+        { kind: 'reversal', delta: -2, originalKind: 'award' },
+        { kind: 'penalty', delta: -3 },
+        { kind: 'reversal', delta: 3, originalKind: 'penalty' },
+      ]),
+    ).toEqual({ awarded: 0, penalized: 0 })
+  })
+  it('undo of an earlier-week award reduces this week, never below zero', () => {
+    expect(sumWeekStars([{ kind: 'reversal', delta: -2, originalKind: 'award' }])).toEqual({ awarded: 0, penalized: 0 })
   })
 })

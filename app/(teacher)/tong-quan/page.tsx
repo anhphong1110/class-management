@@ -170,7 +170,7 @@ export default async function Page() {
                   className="relative flex max-w-[280px] flex-[1_1_200px] flex-col items-center gap-1.5 overflow-hidden rounded-3xl px-4 pb-[18px] pt-5 text-center"
                   style={{ background: m.bg }}
                 >
-                  <AvatarImage avatar={t.avatar} size={m.size} crown={t.rank === 1} />
+                  <AvatarImage avatar={t.avatar} size={m.size} crown={t.rank === 1 && t.stars > 0} />
                   <div className="rounded-full px-3.5 py-1 text-[13px] font-extrabold" style={{ background: m.medalBg, color: m.medalInk }}>
                     {`Hạng ${t.rank}`}
                   </div>

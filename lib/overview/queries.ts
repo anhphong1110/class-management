@@ -6,7 +6,7 @@ import { todayInVietnam } from '@/lib/domain/date'
 import { joinNames } from '@/lib/domain/names'
 import { formatRelative } from '@/lib/domain/relative-time'
 import { getRecentBatches, getStudentsWithStars } from '@/lib/stars/queries'
-import { buildOverviewStats, type AttendanceCounts, type OverviewStat } from './stats'
+import { buildOverviewStats, sumWeekStars, type AttendanceCounts, type OverviewStat, type WeekRow } from './stats'
 
 export { buildOverviewStats } from './stats'
 
@@ -44,9 +44,9 @@ export async function getOverview(classId: string, now: Date = new Date()): Prom
     supabase.from('attendance').select('status').eq('class_id', classId).eq('date', todayInVietnam(now)),
     supabase
       .from('star_transactions')
-      .select('kind, delta')
+      .select('kind, delta, reverses_id')
       .eq('class_id', classId)
-      .in('kind', ['award', 'penalty'])
+      .in('kind', ['award', 'penalty', 'reversal'])
       .gte('created_at', from!)
       .lt('created_at', to!),
     supabase
@@ -67,16 +67,29 @@ export async function getOverview(classId: string, now: Date = new Date()): Prom
   ])
   if (cls.error) throw new Error(cls.error.message)
   if (lb.error) throw new Error(lb.error.message)
+  for (const r of [att, week, reqs, news]) if (r.error) throw new Error(r.error.message)
 
   const attendanceToday: AttendanceCounts = { present: 0, late: 0, absent_excused: 0, absent_unexcused: 0 }
   for (const r of att.data ?? []) attendanceToday[r.status as keyof AttendanceCounts]++
 
-  let weekAwarded = 0
-  let weekPenalized = 0
-  for (const t of week.data ?? []) {
-    if (t.kind === 'award') weekAwarded += t.delta
-    else weekPenalized += Math.abs(t.delta)
+  const weekRows = week.data ?? []
+  const originalKinds = new Map<string, string>()
+  const missingIds = [...new Set(weekRows.filter((t) => t.kind === 'reversal' && t.reverses_id).map((t) => t.reverses_id as string))]
+  if (missingIds.length) {
+    const { data: originals, error } = await supabase
+      .from('star_transactions')
+      .select('id, kind')
+      .eq('class_id', classId)
+      .in('id', missingIds)
+    if (error) throw new Error(error.message)
+    for (const o of originals ?? []) originalKinds.set(o.id, o.kind)
   }
+  const sumRows: WeekRow[] = weekRows.map((t) => ({
+    kind: t.kind,
+    delta: t.delta,
+    originalKind: t.reverses_id ? originalKinds.get(t.reverses_id) : null,
+  }))
+  const { awarded: weekAwarded, penalized: weekPenalized } = sumWeekStars(sumRows)
 
   const requests = reqs.data ?? []
   const redeemedCount = requests.filter((r) => r.status === 'approved' || r.status === 'delivered').length
@@ -96,14 +109,16 @@ export async function getOverview(classId: string, now: Date = new Date()): Prom
   const recentPending = pending.slice(0, 5)
   const studentIds = [...new Set([...batches.flatMap((b) => b.studentIds), ...recentPending.map((r) => r.student_id)])]
   const rewardIds = [...new Set(recentPending.map((r) => r.reward_id))]
-  const [{ data: nameRows }, { data: rewardRows }] = await Promise.all([
+  const [{ data: nameRows, error: nameErr }, { data: rewardRows, error: rewardErr }] = await Promise.all([
     studentIds.length
       ? supabase.from('students').select('id, full_name').in('id', studentIds)
-      : Promise.resolve({ data: [] as { id: string; full_name: string }[] }),
+      : Promise.resolve({ data: [] as { id: string; full_name: string }[], error: null }),
     rewardIds.length
       ? supabase.from('rewards').select('id, name').in('id', rewardIds)
-      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
   ])
+  if (nameErr) throw new Error(nameErr.message)
+  if (rewardErr) throw new Error(rewardErr.message)
   const names = new Map((nameRows ?? []).map((s) => [s.id, s.full_name]))
   const rewardNames = new Map((rewardRows ?? []).map((r) => [r.id, r.name]))
 

@@ -28,7 +28,7 @@ const ROW_WINDOW = 500
 
 export async function getStudentsWithStars(classId: string): Promise<StudentWithStars[]> {
   const supabase = await createServerSupabase()
-  const [{ data: students }, { data: stars }, { data: members }] = await Promise.all([
+  const [studentsRes, starsRes, membersRes] = await Promise.all([
     supabase
       .from('students')
       .select('id, code, full_name, roll_no, avatar_id')
@@ -38,6 +38,10 @@ export async function getStudentsWithStars(classId: string): Promise<StudentWith
     supabase.from('v_student_stars').select('student_id, competition_stars, available_stars').eq('class_id', classId),
     supabase.from('group_members').select('group_id, student_id').eq('class_id', classId),
   ])
+  for (const r of [studentsRes, starsRes, membersRes]) if (r.error) throw new Error(r.error.message)
+  const { data: students } = studentsRes
+  const { data: stars } = starsRes
+  const { data: members } = membersRes
   const rows = students ?? []
   const avatars = await resolveAvatars(rows.map((s) => s.avatar_id))
   const starsBy = new Map((stars ?? []).map((s) => [s.student_id as string, s]))
@@ -93,7 +97,7 @@ export async function getStarSteps(classId: string): Promise<number[]> {
 
 export async function getRecentBatches(classId: string, limit: number): Promise<StarBatch[]> {
   const supabase = await createServerSupabase()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('star_transactions')
     .select(TX_COLUMNS)
     .eq('class_id', classId)
@@ -101,6 +105,7 @@ export async function getRecentBatches(classId: string, limit: number): Promise<
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
     .limit(ROW_WINDOW)
+  if (error) throw new Error(error.message)
   let rows = (data ?? []) as TxRow[]
 
   const order: string[] = []
@@ -116,20 +121,24 @@ export async function getRecentBatches(classId: string, limit: number): Promise<
     (id) => !have.has(id),
   )
   if (missing.length) {
-    const { data: originals } = await supabase.from('star_transactions').select(TX_COLUMNS).eq('class_id', classId).in('id', missing)
+    const { data: originals, error: origErr } = await supabase.from('star_transactions').select(TX_COLUMNS).eq('class_id', classId).in('id', missing)
+    if (origErr) throw new Error(origErr.message)
     rows = [...rows, ...((originals ?? []) as TxRow[])]
   }
 
   const criterionIds = [...new Set(rows.map((r) => r.criterion_id).filter((x): x is string => !!x))]
   const actorIds = [...new Set(rows.map((r) => r.actor_id).filter((x): x is string => !!x))]
-  const [{ data: crit }, { data: actors }] = await Promise.all([
+  const [critRes, actorsRes] = await Promise.all([
     criterionIds.length
       ? supabase.from('star_criteria').select('id, label').in('id', criterionIds)
-      : Promise.resolve({ data: [] as { id: string; label: string }[] }),
+      : Promise.resolve({ data: [] as { id: string; label: string }[], error: null }),
     actorIds.length
       ? supabase.from('profiles').select('id, display_name').in('id', actorIds)
-      : Promise.resolve({ data: [] as { id: string; display_name: string }[] }),
+      : Promise.resolve({ data: [] as { id: string; display_name: string }[], error: null }),
   ])
+  for (const r of [critRes, actorsRes]) if (r.error) throw new Error(r.error.message)
+  const crit = critRes.data
+  const actors = actorsRes.data
   const labels = new Map((crit ?? []).map((c) => [c.id, c.label]))
   const names = new Map((actors ?? []).map((a) => [a.id, a.display_name]))
   // Batch gốc kéo thêm chỉ để lấy lý do, không hiện thành dòng lịch sử riêng.
