@@ -6,6 +6,7 @@ const MESSAGES: Record<string, string> = {
   avatar_not_found: 'Avatar này không còn trong thư viện.',
   not_allowed: 'Bạn không có quyền làm việc này.',
   file_too_large: 'Ảnh lớn hơn 5 MB, cô chọn ảnh nhỏ hơn nhé.',
+  upload_failed: 'Chưa tải được ảnh lên, cô thử lại nhé.',
   unsupported_type: 'Chỉ nhận ảnh JPG, PNG hoặc WEBP.',
 }
 
