@@ -125,7 +125,7 @@ test('lịch tháng hiện số ngày đã điểm danh; bấm ngày của thán
   await open(page)
   await expect(page.getByRole('heading', { name: 'Lịch tháng' })).toBeVisible()
   await expect(page.getByTestId('calendar-days-marked')).toContainText('1 ngày')
-  await expect(page.getByTestId(`cal-${today}`)).toContainText('1/10')
+  await expect(page.getByTestId(`cal-count-${today}`)).toHaveText('2/10')
   await page.getByRole('link', { name: 'Tháng trước' }).click()
   await expect(page).toHaveURL(new RegExp(`thang=${prevLast.slice(0, 7)}`))
   await expect(page.getByTestId('calendar-days-marked')).toContainText('1 ngày')
@@ -135,6 +135,13 @@ test('lịch tháng hiện số ngày đã điểm danh; bấm ngày của thán
   await expect(status(page, 2)).toHaveText('Có mặt')
   await expect(status(page, 3)).toHaveText('Chưa điểm danh')
   await expect(card(page, 1).getByRole('button', { name: 'Vắng có phép' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('lịch tháng đếm cả đi trễ: 1 trễ + 8 có mặt + 1 chưa điểm danh hiện 9/10', async ({ page }) => {
+  seedAttendance(1, 'late', 0)
+  for (let n = 2; n <= 9; n++) seedAttendance(n, 'present', 0)
+  await open(page)
+  await expect(page.getByTestId(`cal-count-${today}`)).toHaveText('9/10')
 })
 
 test('lưu là ảnh chụp đầy đủ: DB đổi từ nơi khác sau khi tải trang thì DB khớp màn hình', async ({ page }) => {

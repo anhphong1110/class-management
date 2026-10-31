@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { exportMonthCsv } from './actions'
 
-export type CalendarDay = { date: string; present: number }
+export type CalendarDay = { date: string; attended: number }
 
 const WEEK = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật']
 
@@ -32,7 +32,7 @@ export function MonthCalendar({
   const [y, m] = month.split('-').map(Number)
   const count = new Date(Date.UTC(y, m, 0)).getUTCDate()
   const lead = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7
-  const presentBy = new Map(days.map((d) => [d.date, d.present]))
+  const attendedBy = new Map(days.map((d) => [d.date, d.attended]))
   const cells: (string | null)[] = [
     ...Array.from({ length: lead }, () => null),
     ...Array.from({ length: count }, (_, i) => `${month}-${String(i + 1).padStart(2, '0')}`),
@@ -104,12 +104,12 @@ export function MonthCalendar({
           ))}
           {cells.map((d, i) => {
             if (!d) return <div key={`b${i}`} />
-            const present = presentBy.get(d)
-            const marked = present !== undefined
+            const attendedCount = attendedBy.get(d)
+            const marked = attendedCount !== undefined
             const body = (
               <>
                 <span className="text-sm font-extrabold">{Number(d.slice(8))}</span>
-                <span className="text-xs font-bold text-[#12794F]">{marked ? `${present}/${classSize}` : ''}</span>
+                <span data-testid={`cal-count-${d}`} className="text-xs font-bold text-[#12794F]">{marked ? `${attendedCount}/${classSize}` : ''}</span>
               </>
             )
             const base = `flex min-h-14 flex-col items-center justify-center rounded-[12px] ${

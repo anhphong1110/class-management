@@ -1,3 +1,5 @@
+import { attended } from '@/lib/attendance/rules'
+
 export type AttendanceCounts = Record<'present' | 'late' | 'absent_excused' | 'absent_unexcused', number>
 
 export type OverviewStatsInput = {
@@ -25,7 +27,7 @@ export function buildOverviewStats(i: OverviewStatsInput): OverviewStat[] {
   return [
     { label: 'Tổng số học sinh', value: String(i.studentCount), sub: 'đang học trong lớp' },
     taken
-      ? { label: 'Có mặt hôm nay', value: `${a.present + a.late}/${i.studentCount}`, sub: `${a.late} bạn đi trễ` }
+      ? { label: 'Có mặt hôm nay', value: `${(Object.keys(a) as (keyof AttendanceCounts)[]).filter(attended).reduce((n, k) => n + a[k], 0)}/${i.studentCount}`, sub: `${a.late} bạn đi trễ` }
       : { label: 'Có mặt hôm nay', value: '—', sub: 'Chưa điểm danh' },
     taken
       ? { label: 'Vắng hôm nay', value: String(absent), sub: absentSub }

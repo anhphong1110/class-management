@@ -1,5 +1,6 @@
 'use server'
 
+import { attended } from '@/lib/attendance/rules'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireTeacher } from '@/lib/auth/session'
@@ -224,8 +225,8 @@ export async function loadProfile(id: string): Promise<{ error?: string; detail?
   const rankRow = ((lb.data ?? []) as { student_id: string; rank: number | string }[]).find((r) => r.student_id === id)
 
   const attRows = att.data ?? []
-  const attended = attRows.filter((a) => a.status === 'present' || a.status === 'late').length
-  const attendanceRate = attRows.length ? `${Math.round((attended / attRows.length) * 100)}%` : '—'
+  const attendedCount = attRows.filter((a) => attended(a.status)).length
+  const attendanceRate = attRows.length ? `${Math.round((attendedCount / attRows.length) * 100)}%` : '—'
 
   let rows = (tx.data ?? []) as TxRow[]
   const have = new Set(rows.map((r) => r.id))

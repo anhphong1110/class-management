@@ -1,11 +1,12 @@
 import 'server-only'
 import { createServerSupabase } from '@/lib/supabase/server'
 import type { Status } from './csv'
+import { attended } from './rules'
 
 export type { Status }
 
 export type RecentDay = { date: string; present: number; absent: number; excused: number; late: number }
-export type MonthDay = { date: string; present: number; absent: number; excused: number; late: number; total: number }
+export type MonthDay = { date: string; present: number; absent: number; excused: number; late: number; attended: number; total: number }
 export type MonthRow = { studentId: string; date: string; status: Status }
 
 const PAGE = 1000
@@ -84,7 +85,7 @@ export async function getMonth(classId: string, month: string): Promise<{ days: 
   for (const r of rows) byDate.set(r.date, [...(byDate.get(r.date) ?? []), r])
   const days = [...byDate.keys()].sort().map((date) => {
     const list = byDate.get(date)!
-    return { date, ...tally(list), total: list.length }
+    return { date, ...tally(list), attended: list.filter((r) => attended(r.status)).length, total: list.length }
   })
   return { days, rows }
 }
