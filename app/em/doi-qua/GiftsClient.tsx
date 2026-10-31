@@ -12,11 +12,13 @@ export function GiftsClient({
   gifts,
   available,
   reserve,
+  enforceStars,
   preview,
 }: {
   gifts: GiftView[]
   available: number
   reserve: boolean
+  enforceStars: boolean
   preview: boolean
 }) {
   const [asking, setAsking] = useState<GiftView | null>(null)
@@ -29,7 +31,7 @@ export function GiftsClient({
     start(async () => {
       const res = await requestReward(gift.id)
       setAsking(null)
-      setMsg(res.error ? { tone: 'error', text: res.error } : { tone: 'success', text: requestSuccessMessage(gift.name, gift.cost, reserve) })
+      setMsg(res.error ? { tone: 'error', text: res.error } : { tone: 'success', text: requestSuccessMessage(gift.name, gift.cost, reserve, res.approved) })
     })
   }
 
@@ -74,8 +76,9 @@ export function GiftsClient({
       )}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-4">
         {gifts.map((g) => {
-          const btn = giftButton(g, available)
-          const locked = btn.disabled || preview
+          const btn = giftButton(g, available, enforceStars)
+          // Khóa mọi nút khi đang gửi yêu cầu để không mở hộp xác nhận thứ hai.
+          const locked = btn.disabled || preview || pending
           return (
             <div key={g.id} data-testid="gift" className="flex flex-col gap-2.5 rounded-3xl bg-white p-3.5 shadow-[0_6px_20px_rgba(102,117,232,0.10)]">
               <RewardVisual visual={g.visual} iconSize={58} className="h-[110px] w-full rounded-[18px]" />

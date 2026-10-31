@@ -9,6 +9,7 @@ import { buildTodayLessons, type DisplayLesson } from '@/lib/display/logic'
 import { getAnnouncements } from '@/lib/announcements/queries'
 import type { AnnouncementView } from '@/lib/announcements/types'
 import { getTimetable } from '@/lib/timetable/queries'
+import { starHistoryLabel } from './history-label'
 import { getRewardPreset } from '@/lib/rewards/presets'
 import type { RewardRequestStatus } from '@/lib/rewards/queries'
 import type { RewardVisualValue } from '@/components/rewards/RewardVisual'
@@ -123,7 +124,7 @@ export const getStudentProfile = cache(async (): Promise<StudentProfile | null> 
     avatar: await resolveAvatar(stu.avatar_id),
     competitionStars: competition,
     availableStars: tx.reduce((a, t) => a + t.delta, 0),
-    rankYear: rank ? Number(rank.rank) : null,
+    rankYear: rank && ctx.settings.student_can_view_rank ? Number(rank.rank) : null,
     classSize: sizeRes.count ?? 0,
   }
 })
@@ -195,17 +196,27 @@ export async function getStarsData(ctx: StudentContext, now: Date = new Date()) 
     } else {
       const { data, error } = await supabase
         .from('star_transactions')
-        .select('id, delta, kind, note, created_at')
+        .select('id, delta, kind, note, criterion_id, reverses_id, created_at')
         .eq('student_id', ctx.studentId)
         .order('created_at', { ascending: false })
         .limit(50)
       if (error) throw new Error(error.message)
-      const label = (k: string, note: string | null) =>
-        k === 'penalty' ? 'Trừ sao' : k === 'reserve' ? 'Giữ sao đổi quà' : k === 'release' ? 'Hoàn sao đã giữ' : k === 'award' ? note || 'Cộng sao' : 'Đổi quà'
-      history = (data ?? []).map((r) => ({
+      const rows = data ?? []
+      // Dòng gốc của các hoàn tác và nhãn tiêu chí cộng sao, để nhãn khớp v_my_star_history.
+      const originalIds = [...new Set(rows.map((r) => r.reverses_id).filter((x): x is string => !!x))]
+      const [origRes, critRes] = await Promise.all([
+        originalIds.length
+          ? supabase.from('star_transactions').select('id, kind, note, criterion_id').in('id', originalIds)
+          : Promise.resolve({ data: [], error: null }),
+        supabase.from('star_criteria').select('id, label').eq('class_id', ctx.classId).eq('kind', 'award'),
+      ])
+      for (const r of [origRes, critRes]) if (r.error) throw new Error(r.error.message)
+      const originals = new Map((origRes.data ?? []).map((o) => [o.id as string, o]))
+      const awardLabels = new Map((critRes.data ?? []).map((c) => [c.id as string, c.label as string]))
+      history = rows.map((r) => ({
         id: r.id,
         delta: Number(r.delta),
-        label: label(r.kind, r.note),
+        label: starHistoryLabel(r, r.reverses_id ? (originals.get(r.reverses_id) ?? null) : null, awardLabels),
         dateLabel: formatDayLabel(new Date(r.created_at), now),
       }))
     }
@@ -267,11 +278,18 @@ export async function getGiftsData(ctx: StudentContext): Promise<{
   gifts: GiftView[]
   requests: MyRequestView[]
   reserveOnRequest: boolean
+  /** only_enough || reserve_on_request: khi đó request_reward chặn yêu cầu thiếu sao. */
+  enforceStars: boolean
+  requireApproval: boolean
 }> {
   const supabase = await createServerSupabase()
   const [availRes, settingRes, reqRes] = await Promise.all([
     supabase.rpc('reward_availability'),
-    supabase.from('class_settings').select('reserve_on_request').eq('class_id', ctx.classId).maybeSingle(),
+    supabase
+      .from('class_settings')
+      .select('reserve_on_request, only_enough, require_approval')
+      .eq('class_id', ctx.classId)
+      .maybeSingle(),
     ctx.preview
       ? ctx.studentId
         ? supabase
@@ -315,7 +333,14 @@ export async function getGiftsData(ctx: StudentContext): Promise<{
         cost: r.cost,
         status: r.status,
       }))
-  return { gifts, requests, reserveOnRequest: settingRes.data?.reserve_on_request ?? false }
+  const cfg = settingRes.data
+  return {
+    gifts,
+    requests,
+    reserveOnRequest: cfg?.reserve_on_request ?? false,
+    enforceStars: (cfg?.only_enough ?? true) || (cfg?.reserve_on_request ?? true),
+    requireApproval: cfg?.require_approval ?? true,
+  }
 }
 
 export type AttendanceRow = { date: string; status: string }

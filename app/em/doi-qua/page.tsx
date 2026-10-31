@@ -1,5 +1,5 @@
 import { Notice } from '@/components/ui/Notice'
-import { STUDENT_STAT } from '@/lib/student/gifts'
+import { giftsHeroHint, STUDENT_STAT } from '@/lib/student/gifts'
 import { getGiftsData, getStudentProfile, requireStudentPage } from '@/lib/student/queries'
 import { GiftsClient } from './GiftsClient'
 
@@ -8,16 +8,16 @@ const card = 'flex flex-col gap-2.5 rounded-[26px] bg-white px-6 py-[22px] shado
 export default async function GiftsPage() {
   const ctx = await requireStudentPage('gifts')
   const profile = await getStudentProfile()
-  const { gifts, requests, reserveOnRequest } = await getGiftsData(ctx)
+  const { gifts, requests, reserveOnRequest, enforceStars, requireApproval } = await getGiftsData(ctx)
   const available = profile?.availableStars ?? 0
   return (
     <div className="flex flex-col gap-5">
       {ctx.preview && <Notice tone="success">Cô đang xem thử giao diện học sinh, nút đổi quà tắt.</Notice>}
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2.5 rounded-3xl bg-[linear-gradient(120deg,#33378F,#7A58E0)] px-6 py-[18px] text-white">
         <div className="font-display text-2xl font-extrabold">Em có {available} sao khả dụng</div>
-        <div className="text-[14.5px] text-[#E9EBFF]">Em gửi yêu cầu, cô giáo duyệt thì sao mới bị trừ chính thức.</div>
+        <div className="text-[14.5px] text-[#E9EBFF]">{giftsHeroHint(requireApproval)}</div>
       </div>
-      <GiftsClient gifts={gifts} available={available} reserve={reserveOnRequest} preview={ctx.preview} />
+      <GiftsClient gifts={gifts} available={available} reserve={reserveOnRequest} enforceStars={enforceStars} preview={ctx.preview} />
       <section className={card} aria-labelledby="req-h">
         <h2 id="req-h" className="m-0 font-display text-[22px] font-extrabold">
           Yêu cầu đổi quà của em

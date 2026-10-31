@@ -152,6 +152,37 @@ test('Đổi quà: cờ đổi quà tắt thì /em/doi-qua trả 404', async ({ 
   expect(res?.status()).toBe(404)
 })
 
+test('Đổi quà: cờ xem quà tắt (đổi quà vẫn bật) thì /em/doi-qua trả 404', async ({ page }) => {
+  await setSettings({ student_can_view_rewards: false })
+  await open(page, '/em')
+  const res = await page.goto(GIFTS)
+  expect(res?.status()).toBe(404)
+})
+
+test('Đổi quà: cô tắt duyệt thì câu thành công và trạng thái là đã duyệt, không "chờ cô duyệt"', async ({ page }) => {
+  await setSettings({ require_approval: false })
+  seedStars(5, 40)
+  await open(page, GIFTS)
+  await expect(page.getByText('Em bấm đổi là xong, sao được trừ ngay và cô sẽ trao quà cho em.')).toBeVisible()
+  await expect(page.getByText('Em gửi yêu cầu, cô giáo duyệt')).toHaveCount(0)
+  await gift(page, 'Sticker vũ trụ').getByRole('button', { name: 'Đổi quà' }).click()
+  await page.getByRole('button', { name: 'Gửi yêu cầu' }).click()
+  const ok = page.getByRole('status').filter({ hasText: 'Đổi quà "Sticker vũ trụ" thành công. Cô sẽ trao quà cho em nhé.' })
+  await expect(ok).toBeVisible()
+  await expect(ok).not.toContainText('chờ cô duyệt')
+  const mine = page.getByTestId('my-request')
+  await expect(mine).toHaveCount(1)
+  await expect(mine).toContainText('Đã duyệt, chờ trao')
+  await expect(mine).not.toContainText('Chờ cô duyệt')
+})
+
+test('Thời khóa biểu: tắt student_can_view_timetable thì 404', async ({ page }) => {
+  await setSettings({ student_can_view_timetable: false })
+  await open(page, '/em')
+  const res = await page.goto('/em/thoi-khoa-bieu')
+  expect(res?.status()).toBe(404)
+})
+
 test('Thời khóa biểu: hiện môn đã gán, cột hôm nay tô #4F5BD5, thứ Bảy theo cờ', async ({ page }) => {
   seedSlot(1, 'morning', 1, 'Toán')
   seedSlot(2, 'afternoon', 2, 'Tin học')
