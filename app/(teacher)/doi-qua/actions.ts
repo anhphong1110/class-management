@@ -21,6 +21,8 @@ const rewardInput = z.object({
   name: z.string().trim().min(1).max(80),
   cost: z.number().int().min(1).max(1000),
   description: z.string().max(200),
+  /** Bắt buộc khi tạo mới (chèn cùng một lệnh); khi sửa dùng `setRewardStock`. */
+  stock: z.number().int().min(0).max(100000).optional(),
   icon: z.enum(REWARD_PRESET_KEYS as [string, ...string[]]).nullable(),
   /** Chọn hình có sẵn thì bỏ ảnh đã tải lên. */
   clearImage: z.boolean().optional(),
@@ -46,12 +48,13 @@ export async function saveReward(
   const user = await requireTeacher()
   const parsed = rewardInput.safeParse(raw)
   if (!parsed.success) return invalid()
-  const { id, name, cost, description, icon, clearImage } = parsed.data
+  const { id, name, cost, description, icon, clearImage, stock } = parsed.data
   const supabase = await createServerSupabase()
   if (!id) {
+    if (stock === undefined) return invalid()
     const { data, error } = await supabase
       .from('rewards')
-      .insert({ class_id: user.classId, name, cost, description, icon })
+      .insert({ class_id: user.classId, name, cost, description, icon, stock })
       .select('id')
       .single()
     if (error || !data) return { error: toVietnameseMessage(error?.message ?? 'not_allowed') }

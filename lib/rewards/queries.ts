@@ -12,6 +12,8 @@ export type RewardView = {
   held: number
   left: number
   hidden: boolean
+  /** Khóa hình có sẵn (kể cả khi đang hiện ảnh tải lên), để sửa không ghi đè. */
+  icon: string | null
   visual: { kind: 'preset'; key: string } | { kind: 'image'; url: string }
 }
 
@@ -59,6 +61,7 @@ export async function getRewards(classId: string, opts: { includeHidden: boolean
       held,
       left: Math.max(r.stock - held, 0),
       hidden: r.hidden,
+      icon: getRewardPreset(r.icon)?.key ?? null,
       visual: url ? { kind: 'image', url } : { kind: 'preset', key: getRewardPreset(r.icon)?.key ?? 'star' },
     }
   })

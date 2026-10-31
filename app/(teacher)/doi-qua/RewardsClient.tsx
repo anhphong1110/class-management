@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useCallback, useRef, useState, useTransition } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
 import { RewardVisual } from '@/components/rewards/RewardVisual'
 import { formatRelative } from '@/lib/domain/relative-time'
@@ -32,6 +32,15 @@ export function RewardsClient({
   const [busy, setBusy] = useState<Set<string>>(new Set())
   const inflight = useRef(new Set<string>())
   const [, startTransition] = useTransition()
+  const trigger = useRef<HTMLElement | null>(null)
+  const open = (next: Editing) => {
+    trigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setEditing(next)
+  }
+  const closeEditor = useCallback(() => {
+    setEditing(null)
+    setTimeout(() => trigger.current?.focus(), 0)
+  }, [])
   const nowDate = new Date(now)
 
   const editingReward = editing?.kind === 'edit' ? (rewards.find((r) => r.id === editing.id) ?? null) : null
@@ -64,7 +73,7 @@ export function RewardsClient({
         </div>
         <button
           type="button"
-          onClick={() => setEditing({ kind: 'new' })}
+          onClick={() => open({ kind: 'new' })}
           className="min-h-12 cursor-pointer rounded-2xl border-0 bg-star px-6 text-base font-extrabold text-[#3B2A00]"
         >
           + Thêm phần thưởng
@@ -75,7 +84,7 @@ export function RewardsClient({
         <RewardEditor
           key={editing.kind === 'new' ? 'new' : editing.id}
           reward={editingReward}
-          onClose={() => setEditing(null)}
+          onClose={closeEditor}
         />
       )}
 
@@ -120,7 +129,7 @@ export function RewardsClient({
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setEditing({ kind: 'edit', id: w.id })}
+                  onClick={() => open({ kind: 'edit', id: w.id })}
                   className={`min-h-11 flex-1 cursor-pointer rounded-xl border-2 bg-white text-sm font-extrabold text-[#3441B5] ${editingThis ? 'border-primary-strong' : 'border-[#D9D5F2]'}`}
                 >
                   Sửa

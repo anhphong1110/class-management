@@ -18,7 +18,14 @@ async function studentRequest(username: string, rewardId: string) {
   return c.rpc('request_reward', { p_reward_id: rewardId })
 }
 
-function cleanup() {
+async function removeUploads() {
+  const store = admin().storage.from('class-media')
+  const { data } = await store.list(`${CLASS_ID}/rewards`)
+  if (data?.length) await store.remove(data.map((f) => `${CLASS_ID}/rewards/${f.name}`))
+}
+
+async function cleanup() {
+  await removeUploads()
   resetStars()
   sql(`delete from public.reward_requests where class_id = '${CLASS_ID}'`)
   sql(`delete from public.rewards where class_id = '${CLASS_ID}' and is_demo = false`)
@@ -50,16 +57,16 @@ test('lưới 5 quà mẫu với nhãn và tồn kho', async ({ page }, info) =>
   await expect(sticker).toContainText('10')
   await expect(sticker).toContainText('Còn quà')
   await expect(sticker).toContainText('Còn 30')
-  sql(`update public.rewards set stock = 0 where id = '${REWARD(5)}'`)
-  await page.reload()
-  await expect(card(page, 'Quà bí mật')).toContainText('Hết quà')
-  await expect(card(page, 'Quà bí mật')).toContainText('Còn 0')
   if (info.project.name === 'desktop') {
     seedStars(5, 100)
     await studentRequest('hs.hamy', REWARD(1))
     await page.reload()
     await page.screenshot({ path: 'test-results/rewards-desktop.png', fullPage: true })
   }
+  sql(`update public.rewards set stock = 0 where id = '${REWARD(5)}'`)
+  await page.reload()
+  await expect(card(page, 'Quà bí mật')).toContainText('Hết quà')
+  await expect(card(page, 'Quà bí mật')).toContainText('Còn 0')
 })
 
 test('thêm, sửa, ẩn phần thưởng', async ({ page }) => {
@@ -88,7 +95,8 @@ test('thêm, sửa, ẩn phần thưởng', async ({ page }) => {
   const { data } = await admin().from('rewards').select('id').eq('name', 'Bút chì màu').single()
   seedStars(5, 100)
   const res = await studentRequest('hs.hamy', data!.id)
-  expect(res.error).toBeTruthy()
+  expect(res.error?.message).toBe('reward_not_found')
+  await expect(card(page, 'Bút chì màu')).toHaveClass(/opacity-60/)
 })
 
 test('duyệt, trao quà và tồn kho giảm', async ({ page }) => {
@@ -143,4 +151,30 @@ test('tải ảnh quà lên thì thẻ hiện ảnh', async ({ page }) => {
   await expect(card(page, 'Sticker vũ trụ').locator('img')).toBeVisible()
   const { data } = await admin().from('rewards').select('image_path').eq('id', REWARD(1)).single()
   expect(data?.image_path).toBeTruthy()
+})
+
+test('Hủy và Esc đóng bảng sửa mà không lưu', async ({ page }) => {
+  await open(page)
+  const sticker = card(page, 'Sticker vũ trụ')
+  await sticker.getByRole('button', { name: 'Sửa' }).click()
+  await expect(editor(page).getByLabel('Tên quà')).toBeFocused()
+  await editor(page).getByLabel('Tên quà').fill('Đổi tên thử')
+  await editor(page).getByRole('button', { name: 'Hủy' }).click()
+  await expect(editor(page)).toHaveCount(0)
+  await expect(sticker.getByRole('button', { name: 'Sửa' })).toBeFocused()
+  await expect(card(page, 'Sticker vũ trụ')).toBeVisible()
+  await sticker.getByRole('button', { name: 'Sửa' }).click()
+  await page.keyboard.press('Escape')
+  await expect(editor(page)).toHaveCount(0)
+})
+
+test('kho không được ít hơn số đang giữ', async ({ page }) => {
+  seedStars(5, 100)
+  expect((await studentRequest('hs.hamy', REWARD(1))).error).toBeNull()
+  await open(page)
+  await card(page, 'Sticker vũ trụ').getByRole('button', { name: 'Sửa' }).click()
+  await expect(editor(page)).toContainText('Đang giữ 1')
+  await editor(page).getByLabel('Số lượng trong kho').fill('0')
+  await editor(page).getByRole('button', { name: 'Xong' }).click()
+  await expect(editor(page).getByRole('alert')).toContainText('Số quà không được ít hơn số yêu cầu đang chờ.')
 })

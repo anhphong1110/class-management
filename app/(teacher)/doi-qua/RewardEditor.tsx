@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { RewardVisual } from '@/components/rewards/RewardVisual'
 import { compressImage } from '@/lib/domain/compress-image'
 import { validateImageFile } from '@/lib/domain/upload'
@@ -12,21 +12,41 @@ import { saveReward, setRewardStock, uploadRewardImage } from './actions'
 const field =
   'min-h-12 box-border rounded-xl border-2 border-[#B9B5E8] bg-white px-3 text-base font-bold text-ink'
 
-/** `reward` rỗng là thêm mới. Bấm "Xong" mới lưu mọi thay đổi (tên, giá, kho, hình). */
+/** `reward` rỗng là thêm mới. Bấm "Xong" mới lưu; "Hủy" hoặc Esc đóng mà không lưu. */
 export function RewardEditor({ reward, onClose }: { reward: RewardView | null; onClose: () => void }) {
   const [name, setName] = useState(reward?.name ?? '')
   const [cost, setCost] = useState(reward ? String(reward.cost) : '')
-  const [stock, setStock] = useState(reward ? String(reward.stock) : '0')
-  const [icon, setIcon] = useState<string>(reward?.visual.kind === 'preset' ? reward.visual.key : 'star')
+  const [stock, setStock] = useState(reward ? String(reward.stock) : '')
+  const [description, setDescription] = useState(reward?.description ?? '')
+  const [icon, setIcon] = useState<string | null>(reward ? reward.icon : 'star')
   const [file, setFile] = useState<File | null>(null)
   const [clearImage, setClearImage] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [busy, startTransition] = useTransition()
   const fileRef = useRef<HTMLInputElement>(null)
+  const regionRef = useRef<HTMLDivElement>(null)
+  const nameRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  // Quà vừa tạo: mọi lần bấm "Xong" sau đó (thử lại) cập nhật chính nó, không tạo thêm.
+  const [createdId, setCreatedId] = useState<string | null>(null)
+  const [savedStock, setSavedStock] = useState<number | null>(reward ? reward.stock : null)
 
+  const held = reward?.held ?? 0
   const existingImage = reward?.visual.kind === 'image' && !clearImage ? reward.visual.url : null
   const shownImage = preview ?? existingImage
+
+  useEffect(() => {
+    regionRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    nameRef.current?.focus({ preventScroll: true })
+  }, [])
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !busy) onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [busy, onClose])
 
   function pickPreset(key: string) {
     setIcon(key)
@@ -39,7 +59,8 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
 
   function onFile(f: File | undefined) {
     if (!f) return
-    const check = validateImageFile(f)
+    // Chỉ kiểm loại ở đây; kích thước kiểm sau khi nén (ảnh chụp điện thoại thường lớn).
+    const check = validateImageFile({ size: 0, type: f.type })
     if (!check.ok) {
       setMsg(toVietnameseMessage(check.error))
       if (fileRef.current) fileRef.current.value = ''
@@ -53,52 +74,84 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
 
   function done() {
     const costNum = Number.parseInt(cost, 10)
-    const stockNum = Number.parseInt(stock, 10)
-    if (!name.trim() || !(costNum > 0) || !(stockNum >= 0)) {
+    const stockNum = stock.trim() === '' ? Number.NaN : Number(stock)
+    if (!name.trim() || !(costNum > 0) || !Number.isInteger(stockNum) || stockNum < 0) {
       setMsg(toVietnameseMessage('invalid_input'))
       return
     }
+    if (stockNum < held) {
+      setMsg(toVietnameseMessage('stock_below_held'))
+      return
+    }
     startTransition(async () => {
+      let saved = ''
       try {
-        const saved = await saveReward({
-          id: reward?.id,
+        const id = reward?.id ?? createdId
+        const res = await saveReward({
+          id: id ?? undefined,
           name,
           cost: costNum,
-          description: reward?.description ?? '',
+          description,
           icon,
           clearImage: clearImage || undefined,
+          stock: id ? undefined : stockNum,
         })
-        if (saved.error || !saved.id) {
-          setMsg(saved.error ?? toVietnameseMessage('invalid_input'))
+        if (res.error || !res.id) {
+          setMsg(res.error ?? toVietnameseMessage('invalid_input'))
           return
         }
-        if (!reward || stockNum !== reward.stock) {
-          const st = await setRewardStock(saved.id, stockNum)
+        const rewardId = res.id
+        if (!id) {
+          setCreatedId(rewardId)
+          setSavedStock(stockNum)
+        }
+        saved = id ? 'tên, giá và mô tả' : 'quà mới'
+        if (id && stockNum !== savedStock) {
+          const st = await setRewardStock(rewardId, stockNum)
           if (st.error) {
-            setMsg(st.error)
+            setMsg(`Đã lưu ${saved}; ${st.error}`)
             return
           }
+          setSavedStock(stockNum)
+          saved = 'tên, giá, mô tả và số lượng'
         }
         if (file) {
-          const small = await compressImage(file)
-          const form = new FormData()
-          form.set('id', saved.id)
-          form.set('file', small)
-          const up = await uploadRewardImage(form)
-          if (up.error) {
-            setMsg(up.error)
+          let small: File
+          try {
+            small = await compressImage(file)
+          } catch {
+            setMsg(`Đã lưu ${saved}; ${toVietnameseMessage('upload_failed')}`)
+            return
+          }
+          const check = validateImageFile(small)
+          if (!check.ok) {
+            setMsg(`Đã lưu ${saved}; ${toVietnameseMessage(check.error)}`)
+            return
+          }
+          try {
+            const form = new FormData()
+            form.set('id', rewardId)
+            form.set('file', small)
+            const up = await uploadRewardImage(form)
+            if (up.error) {
+              setMsg(`Đã lưu ${saved}; ${up.error}`)
+              return
+            }
+          } catch {
+            setMsg(`Đã lưu ${saved}; ${toVietnameseMessage('upload_failed')}`)
             return
           }
         }
         onClose()
       } catch {
-        setMsg(toVietnameseMessage('upload_failed'))
+        setMsg(saved ? `Đã lưu ${saved}; ${toVietnameseMessage('unknown')}` : toVietnameseMessage('unknown'))
       }
     })
   }
 
   return (
     <div
+      ref={regionRef}
       role="region"
       aria-label="Sửa phần thưởng"
       className="flex flex-wrap gap-5 rounded-[28px] border-2 border-primary-strong bg-[#EEF0FF] px-6 py-[22px]"
@@ -107,7 +160,7 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
         {shownImage ? (
           <RewardVisual visual={{ kind: 'image', url: shownImage }} iconSize={84} className="h-40 w-[200px] rounded-[22px]" />
         ) : (
-          <RewardVisual visual={{ kind: 'preset', key: icon }} iconSize={84} className="h-40 w-[200px] rounded-[22px]" />
+          <RewardVisual visual={{ kind: 'preset', key: icon ?? 'star' }} iconSize={84} className="h-40 w-[200px] rounded-[22px]" />
         )}
         <button
           type="button"
@@ -123,17 +176,30 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
         <div className="flex flex-wrap gap-2.5">
           <label className="flex flex-[2_1_200px] flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
             Tên quà
-            <input type="text" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className={field} />
+            <input ref={nameRef} type="text" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className={field} />
           </label>
           <label className="flex flex-[1_1_110px] flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
             Giá (sao)
             <input type="number" min={1} value={cost} onChange={(e) => setCost(e.target.value)} className={field} />
           </label>
-          <label className="flex flex-[1_1_110px] flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
-            Số lượng trong kho
-            <input type="number" min={0} value={stock} onChange={(e) => setStock(e.target.value)} className={field} />
-          </label>
+          <div className="flex flex-[1_1_130px] flex-col gap-1">
+            <label className="flex flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
+              Số lượng trong kho
+              <input type="number" min={held} required value={stock} onChange={(e) => setStock(e.target.value)} className={field} />
+            </label>
+            {reward && <span className="text-xs font-bold text-muted">Đang giữ {held} (kho không được ít hơn)</span>}
+          </div>
         </div>
+        <label className="flex flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
+          Mô tả
+          <textarea
+            value={description}
+            maxLength={200}
+            rows={2}
+            onChange={(e) => setDescription(e.target.value)}
+            className="rounded-xl border-2 border-[#B9B5E8] bg-white px-3 py-2 text-base font-bold text-ink"
+          />
+        </label>
         <div className="text-sm font-extrabold text-[#4A476E]">Hoặc chọn hình có sẵn</div>
         <div className="flex flex-wrap gap-2">
           {REWARD_PRESETS.map((p) => {
@@ -160,7 +226,7 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
             {msg}
           </div>
         )}
-        <div>
+        <div className="flex gap-2">
           <button
             type="button"
             disabled={busy}
@@ -168,6 +234,14 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
             className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-[26px] text-[15px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             Xong
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onClose}
+            className="min-h-12 cursor-pointer rounded-[14px] border-2 border-primary-strong bg-white px-[22px] text-[15px] font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Hủy
           </button>
         </div>
       </div>
