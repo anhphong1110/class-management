@@ -111,8 +111,8 @@ create policy self_select on public.profiles for select to authenticated
 create policy student_select on public.students for select to authenticated
   using (id = (select private.my_student_id()));
 
-create policy student_select on public.star_transactions for select to authenticated
-  using (student_id = (select private.my_student_id()) and (select private.setting_on('student_can_view_history')));
+-- star_transactions: học sinh không có policy nào; chỉ đọc qua view v_my_star_history / v_student_stars
+-- (đọc trực tiếp sẽ lộ note và criterion_id của giao dịch trừ sao).
 
 create policy student_select on public.reward_requests for select to authenticated
   using (student_id = (select private.my_student_id()) and (select private.setting_on('student_can_view_rewards')));

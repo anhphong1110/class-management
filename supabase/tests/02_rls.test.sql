@@ -1,5 +1,5 @@
 begin;
-select plan(21);
+select plan(23);
 
 -- dữ liệu nền (quyền postgres)
 insert into public.classes (id, class_name) values
@@ -32,7 +32,8 @@ insert into public.attendance (class_id, student_id, date, status) values
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d2', 'role', 'authenticated')::text, true);
 
-select is((select count(*)::int from public.star_transactions), 2, 'A chỉ thấy giao dịch của mình');
+select is((select count(*)::int from public.star_transactions), 0, 'A không đọc trực tiếp sổ giao dịch');
+select is_empty($$select note from public.star_transactions$$, 'A không đọc được note');
 select is((select count(*)::int from public.students), 1, 'A chỉ thấy hồ sơ học sinh của mình');
 select is((select count(*)::int from public.profiles), 1, 'A chỉ thấy profile của mình');
 select throws_ok($$
@@ -55,7 +56,8 @@ update public.class_settings set student_can_view_history = false
   where class_id = '00000000-0000-0000-0000-0000000000c1';
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d2', 'role', 'authenticated')::text, true);
-select is((select count(*)::int from public.star_transactions), 0, 'cờ lịch sử tắt: A không thấy giao dịch');
+select is((select available_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a1'), 3, 'cờ lịch sử tắt: A vẫn thấy sao khả dụng của mình');
+select is((select count(*)::int from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000b1'), 0, 'A không thấy dòng sao của B');
 reset role;
 update public.class_settings set student_can_view_history = true
   where class_id = '00000000-0000-0000-0000-0000000000c1';

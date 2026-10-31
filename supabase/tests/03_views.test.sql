@@ -25,17 +25,19 @@ insert into public.star_transactions (id, class_id, student_id, delta, kind, cri
   ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -3, 'reserve', null, null, '00000000-0000-0000-0000-0000000000bb'),
   ('00000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', 4, 'award', null, null, null);
 
+set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d2', 'role', 'authenticated')::text, true);
 select is((select competition_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a1'), 3, 'A: sao thi đua = 3');
 select is((select available_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a1'), 0, 'A: sao khả dụng = 0');
 
+reset role;
 insert into public.star_transactions (class_id, student_id, delta, kind, reverses_id) values
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', 2, 'reversal', '00000000-0000-0000-0000-000000000102');
 
-select is((select competition_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a1'), 5, 'sau hoàn tác: sao thi đua = 5');
-select is((select available_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a1'), 2, 'sau hoàn tác: sao khả dụng = 2');
-
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d2', 'role', 'authenticated')::text, true);
+select is((select competition_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a1'), 5, 'sau hoàn tác: sao thi đua = 5');
+select is((select available_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a1'), 2, 'sau hoàn tác: sao khả dụng = 2');
 
 select is((select count(*)::int from public.v_leaderboard_public), 2, 'bảng xếp hạng công khai có 2 học sinh');
 select is((select competition_stars from public.v_leaderboard_public where student_id = '00000000-0000-0000-0000-0000000000b1'), 4, 'A thấy sao thi đua của B');
