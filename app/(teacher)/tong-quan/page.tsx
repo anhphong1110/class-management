@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
 import { getOverview, type Top3Row } from '@/lib/overview/queries'
 import { teacherGreetingName } from '@/lib/overview/stats'
+import { announcementColors } from '@/lib/announcements/types'
 import { formatDayLabel } from '@/lib/domain/relative-time'
 
 const CARD = 'shadow-[0_6px_20px_rgba(102,117,232,.10)]'
@@ -34,14 +35,6 @@ const MEDAL = {
   2: { medal: 'Hạng 2', medalBg: '#DDE2F0', medalInk: '#2F3550', bg: 'linear-gradient(180deg,#ECEFFA,#FFFFFF)', size: 96 },
   3: { medal: 'Hạng 3', medalBg: '#F3BC97', medalInk: '#512810', bg: 'linear-gradient(180deg,#FFE8D8,#FFFFFF)', size: 96 },
 } as const
-
-const NEWS_COLOR: Record<string, [string, string]> = {
-  'Thông báo chung': ['#E8EBFF', '#2C37A8'],
-  'Nhắc bài': ['#E8EBFF', '#2C37A8'],
-  'Lịch kiểm tra': ['#FFE3EE', '#8E1B3B'],
-  'Hoạt động': ['#DDF6F1', '#0B5A4D'],
-  'Sự kiện của lớp': ['#FFF1CC', '#6E4700'],
-}
 
 const DELTA_STYLE = {
   award: { tint: '#FFF1CC', ink: '#7A4E00' },
@@ -236,7 +229,7 @@ export default async function Page() {
             </div>
             {data.news.length === 0 ? <div className="text-[15px] text-[#5B5890]">Chưa có thông báo nào.</div> : null}
             {data.news.map((n) => {
-              const [tint, ink] = NEWS_COLOR[n.type] ?? NEWS_COLOR['Thông báo chung']
+              const [tint, ink] = announcementColors(n.type)
               return (
                 <div key={n.id} className="flex flex-col gap-1 rounded-2xl bg-[#F6F4FF] px-4 py-3.5">
                   <div className="flex flex-wrap items-center gap-2">

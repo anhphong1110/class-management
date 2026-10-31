@@ -9,6 +9,9 @@ import { buildTodayLessons, type DisplayLesson } from '@/lib/display/logic'
 import { getAnnouncements } from '@/lib/announcements/queries'
 import type { AnnouncementView } from '@/lib/announcements/types'
 import { getTimetable } from '@/lib/timetable/queries'
+import { getRewardPreset } from '@/lib/rewards/presets'
+import type { RewardRequestStatus } from '@/lib/rewards/queries'
+import type { RewardVisualValue } from '@/components/rewards/RewardVisual'
 import {
   STUDENT_SETTING_COLUMNS,
   visibleStudentPages,
@@ -247,4 +250,86 @@ export async function getRankData(ctx: StudentContext): Promise<RankRow[]> {
     avatar: (r.avatar_id && avatars.get(r.avatar_id)) || null,
     me: r.student_id === ctx.studentId,
   }))
+}
+
+export type GiftView = {
+  id: string
+  name: string
+  cost: number
+  description: string
+  left: number
+  visual: RewardVisualValue
+}
+type AvailRow = { reward_id: string; name: string; cost: number; description: string; icon: string | null; image_path: string | null; left_count: number }
+export type MyRequestView = { id: string; rewardName: string; cost: number; status: RewardRequestStatus }
+
+export async function getGiftsData(ctx: StudentContext): Promise<{
+  gifts: GiftView[]
+  requests: MyRequestView[]
+  reserveOnRequest: boolean
+}> {
+  const supabase = await createServerSupabase()
+  const [availRes, settingRes, reqRes] = await Promise.all([
+    supabase.rpc('reward_availability'),
+    supabase.from('class_settings').select('reserve_on_request').eq('class_id', ctx.classId).maybeSingle(),
+    ctx.preview
+      ? ctx.studentId
+        ? supabase
+            .from('reward_requests')
+            .select('id, cost, status, created_at, rewards(name)')
+            .eq('student_id', ctx.studentId)
+            .order('created_at', { ascending: false })
+        : Promise.resolve({ data: [], error: null })
+      : supabase.rpc('my_reward_requests'),
+  ])
+  for (const r of [availRes, settingRes, reqRes]) if (r.error) throw new Error(r.error.message)
+  const rows = (availRes.data ?? []) as AvailRow[]
+  const urls = await signAvatarPaths(
+    supabase,
+    rows.map((r) => r.image_path).filter((p): p is string => !!p),
+  )
+  const gifts = rows.map((r) => {
+    const url = r.image_path ? urls.get(r.image_path) : undefined
+    return {
+      id: r.reward_id,
+      name: r.name,
+      cost: r.cost,
+      description: r.description,
+      left: r.left_count,
+      visual: url
+        ? ({ kind: 'image', url } as const)
+        : ({ kind: 'preset', key: getRewardPreset(r.icon)?.key ?? 'star' } as const),
+    }
+  })
+  const rawReqs = (reqRes.data ?? []) as unknown[]
+  const requests: MyRequestView[] = ctx.preview
+    ? (rawReqs as { id: string; cost: number; status: RewardRequestStatus; rewards: { name: string } | null }[]).map((r) => ({
+        id: r.id,
+        rewardName: r.rewards?.name ?? '',
+        cost: r.cost,
+        status: r.status,
+      }))
+    : (rawReqs as { id: string; reward_name: string; cost: number; status: RewardRequestStatus }[]).map((r) => ({
+        id: r.id,
+        rewardName: r.reward_name,
+        cost: r.cost,
+        status: r.status,
+      }))
+  return { gifts, requests, reserveOnRequest: settingRes.data?.reserve_on_request ?? false }
+}
+
+export type AttendanceRow = { date: string; status: string }
+
+export async function getMyAttendance(ctx: StudentContext): Promise<AttendanceRow[]> {
+  if (!ctx.studentId) return []
+  const supabase = await createServerSupabase()
+  // RLS cho học sinh chỉ trả dòng của chính em; giáo viên xem thử lọc theo học sinh đầu tiên.
+  const { data, error } = await supabase
+    .from('attendance')
+    .select('date, status')
+    .eq('student_id', ctx.studentId)
+    .order('date', { ascending: false })
+    .limit(1000)
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((r) => ({ date: r.date as string, status: r.status as string }))
 }

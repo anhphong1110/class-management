@@ -114,3 +114,63 @@ test('Tổng quan hiện thông báo ghim, không hiện thông báo đã xóa',
   await expect(news).not.toContainText('Thông báo sẽ xóa')
   await expect(news.getByRole('heading', { name: 'Tín hiệu từ trạm chỉ huy' })).toBeVisible()
 })
+
+test('sửa thông báo: thay hình mới thì hình cũ bị xóa khỏi kho', async ({ page }) => {
+  await open(page)
+  await page.locator('input[type=file]').setInputFiles('tests/e2e/fixtures/avatar.png')
+  await post(page, 'Có hình', 'Nội dung.')
+  await expect(status(page, 'Đã đăng thông báo.')).toBeVisible()
+  const first = await admin().from('announcements').select('image_path').eq('title', 'Có hình').single()
+  const oldPath = first.data?.image_path as string
+  expect(oldPath).toBeTruthy()
+
+  await card(page, 'Có hình').getByRole('button', { name: 'Sửa' }).click()
+  await page.locator('input[type=file]').setInputFiles('tests/e2e/fixtures/avatar.png')
+  await page.getByRole('button', { name: 'Lưu thay đổi' }).click()
+  await expect(status(page, 'Đã lưu thay đổi.')).toBeVisible()
+  await expect(card(page, 'Có hình').locator('img')).toBeVisible()
+
+  await expect
+    .poll(async () => (await admin().from('announcements').select('image_path').eq('title', 'Có hình').single()).data?.image_path)
+    .not.toBe(oldPath)
+  const next = await admin().from('announcements').select('image_path').eq('title', 'Có hình').single()
+  expect(next.data?.image_path).toMatch(new RegExp(`^${CLASS_ID}/announcements/.+\\.(png|jpg|webp)$`))
+  const { data: files } = await admin().storage.from('class-media').list(`${CLASS_ID}/announcements`)
+  expect(files?.map((f) => `${CLASS_ID}/announcements/${f.name}`)).toEqual([next.data?.image_path])
+})
+
+test('sửa thông báo: "Bỏ hình" gỡ ảnh khỏi thông báo và kho', async ({ page }) => {
+  await open(page)
+  await page.locator('input[type=file]').setInputFiles('tests/e2e/fixtures/avatar.png')
+  await post(page, 'Bỏ hình thử', 'Nội dung.')
+  await expect(status(page, 'Đã đăng thông báo.')).toBeVisible()
+  await expect(card(page, 'Bỏ hình thử').locator('img')).toBeVisible()
+
+  await card(page, 'Bỏ hình thử').getByRole('button', { name: 'Sửa' }).click()
+  await page.getByRole('button', { name: 'Bỏ hình' }).click()
+  await page.getByRole('button', { name: 'Lưu thay đổi' }).click()
+  await expect(status(page, 'Đã lưu thay đổi.')).toBeVisible()
+  await expect(card(page, 'Bỏ hình thử').locator('img')).toHaveCount(0)
+
+  const { data } = await admin().from('announcements').select('image_path').eq('title', 'Bỏ hình thử').single()
+  expect(data?.image_path).toBeNull()
+  await expect
+    .poll(async () => (await admin().storage.from('class-media').list(`${CLASS_ID}/announcements`)).data?.length)
+    .toBe(0)
+})
+
+test('sửa thông báo đã bị xóa ở nơi khác thì báo announcement_not_found', async ({ page }) => {
+  await open(page)
+  await post(page, 'Sẽ biến mất', 'Nội dung.')
+  await expect(status(page, 'Đã đăng thông báo.')).toBeVisible()
+  await card(page, 'Sẽ biến mất').getByRole('button', { name: 'Sửa' }).click()
+  const { error } = await admin()
+    .from('announcements')
+    .update({ archived_at: new Date().toISOString() })
+    .eq('class_id', CLASS_ID)
+    .eq('title', 'Sẽ biến mất')
+  expect(error).toBeNull()
+  await page.getByLabel('Nội dung').fill('Nội dung mới.')
+  await page.getByRole('button', { name: 'Lưu thay đổi' }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'Thông báo này không còn nữa.' })).toBeVisible()
+})
