@@ -39,6 +39,7 @@ function pushModal(token: Token) {
 function popModal(token: Token) {
   const i = stack.indexOf(token);
   if (i >= 0) stack.splice(i, 1);
+  if (token.overlay) inerted.delete(token.overlay);
   if (stack.length === 0) document.body.style.overflow = savedOverflow;
   syncInert();
 }

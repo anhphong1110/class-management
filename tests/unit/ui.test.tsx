@@ -104,7 +104,7 @@ describe("Modal", () => {
     rerender(<Modal open={false} onClose={() => {}} title="T">x</Modal>);
     expect(container.hasAttribute("inert")).toBe(false);
   });
-  it("Esc only closes the topmost of stacked modals; unlock only after the last", () => {
+  it("Esc closes only the topmost of stacked modals while the lock stays on", () => {
     const a = vi.fn();
     const b = vi.fn();
     const { container } = render(
@@ -118,6 +118,47 @@ describe("Modal", () => {
     expect(a).not.toHaveBeenCalled();
     expect(document.body.style.overflow).toBe("hidden");
     expect(container.hasAttribute("inert")).toBe(true);
+  });
+  const M = (o: { open: boolean; onClose?: () => void; t: string }) => (
+    <Modal open={o.open} onClose={o.onClose ?? (() => {})} title={o.t}><button>{o.t}</button></Modal>
+  );
+  const overlayOf = (t: string) =>
+    screen.getByRole("dialog", { name: t }).parentElement as HTMLElement;
+  const inertCount = () => document.querySelectorAll("body > [inert]").length;
+
+  it("stacked: only the top overlay is interactive; closing top re-enables the one below", () => {
+    const a = vi.fn();
+    const b = vi.fn();
+    const { rerender } = render(<><M open t="A" onClose={a} /><M open t="B" onClose={b} /></>);
+    expect(overlayOf("A").hasAttribute("inert")).toBe(true);
+    expect(overlayOf("B").hasAttribute("inert")).toBe(false);
+    expect(document.body.style.overflow).toBe("hidden");
+    rerender(<><M open t="A" onClose={a} /><M open={false} t="B" onClose={b} /></>);
+    expect(overlayOf("A").hasAttribute("inert")).toBe(false);
+    expect(document.body.style.overflow).toBe("hidden");
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(a).toHaveBeenCalledTimes(1);
+    expect(b).not.toHaveBeenCalled();
+    rerender(<><M open={false} t="A" onClose={a} /><M open={false} t="B" onClose={b} /></>);
+    expect(document.body.style.overflow).toBe("");
+    expect(inertCount()).toBe(0);
+  });
+  it("out-of-order close: closing the lower modal first leaves the top usable", () => {
+    const { rerender } = render(<><M open t="A" /><M open t="B" /></>);
+    rerender(<><M open={false} t="A" /><M open t="B" /></>);
+    expect(overlayOf("B").hasAttribute("inert")).toBe(false);
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(inertCount()).toBeGreaterThan(0);
+    rerender(<><M open={false} t="A" /><M open={false} t="B" /></>);
+    expect(document.body.style.overflow).toBe("");
+    expect(inertCount()).toBe(0);
+  });
+  it("unmounting while open restores overflow and inert", () => {
+    const { unmount } = render(<M open t="A" />);
+    expect(document.body.style.overflow).toBe("hidden");
+    unmount();
+    expect(document.body.style.overflow).toBe("");
+    expect(inertCount()).toBe(0);
   });
   it("keeps focus inside a dialog with no focusable children on Tab", () => {
     render(<Modal open onClose={() => {}} title="T"><p>chỉ chữ</p></Modal>);
