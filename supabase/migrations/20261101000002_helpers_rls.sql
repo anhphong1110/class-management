@@ -63,7 +63,8 @@ alter table public.audit_logs enable row level security;
 -- anon không được ghi vào bảng nào
 revoke insert, update, delete on all tables in schema public from anon;
 
--- Giáo viên: select/insert/update trên mọi bảng có class_id của lớp mình
+-- Giáo viên: select trên mọi bảng có class_id của lớp mình; insert/update trừ sổ sao và yêu cầu đổi quà
+-- (hai bảng đó chỉ ghi qua hàm security definer ở Phase 2/3 để có kiểm tra số dư và audit log)
 do $$
 declare
   t text;
@@ -76,6 +77,9 @@ begin
   loop
     execute format($f$create policy teacher_select on public.%I for select to authenticated
       using (private.is_teacher() and class_id = (select private.my_class_id()))$f$, t);
+    if t in ('reward_requests', 'star_transactions') then
+      continue;
+    end if;
     execute format($f$create policy teacher_insert on public.%I for insert to authenticated
       with check (private.is_teacher() and class_id = (select private.my_class_id()))$f$, t);
     execute format($f$create policy teacher_update on public.%I for update to authenticated

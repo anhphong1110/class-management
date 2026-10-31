@@ -1,5 +1,5 @@
 begin;
-select plan(23);
+select plan(45);
 
 -- dữ liệu nền (quyền postgres)
 insert into public.classes (id, class_name) values
@@ -78,6 +78,11 @@ select throws_ok($$
   insert into public.groups (class_id, name) values ('00000000-0000-0000-0000-0000000000c2', 'Tổ lạ')
 $$, '42501', null, 'T không insert được vào lớp khác');
 select throws_ok($$
+  insert into public.star_transactions (class_id, student_id, delta, kind)
+  values ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', 1, 'award')
+$$, '42501', null, 'T không insert trực tiếp sổ sao');
+select is_empty($$update public.star_transactions set delta = delta + 1 returning 1$$, 'T không update được sổ sao');
+select throws_ok($$
   insert into public.audit_logs (class_id, action, entity) values ('00000000-0000-0000-0000-0000000000c1', 'x', 'y')
 $$, '42501', null, 'T không insert trực tiếp audit_logs');
 
@@ -85,9 +90,13 @@ $$, '42501', null, 'T không insert trực tiếp audit_logs');
 reset role;
 set local role anon;
 select set_config('request.jwt.claims', '', true);
-select is((select count(*)::int from public.star_transactions), 0, 'anon: star_transactions rỗng');
-select is((select count(*)::int from public.students), 0, 'anon: students rỗng');
-select is((select count(*)::int from public.profiles), 0, 'anon: profiles rỗng');
+select is_empty(format('select 1 from public.%I', t), 'anon: ' || t || ' rỗng') from unnest(array[
+  'classes','profiles','students','groups','group_members','star_criteria',
+  'star_transactions','rewards','reward_requests','attendance','subjects',
+  'timetable_slots','announcements','missions','mission_completions','badges',
+  'student_badges','avatar_library','class_settings','audit_logs']) as t;
+select throws_ok(format('select 1 from public.%I', v), '42501', null, 'anon bị chặn: ' || v)
+  from unnest(array['v_student_stars','v_leaderboard_public','v_my_star_history']) as v;
 select throws_ok($$ insert into public.groups (class_id, name) values ('00000000-0000-0000-0000-0000000000c1', 'x') $$,
   '42501', null, 'anon không insert được');
 
