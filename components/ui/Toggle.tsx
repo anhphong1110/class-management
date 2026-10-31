@@ -7,11 +7,13 @@ export function Toggle({
   onChange,
   label,
   hint,
+  disabled = false,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   label: string;
   hint?: string;
+  disabled?: boolean;
 }) {
   const id = useId();
   return (
@@ -21,8 +23,12 @@ export function Toggle({
       aria-checked={checked}
       aria-labelledby={`${id}-l`}
       aria-describedby={hint ? `${id}-h` : undefined}
-      onClick={() => onChange(!checked)}
-      className="flex min-h-[50px] w-full items-center justify-between gap-4 rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+      disabled={disabled}
+      aria-disabled={disabled}
+      onClick={() => {
+        if (!disabled) onChange(!checked);
+      }}
+      className="flex min-h-[50px] w-full items-center justify-between gap-4 rounded-2xl text-left disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
     >
       <span className="block">
         <span id={`${id}-l`} className="block font-extrabold text-ink">

@@ -2,10 +2,14 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  const supabase = await createServerSupabase()
-  await supabase.auth.signOut()
+  try {
+    const supabase = await createServerSupabase()
+    await supabase.auth.signOut({ scope: 'local' })
+  } catch {
+    // vẫn chuyển hướng dù đăng xuất lỗi
+  }
 
-  const reason = request.nextUrl.searchParams.get('reason') ?? 'no_profile'
+  const reason = request.nextUrl.searchParams.get('reason')
   const url = request.nextUrl.clone()
   url.pathname = '/dang-nhap'
   url.search = reason === 'no_profile' ? '?error=no_profile' : ''

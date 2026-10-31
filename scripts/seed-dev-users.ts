@@ -16,6 +16,12 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!url || !serviceKey) throw new Error('Thiếu NEXT_PUBLIC_SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY (.env.local)')
 
+const host = new URL(url).hostname
+if (host !== '127.0.0.1' && host !== 'localhost') {
+  console.error(`Từ chối chạy: seed:dev chỉ dùng cho Supabase cục bộ (127.0.0.1/localhost), hiện là "${host}".`)
+  process.exit(1)
+}
+
 const supabase = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
 const { users } = JSON.parse(
   readFileSync(new URL('./dev-users.json', import.meta.url), 'utf8'),

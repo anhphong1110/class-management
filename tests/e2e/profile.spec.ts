@@ -1,5 +1,39 @@
 import { expect, test, type Page } from '@playwright/test'
+import { randomBytes } from 'node:crypto'
+import { deflateSync } from 'node:zlib'
 import { admin, login } from './helpers'
+
+function crc32(buf: Buffer) {
+  let c = ~0
+  for (const b of buf) {
+    c ^= b
+    for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1
+  }
+  return ~c >>> 0
+}
+function chunk(type: string, data: Buffer) {
+  const len = Buffer.alloc(4)
+  len.writeUInt32BE(data.length)
+  const body = Buffer.concat([Buffer.from(type), data])
+  const crc = Buffer.alloc(4)
+  crc.writeUInt32BE(crc32(body))
+  return Buffer.concat([len, body, crc])
+}
+/** PNG nhiễu ngẫu nhiên (không nén được) ~ size x size RGB. */
+function noisePng(size: number) {
+  const ihdr = Buffer.alloc(13)
+  ihdr.writeUInt32BE(size, 0)
+  ihdr.writeUInt32BE(size, 4)
+  ihdr[8] = 8
+  ihdr[9] = 2
+  const raw = Buffer.concat(Array.from({ length: size }, () => Buffer.concat([Buffer.from([0]), randomBytes(size * 3)])))
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', deflateSync(raw, { level: 0 })),
+    chunk('IEND', Buffer.alloc(0)),
+  ])
+}
 
 test.describe.configure({ mode: 'serial' })
 
@@ -74,6 +108,19 @@ test('tải ảnh lên thư viện và từ chối ảnh quá 5 MB', async ({ pa
   await input.setInputFiles({ name: 'a.gif', mimeType: 'image/gif', buffer: Buffer.alloc(10) })
   await expect(page.getByText('Chỉ nhận ảnh JPG, PNG hoặc WEBP.')).toBeVisible()
   await expect(tiles).toHaveCount(13)
+})
+
+test('tải ảnh PNG ~2 MB lên được nhờ nén phía trình duyệt', async ({ page }) => {
+  const buffer = noisePng(800)
+  expect(buffer.length).toBeGreaterThan(1024 * 1024)
+  expect(buffer.length).toBeLessThan(5 * 1024 * 1024)
+  await open(page)
+  const tiles = page.getByTestId('library').locator('button[aria-pressed]')
+  await expect(tiles).toHaveCount(12)
+  await page.locator('input[type=file]').setInputFiles({ name: 'anh-lon.png', mimeType: 'image/png', buffer })
+  await expect(page.getByRole('status').filter({ hasText: 'Đã thêm avatar vào thư viện của lớp.' })).toBeVisible()
+  await expect(tiles).toHaveCount(13)
+  await expect(tiles.nth(12)).toHaveText('anh-lon')
 })
 
 test('công tắc quyền đổi avatar của học sinh', async ({ page }) => {

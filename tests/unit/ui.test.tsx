@@ -25,6 +25,18 @@ describe("Toggle", () => {
   });
 });
 
+describe("Toggle disabled", () => {
+  it("does not call onChange when disabled", () => {
+    const onChange = vi.fn();
+    render(<Toggle checked={false} onChange={onChange} label="Cho phép" disabled />);
+    const sw = screen.getByRole("switch") as HTMLButtonElement;
+    expect(sw.disabled).toBe(true);
+    expect(sw.getAttribute("aria-disabled")).toBe("true");
+    fireEvent.click(sw);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
 describe("Toggle row", () => {
   it("clicking the label toggles, checked sets aria-checked, row is >= 44px", () => {
     const onChange = vi.fn();

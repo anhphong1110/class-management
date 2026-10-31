@@ -5,6 +5,7 @@ import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Button } from '@/components/ui/Button'
 import { Notice } from '@/components/ui/Notice'
 import { Toggle } from '@/components/ui/Toggle'
+import { compressImage } from '@/lib/domain/compress-image'
 import { validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { saveAvatar, setStudentCanChangeAvatar, uploadAvatar, type AvatarTarget } from './actions'
@@ -60,15 +61,20 @@ export function ProfileClient({
       if (fileRef.current) fileRef.current.value = ''
       return
     }
-    const form = new FormData()
-    form.set('file', file)
-    form.set('label', file.name.replace(/\.[^.]+$/, ''))
     startTransition(async () => {
-      const res = await uploadAvatar(form)
-      if (res.error) setMsg({ tone: 'error', text: res.error })
-      else {
-        if (res.avatarId) setPending(res.avatarId)
-        setMsg({ tone: 'success', text: 'Đã thêm avatar vào thư viện của lớp.' })
+      try {
+        const small = await compressImage(file)
+        const form = new FormData()
+        form.set('file', small)
+        form.set('label', file.name.replace(/\.[^.]+$/, ''))
+        const res = await uploadAvatar(form)
+        if (res.error) setMsg({ tone: 'error', text: res.error })
+        else {
+          if (res.avatarId) setPending(res.avatarId)
+          setMsg({ tone: 'success', text: 'Đã thêm avatar vào thư viện của lớp.' })
+        }
+      } catch {
+        setMsg({ tone: 'error', text: toVietnameseMessage('upload_failed') })
       }
       if (fileRef.current) fileRef.current.value = ''
     })
@@ -196,6 +202,7 @@ export function ProfileClient({
           <Toggle
             checked={allow}
             onChange={flipAllow}
+            disabled={busy}
             label="Quyền đổi avatar của học sinh"
             hint="Khi bật, học sinh tự chọn avatar trong thư viện ở trang hồ sơ của mình. Khi tắt, chỉ cô được đổi."
           />
