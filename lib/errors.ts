@@ -30,6 +30,7 @@ const MESSAGES: Record<string, string> = {
   weekly_limit: 'Em đã đổi đủ số lượt trong tuần này.',
   already_processed: 'Yêu cầu này đã được xử lý.',
   stock_below_held: 'Số quà không được ít hơn số yêu cầu đang chờ.',
+  invalid_input: 'Thông tin chưa hợp lệ, cô kiểm tra lại nhé.',
 }
 
 export function toVietnameseMessage(key: string): string {
