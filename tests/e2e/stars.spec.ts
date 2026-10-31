@@ -1,0 +1,141 @@
+import { expect, test, type Page } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
+import { login } from './helpers'
+
+test.describe.configure({ mode: 'serial' })
+
+const CLASS_ID = '00000000-0000-0000-0000-000000000058'
+const sid = (n: number) => `00000000-0000-0000-0000-0000000b${String(n).padStart(4, '0')}`
+const DB_CONTAINER = 'supabase_db_MaiKhanh-WebQua_nLy'
+
+/** Sổ sao là append-only (trigger chặn DELETE), nên test tắt trigger trong một giao dịch để dọn. */
+function sql(statement: string) {
+  execFileSync('docker', ['exec', '-i', DB_CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', statement], {
+    stdio: 'pipe',
+  })
+}
+
+function resetStars() {
+  sql(`
+    begin;
+    alter table public.star_transactions disable trigger star_transactions_immutable;
+    delete from public.star_transactions where class_id = '${CLASS_ID}';
+    alter table public.star_transactions enable trigger star_transactions_immutable;
+    delete from public.star_criteria where class_id = '${CLASS_ID}' and label in ('Đọc sách', 'Đọc sách nhiều');
+    update public.star_criteria set archived_at = null where class_id = '${CLASS_ID}';
+    commit;
+  `)
+}
+
+function seedStars(studentNo: number, points: number) {
+  sql(`insert into public.star_transactions (class_id, student_id, delta, kind, note, batch_id)
+       values ('${CLASS_ID}', '${sid(studentNo)}', ${points}, 'award', 'seed', gen_random_uuid())`)
+}
+
+async function open(page: Page) {
+  await login(page, 'Giáo viên', 'co.khanh')
+  await expect(page).toHaveURL(/\/tong-quan$/)
+  await page.goto('/thi-dua')
+  await expect(page.getByRole('heading', { level: 1, name: 'Trạm thi đua' })).toBeVisible()
+}
+
+const card = (page: Page, name: string) => page.getByTestId('students').getByRole('button', { name: new RegExp(name) })
+const history = (page: Page) => page.getByTestId('history')
+
+test.beforeEach(resetStars)
+test.afterAll(resetStars)
+
+test('chọn Tổ 1, cộng 2 sao theo tiêu chí Giúp đỡ bạn bè', async ({ page }, info) => {
+  await open(page)
+  await page.getByRole('button', { name: 'Tổ 1 (3 bạn)' }).click()
+  await expect(page.getByRole('heading', { name: '1. Chọn học sinh (đã chọn 3)' })).toBeVisible()
+  await page.getByTestId('criteria-picker').getByRole('button', { name: /Giúp đỡ bạn bè/ }).click()
+  await page.getByRole('button', { name: 'Xác nhận cộng sao' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Đã cộng 2 sao cho Nguyễn Minh Anh, Trần Gia Bảo và 1 bạn khác.' })).toBeVisible()
+  await expect(card(page, 'Nguyễn Minh Anh')).toContainText('2 sao khả dụng')
+  await expect(card(page, 'Lê Khánh Chi')).toContainText('2 sao khả dụng')
+  await expect(card(page, 'Phạm Đức Dũng')).toContainText('0 sao khả dụng')
+  await expect(history(page)).toContainText('+2')
+  await expect(history(page)).toContainText('Giúp đỡ bạn bè')
+  await expect(page.getByTestId('star-burst')).toBeAttached()
+  await page.screenshot({ path: `test-results/stars-${info.project.name}.png`, fullPage: true })
+})
+
+test('báo lỗi khi chưa chọn học sinh hoặc chưa có lý do', async ({ page }) => {
+  await open(page)
+  await page.getByRole('button', { name: 'Xác nhận cộng sao' }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'Cô hãy chọn ít nhất một học sinh.' })).toBeVisible()
+  await card(page, 'Nguyễn Minh Anh').click()
+  await page.getByRole('button', { name: 'Xác nhận cộng sao' }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'Cô hãy chọn một tiêu chí hoặc nhập lý do.' })).toBeVisible()
+  await expect(card(page, 'Nguyễn Minh Anh')).toContainText('0 sao khả dụng')
+})
+
+test('trừ sao: không đủ sao, hộp xác nhận, hủy rồi đồng ý', async ({ page }) => {
+  seedStars(2, 2)
+  await open(page)
+  await page.getByRole('button', { name: '− Trừ sao' }).click()
+  await expect(page.getByTestId('amounts').getByRole('button')).toHaveText(['−1', '−2', '−3', '−5'])
+  await card(page, 'Nguyễn Minh Anh').click()
+  await page.getByTestId('criteria-picker').getByRole('button', { name: /Mất trật tự/ }).click()
+  await page.getByRole('button', { name: 'Xác nhận trừ sao' }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'Không đủ sao khả dụng để trừ: Nguyễn Minh Anh.' })).toBeVisible()
+
+  await card(page, 'Nguyễn Minh Anh').click()
+  await card(page, 'Trần Gia Bảo').click()
+  await page.getByRole('button', { name: 'Xác nhận trừ sao' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toContainText('Cô muốn trừ 1 sao của Trần Gia Bảo với lý do "Mất trật tự"?')
+  await dialog.getByRole('button', { name: 'Hủy' }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(card(page, 'Trần Gia Bảo')).toContainText('2 sao khả dụng')
+
+  await page.getByRole('button', { name: 'Xác nhận trừ sao' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Đồng ý trừ sao' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Đã trừ 1 sao cho Trần Gia Bảo.' })).toBeVisible()
+  await expect(card(page, 'Trần Gia Bảo')).toContainText('1 sao khả dụng')
+  await expect(history(page)).toContainText('−1')
+})
+
+test('hoàn tác một dòng cộng sao chỉ một lần', async ({ page }) => {
+  await open(page)
+  await card(page, 'Nguyễn Minh Anh').click()
+  await page.getByTestId('criteria-picker').getByRole('button', { name: /Hoàn thành tốt nhiệm vụ/ }).click()
+  await page.getByRole('button', { name: 'Xác nhận cộng sao' }).click()
+  await expect(card(page, 'Nguyễn Minh Anh')).toContainText('2 sao khả dụng')
+
+  await history(page).getByRole('button', { name: 'Hoàn tác' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Đã hoàn tác. Hệ thống ghi thêm một bản ghi mới, bản ghi cũ vẫn được giữ.' })).toBeVisible()
+  await expect(card(page, 'Nguyễn Minh Anh')).toContainText('0 sao khả dụng')
+  const rows = history(page).getByTestId('history-row')
+  await expect(rows).toHaveCount(2)
+  await expect(rows.nth(0)).toContainText('Hoàn tác: Hoàn thành tốt nhiệm vụ')
+  await expect(rows.nth(0).getByRole('button')).toHaveText('Đã ghi')
+  await expect(rows.nth(1).getByRole('button')).toHaveText('Đã hoàn tác')
+  await expect(rows.nth(1).getByRole('button')).toBeDisabled()
+  await expect(rows.nth(0).getByRole('button')).toBeDisabled()
+  await expect(rows).toHaveCount(2)
+})
+
+test('thêm tiêu chí Đọc sách 2 sao', async ({ page }) => {
+  await open(page)
+  await page.getByRole('button', { name: '+ Thêm tiêu chí' }).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Tên tiêu chí').fill('Đọc sách')
+  await dialog.getByLabel('Số sao mặc định').fill('2')
+  await dialog.getByRole('button', { name: 'Lưu tiêu chí' }).click()
+  await expect(dialog).toHaveCount(0)
+  const manage = page.getByTestId('manage')
+  await expect(manage).toContainText('Đọc sách')
+  await expect(page.getByTestId('criteria-picker').getByRole('button', { name: /Đọc sách/ })).toBeVisible()
+
+  await manage.getByRole('button', { name: 'Sửa tiêu chí Đọc sách', exact: true }).click()
+  await page.getByRole('dialog').getByLabel('Tên tiêu chí').fill('Đọc sách nhiều')
+  await page.getByRole('dialog').getByRole('button', { name: 'Lưu tiêu chí' }).click()
+  await expect(manage).toContainText('Đọc sách nhiều')
+
+  await manage.getByRole('button', { name: 'Lưu trữ tiêu chí Đọc sách nhiều' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Đồng ý lưu trữ' }).click()
+  await expect(manage).not.toContainText('Đọc sách nhiều')
+  await expect(page.getByTestId('criteria-picker')).not.toContainText('Đọc sách nhiều')
+})
