@@ -2,6 +2,11 @@ export type Status = 'present' | 'absent_unexcused' | 'absent_excused' | 'late'
 
 const SYMBOL: Record<Status, string> = { present: 'C', absent_unexcused: 'K', absent_excused: 'P', late: 'T' }
 
+/** Ô văn bản bắt đầu bằng = + - @ hoặc tab/CR bị Excel hiểu là công thức, nên thêm dấu nháy đơn phía trước. */
+function safe(v: string): string {
+  return /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
+}
+
 function field(v: string): string {
   return /[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
 }
@@ -20,8 +25,8 @@ export function buildMonthCsv(
     const count = (st: Status) => days.filter((d) => mine[d] === st).length
     lines.push(
       [
-        s.code,
-        s.fullName,
+        safe(s.code),
+        safe(s.fullName),
         ...days.map((d) => (mine[d] ? SYMBOL[mine[d]] : '')),
         String(count('present')),
         String(count('absent_unexcused')),
@@ -32,5 +37,5 @@ export function buildMonthCsv(
         .join(','),
     )
   }
-  return '﻿' + lines.join('\r\n') + '\r\n'
+  return '\uFEFF' + lines.join('\r\n') + '\r\n'
 }

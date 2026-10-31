@@ -5,13 +5,14 @@ import { z } from 'zod'
 import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { toVietnameseMessage } from '@/lib/errors'
+import { isValidIsoDate } from '@/lib/domain/date'
 import { classShortName } from '@/lib/classes/short-name'
 import { classSlug } from '@/lib/students/export'
 import { getStudentsWithStars } from '@/lib/stars/queries'
 import { getMonth } from '@/lib/attendance/queries'
 import { buildMonthCsv, type Status } from '@/lib/attendance/csv'
 
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+const date = z.string().refine(isValidIsoDate)
 const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/)
 // `status` luôn có mặt trên mỗi dòng (null = bỏ chọn, xóa dòng của ngày đó).
 const rowsInput = z
@@ -30,7 +31,7 @@ export async function saveAttendance(
   await requireTeacher()
   const d = date.safeParse(day)
   const r = rowsInput.safeParse(rows)
-  if (!d.success || !r.success || Number.isNaN(Date.parse(d.data))) return { error: toVietnameseMessage('invalid_input') }
+  if (!d.success || !r.success) return { error: toVietnameseMessage('invalid_input') }
   const supabase = await createServerSupabase()
   const { error } = await supabase.rpc('save_attendance', {
     p_date: d.data,

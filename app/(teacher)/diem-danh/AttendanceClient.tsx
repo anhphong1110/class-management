@@ -21,6 +21,7 @@ const OPT: [Status, string, string, string][] = [
 ]
 const TEXT = Object.fromEntries(OPT.map(([k, label]) => [k, label])) as Record<Status, string>
 
+const LEAVE_MESSAGE = 'Cô có thay đổi chưa lưu. Rời trang này sẽ mất các thay đổi đó.'
 const dmy = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`
 const same = (a: Record<string, Status>, b: Record<string, Status>) => {
   const ka = Object.keys(a)
@@ -55,24 +56,52 @@ export function AttendanceClient({
   const [picking, setPicking] = useState(false)
   const [pending, startTransition] = useTransition()
 
+  // Sau khi lưu, dữ liệu máy chủ làm mới: đồng bộ lại màn hình theo đúng những gì đang có trong cơ sở dữ liệu.
+  const serverKey = JSON.stringify(initial)
+  const [seenKey, setSeenKey] = useState(serverKey)
+  if (seenKey !== serverKey) {
+    setSeenKey(serverKey)
+    setBase(initial)
+    setSt(initial)
+  }
+
   const dirty = !same(base, st)
 
   useEffect(() => {
     if (!dirty) return
     const h = (e: BeforeUnloadEvent) => {
       e.preventDefault()
+      e.returnValue = ''
+    }
+    // Chuyển trang trong ứng dụng (thanh bên, liên kết) không phát beforeunload nên chặn ở bước bấm.
+    const c = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.('a[href^="/"]') as HTMLAnchorElement | null
+      if (!a || e.defaultPrevented || a.target === '_blank') return
+      const to = new URL(a.href, window.location.href)
+      if (to.pathname === window.location.pathname && to.search === window.location.search) return
+      if (!window.confirm(LEAVE_MESSAGE)) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
     }
     window.addEventListener('beforeunload', h)
-    return () => window.removeEventListener('beforeunload', h)
+    document.addEventListener('click', c, true)
+    return () => {
+      window.removeEventListener('beforeunload', h)
+      document.removeEventListener('click', c, true)
+    }
   }, [dirty])
 
-  const confirmLeave = () => !dirty || window.confirm('Cô có thay đổi chưa lưu. Rời trang này sẽ mất các thay đổi đó.')
+  // Các liên kết trong trang đã được bộ chặn ở trên hỏi; chỉ còn việc đổi ngày bằng ô chọn ngày.
+  const confirmLeave = () => !dirty || window.confirm(LEAVE_MESSAGE)
 
   function change(next: Record<string, Status>) {
+    if (pending) return
     setSt(next)
     setNotice(null)
   }
   const set = (id: string, v: Status | null) => {
+    if (pending) return
     const next = { ...st }
     if (v) next[id] = v
     else delete next[id]
@@ -80,10 +109,8 @@ export function AttendanceClient({
   }
 
   function save() {
-    // Chỉ gửi các bạn có thay đổi; luôn gửi khóa status (null = bỏ chọn).
-    const rows = students
-      .filter((s) => (st[s.id] ?? null) !== (base[s.id] ?? null))
-      .map((s) => ({ studentId: s.id, status: st[s.id] ?? null }))
+    // Gửi toàn bộ ảnh chụp màn hình: mọi học sinh đang học, status null = bỏ chọn (xóa dòng).
+    const rows = students.map((s) => ({ studentId: s.id, status: st[s.id] ?? null }))
     startTransition(async () => {
       const res = await saveAttendance(date, rows)
       if (res.error) {
@@ -149,16 +176,17 @@ export function AttendanceClient({
           </button>
           <button
             type="button"
+            disabled={pending}
             onClick={() => {
               const next: Record<string, Status> = {}
               for (const s of students) next[s.id] = 'present'
               change(next)
             }}
-            className="min-h-11 cursor-pointer rounded-[14px] border-0 bg-[#12794F] px-5 text-[15px] font-extrabold text-white"
+            className="min-h-11 cursor-pointer rounded-[14px] border-0 bg-[#12794F] px-5 text-[15px] font-extrabold text-white disabled:opacity-60"
           >
             Tất cả có mặt
           </button>
-          <button type="button" onClick={() => change({})} className={`${outline} text-[#4A476E]`}>
+          <button type="button" onClick={() => change({})} disabled={pending} className={`${outline} text-[#4A476E] disabled:opacity-60`}>
             Bỏ chọn hết
           </button>
           <button
@@ -190,7 +218,7 @@ export function AttendanceClient({
                 <div className="min-w-0 flex-1">
                   <div className="text-[16.5px] font-extrabold">{s.fullName}</div>
                   <div className="text-[13px] text-muted">
-                    {s.code} · {cur ? TEXT[cur] : 'Chưa điểm danh'}
+                    {s.code} · <span data-testid={`att-status-${s.code}`}>{cur ? TEXT[cur] : 'Chưa điểm danh'}</span>
                   </div>
                 </div>
               </div>
@@ -202,8 +230,9 @@ export function AttendanceClient({
                       key={k}
                       type="button"
                       aria-pressed={on}
+                      disabled={pending}
                       onClick={() => set(s.id, on ? null : k)}
-                      className="min-h-11 flex-[1_1_90px] cursor-pointer rounded-[12px] border-[1.5px] px-2.5 text-[13.5px] font-extrabold"
+                      className="min-h-11 flex-[1_1_90px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 rounded-[12px] border-[1.5px] px-2.5 text-[13.5px] font-extrabold"
                       style={{ background: on ? bg : '#FFFFFF', color: on ? color : '#3A3769', borderColor: on ? bg : '#D9D5F2' }}
                     >
                       {label}
@@ -251,9 +280,6 @@ export function AttendanceClient({
                 <div className="text-[#7A5400]">{h.late} đi trễ</div>
                 <Link
                   href={`/diem-danh?ngay=${h.date}`}
-                  onClick={(e) => {
-                    if (h.date !== date && !confirmLeave()) e.preventDefault()
-                  }}
                   className="text-right text-[#4F5BD5]"
                 >
                   Chỉnh sửa
@@ -264,7 +290,7 @@ export function AttendanceClient({
         </div>
       </section>
 
-      <MonthCalendar month={month} selected={date} today={today} classSize={students.length} days={calendarDays} confirmLeave={confirmLeave} />
+      <MonthCalendar month={month} selected={date} today={today} classSize={students.length} days={calendarDays} />
     </div>
   )
 }

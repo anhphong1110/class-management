@@ -20,14 +20,12 @@ export function MonthCalendar({
   today,
   classSize,
   days,
-  confirmLeave,
 }: {
   month: string
   selected: string
   today: string
   classSize: number
   days: CalendarDay[]
-  confirmLeave: () => boolean
 }) {
   const [error, setError] = useState('')
   const [pending, startTransition] = useTransition()
@@ -123,9 +121,6 @@ export function MonthCalendar({
                 key={d}
                 data-testid={`cal-${d}`}
                 href={`/diem-danh?ngay=${d}&thang=${month}`}
-                onClick={(e) => {
-                  if (d !== selected && !confirmLeave()) e.preventDefault()
-                }}
                 className={base}
               >
                 {body}

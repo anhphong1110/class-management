@@ -51,7 +51,12 @@ export async function getOverview(classId: string, now: Date = new Date()): Prom
   const [students, cls, att, week, reqs, redeemedCount, pendingCount, lb, news, batches] = await Promise.all([
     getStudentsWithStars(classId),
     supabase.from('classes').select('teacher_name, cover_path').eq('id', classId).single(),
-    supabase.from('attendance').select('status').eq('class_id', classId).eq('date', todayInVietnam(now)),
+    supabase
+      .from('attendance')
+      .select('status, students!inner(archived_at)')
+      .eq('class_id', classId)
+      .eq('date', todayInVietnam(now))
+      .is('students.archived_at', null),
     supabase.rpc('class_star_totals_between', { p_from: from!, p_to: to! }),
     supabase
       .from('reward_requests')

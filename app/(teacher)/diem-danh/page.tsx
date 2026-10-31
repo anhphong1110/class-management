@@ -1,16 +1,11 @@
 import { requireTeacher } from '@/lib/auth/session'
-import { formatVietnameseDate, todayInVietnam } from '@/lib/domain/date'
+import { formatVietnameseDate, isValidIsoDate, todayInVietnam } from '@/lib/domain/date'
 import { getDay, getMonth, getRecentDays } from '@/lib/attendance/queries'
 import { getStudentsWithStars } from '@/lib/stars/queries'
 import { Header } from '@/components/layout/Header'
 import { AttendanceClient } from './AttendanceClient'
 
-const DAY = /^\d{4}-\d{2}-\d{2}$/
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/
-
-function validDay(v: string | undefined): v is string {
-  return !!v && DAY.test(v) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v
-}
 
 const label = (iso: string) => formatVietnameseDate(new Date(`${iso}T12:00:00+07:00`))
 
@@ -18,7 +13,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ n
   const user = await requireTeacher()
   const sp = await searchParams
   const today = todayInVietnam()
-  const date = validDay(sp.ngay) ? sp.ngay : today
+  const date = isValidIsoDate(sp.ngay) ? sp.ngay : today
   const month = sp.thang && MONTH.test(sp.thang) ? sp.thang : date.slice(0, 7)
 
   const [students, initial, recent, monthData] = await Promise.all([

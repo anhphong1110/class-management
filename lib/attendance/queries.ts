@@ -12,7 +12,10 @@ const PAGE = 1000
 
 export async function getDay(classId: string, date: string): Promise<Record<string, Status>> {
   const supabase = await createServerSupabase()
-  const { data, error } = await supabase.from('attendance').select('student_id, status').eq('class_id', classId).eq('date', date)
+  const { data, error } = await supabase.from('attendance').select('student_id, status, students!inner(archived_at)')
+    .eq('class_id', classId)
+    .eq('date', date)
+    .is('students.archived_at', null)
   if (error) throw new Error(error.message)
   return Object.fromEntries((data ?? []).map((r) => [r.student_id as string, r.status as Status]))
 }
@@ -33,8 +36,9 @@ export async function getRecentDays(classId: string, limit = 5): Promise<RecentD
   const supabase = await createServerSupabase()
   const { data, error } = await supabase
     .from('attendance')
-    .select('date, status')
+    .select('date, status, students!inner(archived_at)')
     .eq('class_id', classId)
+    .is('students.archived_at', null)
     .order('date', { ascending: false })
     .limit(PAGE)
   if (error) throw new Error(error.message)
@@ -64,8 +68,9 @@ export async function getMonth(classId: string, month: string): Promise<{ days: 
   for (let offset = 0; ; offset += PAGE) {
     const { data, error } = await supabase
       .from('attendance')
-      .select('student_id, date, status')
+      .select('student_id, date, status, students!inner(archived_at)')
       .eq('class_id', classId)
+      .is('students.archived_at', null)
       .gte('date', from)
       .lte('date', to)
       .order('date')

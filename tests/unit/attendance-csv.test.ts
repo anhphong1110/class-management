@@ -29,4 +29,21 @@ describe('buildMonthCsv', () => {
     expect(lines.length).toBe(4)
     expect(lines[3]).toBe('')
   })
+
+  it('chặn công thức: thêm dấu nháy trước = + - @', () => {
+    const out = buildMonthCsv(
+      [
+        { code: 'HS03', fullName: '=HYPERLINK("x")' },
+        { code: '+1', fullName: '-Anh' },
+        { code: '@x', fullName: 'Bình' },
+      ],
+      [],
+      {},
+    )
+      .replace(/^\uFEFF/, '')
+      .split('\r\n')
+    expect(out[1]).toBe('HS03,"\'=HYPERLINK(""x"")",0,0,0,0')
+    expect(out[2]).toBe("'+1,'-Anh,0,0,0,0")
+    expect(out[3]).toBe("'@x,Bình,0,0,0,0")
+  })
 })

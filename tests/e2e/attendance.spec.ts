@@ -15,6 +15,7 @@ const shift = (iso: string, days: number) => {
 const dmy = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`
 const code = (n: number) => `HS${String(n).padStart(2, '0')}`
 const card = (page: Page, n: number) => page.getByTestId(`att-card-${code(n)}`)
+const status = (page: Page, n: number) => page.getByTestId(`att-status-${code(n)}`)
 
 async function open(page: Page, query = '') {
   await login(page, 'Giáo viên', 'co.khanh')
@@ -36,14 +37,14 @@ test('mặc định là hôm nay và mọi bạn chưa điểm danh', async ({ p
   await open(page)
   await expect(page.getByRole('heading', { level: 1, name: 'Điểm danh phi hành đoàn' })).toBeVisible()
   await expect(page.getByText(formatVietnameseDate(new Date()), { exact: true }).first()).toBeVisible()
-  for (let n = 1; n <= 10; n++) await expect(card(page, n)).toContainText('Chưa điểm danh')
+  for (let n = 1; n <= 10; n++) await expect(status(page, n)).toHaveText('Chưa điểm danh')
   await expect(page.getByTestId('total-unmarked')).toHaveText('10')
 })
 
 test('Tất cả có mặt chỉ điền trên màn hình, Lưu mới ghi xuống', async ({ page }) => {
   await open(page)
   await page.getByRole('button', { name: 'Tất cả có mặt' }).click()
-  for (let n = 1; n <= 10; n++) await expect(card(page, n)).toContainText('Có mặt')
+  for (let n = 1; n <= 10; n++) await expect(status(page, n)).toHaveText('Có mặt')
   expect(await dbRows()).toHaveLength(0)
   await page.getByRole('button', { name: 'Lưu điểm danh' }).click()
   await expect(page.getByRole('status').filter({ hasText: `Đã lưu điểm danh ngày ${dmy(today)}.` })).toBeVisible()
@@ -60,7 +61,7 @@ test('sửa một bạn, bỏ chọn một bạn rồi lưu lại: 9 dòng, tổ
 
   await card(page, 2).getByRole('button', { name: 'Đi trễ' }).click()
   await card(page, 3).getByRole('button', { name: 'Có mặt' }).click()
-  await expect(card(page, 3)).toContainText('Chưa điểm danh')
+  await expect(status(page, 3)).toHaveText('Chưa điểm danh')
   await page.getByRole('button', { name: 'Lưu điểm danh' }).click()
   await expect(page.getByText(`Đã lưu điểm danh ngày ${dmy(today)}.`)).toBeVisible()
 
@@ -75,8 +76,8 @@ test('sửa một bạn, bỏ chọn một bạn rồi lưu lại: 9 dòng, tổ
   await expect(page.getByTestId('total-unmarked')).toHaveText('1')
 
   await page.reload()
-  await expect(card(page, 2)).toContainText('Đi trễ')
-  await expect(card(page, 3)).toContainText('Chưa điểm danh')
+  await expect(status(page, 2)).toHaveText('Đi trễ')
+  await expect(status(page, 3)).toHaveText('Chưa điểm danh')
   await expect(page.getByRole('heading', { name: 'Lịch sử điểm danh theo ngày' })).toBeVisible()
   const hist = page.getByTestId(`history-${today}`)
   await expect(hist).toContainText('8 có mặt')
@@ -92,7 +93,7 @@ test('chỉnh sửa một ngày cũ', async ({ page }) => {
   await open(page)
   await page.getByTestId(`history-${old}`).getByRole('link', { name: 'Chỉnh sửa' }).click()
   await expect(page).toHaveURL(new RegExp(`ngay=${old}`))
-  await expect(card(page, 2)).toContainText('Vắng không phép')
+  await expect(status(page, 2)).toHaveText('Vắng không phép')
   await card(page, 2).getByRole('button', { name: 'Vắng có phép' }).click()
   await page.getByRole('button', { name: 'Lưu điểm danh' }).click()
   await expect(page.getByText(`Đã lưu điểm danh ngày ${dmy(old)}.`)).toBeVisible()
@@ -114,21 +115,44 @@ test('chọn ngày mai thì lưu báo lỗi ngày tương lai', async ({ page })
   expect(await dbRows(shift(today, 1))).toHaveLength(0)
 })
 
-test('lịch tháng hiện số ngày đã điểm danh và bấm ngày thì mở ngày đó', async ({ page }) => {
-  const old = today.slice(0, 8) + '01'
+test('lịch tháng hiện số ngày đã điểm danh; bấm ngày của tháng trước mở đúng ngày đó', async ({ page }) => {
+  const dayOfMonth = Number(today.slice(8, 10))
+  const prevLast = shift(today, -dayOfMonth) // ngày cuối của tháng trước, đúng cả khi hôm nay là mùng 1
   seedAttendance(1, 'present', 0)
   seedAttendance(2, 'late', 0)
+  seedAttendance(1, 'absent_excused', dayOfMonth)
+  seedAttendance(2, 'present', dayOfMonth)
   await open(page)
   await expect(page.getByRole('heading', { name: 'Lịch tháng' })).toBeVisible()
   await expect(page.getByTestId('calendar-days-marked')).toContainText('1 ngày')
   await expect(page.getByTestId(`cal-${today}`)).toContainText('1/10')
-  if (old !== today) {
-    await page.getByTestId(`cal-${old}`).click()
-    await expect(page).toHaveURL(new RegExp(`ngay=${old}`))
-    await expect(page.getByText(dmy(old), { exact: false }).first()).toBeVisible()
-  }
   await page.getByRole('link', { name: 'Tháng trước' }).click()
-  await expect(page).toHaveURL(/thang=\d{4}-\d{2}/)
+  await expect(page).toHaveURL(new RegExp(`thang=${prevLast.slice(0, 7)}`))
+  await expect(page.getByTestId('calendar-days-marked')).toContainText('1 ngày')
+  await page.getByTestId(`cal-${prevLast}`).click()
+  await expect(page).toHaveURL(new RegExp(`ngay=${prevLast}`))
+  await expect(status(page, 1)).toHaveText('Vắng có phép')
+  await expect(status(page, 2)).toHaveText('Có mặt')
+  await expect(status(page, 3)).toHaveText('Chưa điểm danh')
+  await expect(card(page, 1).getByRole('button', { name: 'Vắng có phép' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('lưu là ảnh chụp đầy đủ: DB đổi từ nơi khác sau khi tải trang thì DB khớp màn hình', async ({ page }) => {
+  seedAttendance(1, 'present', 0)
+  await open(page)
+  await expect(status(page, 1)).toHaveText('Có mặt')
+  // Một nơi khác đổi dữ liệu sau khi trang đã tải.
+  seedAttendance(5, 'late', 0)
+  await card(page, 2).getByRole('button', { name: 'Vắng không phép' }).click()
+  await page.getByRole('button', { name: 'Lưu điểm danh' }).click()
+  await expect(page.getByText(`Đã lưu điểm danh ngày ${dmy(today)}.`)).toBeVisible()
+  const rows = await dbRows()
+  const byStudent = new Map(rows.map((r) => [r.student_id, r.status]))
+  expect(rows).toHaveLength(2)
+  expect(byStudent.get(sid(1))).toBe('present')
+  expect(byStudent.get(sid(2))).toBe('absent_unexcused')
+  expect(byStudent.has(sid(5))).toBe(false)
+  await expect(status(page, 5)).toHaveText('Chưa điểm danh')
 })
 
 test('Xuất CSV tải file có tiêu đề đúng', async ({ page }) => {
