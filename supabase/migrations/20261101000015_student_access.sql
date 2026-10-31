@@ -12,6 +12,7 @@ create policy class_media_select on storage.objects for select to authenticated
       or ((storage.foldername(name))[2] = 'announcements'
           and exists (select 1 from public.announcements a where a.image_path = objects.name))
       or ((storage.foldername(name))[2] = 'rewards'
+          and (select private.setting_on('feature_rewards'))
           and exists (select 1 from public.rewards r where r.image_path = objects.name and not r.hidden))
     )
   );
@@ -76,8 +77,8 @@ as $$
    group by s.id, s.full_name, s.avatar_id, s.roll_no
    order by stars desc, s.roll_no asc
 $$;
-revoke execute on function private.leaderboard_core(timestamptz, timestamptz) from public, anon;
-grant execute on function private.leaderboard_core(timestamptz, timestamptz) to authenticated;
+-- Chỉ các hàm security definer bên dưới gọi được (chủ sở hữu); không ai khác, kể cả authenticated.
+revoke execute on function private.leaderboard_core(timestamptz, timestamptz) from public, anon, authenticated;
 
 -- Giữ chữ ký và kết quả của 0009; khác: chỉ giáo viên (học sinh dùng leaderboard_for_period).
 create or replace function public.leaderboard_between(p_from timestamptz, p_to timestamptz)

@@ -1,5 +1,5 @@
 begin;
-select plan(40);
+select plan(52);
 
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A'), ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id, feature_rewards, student_can_view_rewards, student_can_view_news, student_can_view_rank)
@@ -97,6 +97,14 @@ select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-
 select is((select count(*)::int from public.my_reward_requests()), 2, 'A2 thấy 2 yêu cầu của mình, không thấy của A1');
 select is((select left_count from public.reward_availability() where reward_id = '00000000-0000-0000-0000-0000000000f1'), 1, 'A2 cũng thấy còn 1');
 
+-- B1 (lớp B): chỉ thấy dữ liệu lớp B
+select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d5', 'role', 'authenticated')::text, true);
+select is((select array_agg(name)::text from storage.objects where bucket_id = 'class-media'), '{00000000-0000-0000-0000-0000000000c2/avatars/b.png}', 'B1: chỉ đọc file lớp B');
+select is((select count(*)::int from storage.objects where name like '00000000-0000-0000-0000-0000000000c1/%'), 0, 'B1: không đọc file lớp A');
+select is((select array_agg(reward_id)::text from public.reward_availability()), '{00000000-0000-0000-0000-0000000000f3}', 'B1: reward_availability chỉ quà lớp B');
+select is((select array_agg(student_id)::text from public.leaderboard_for_period('year')), '{00000000-0000-0000-0000-0000000000b1}', 'B1: leaderboard_for_period chỉ học sinh lớp B');
+select is((select count(*)::int from public.my_reward_requests()), 0, 'B1: không thấy yêu cầu lớp A');
+
 -- Giáo viên gọi hàm học sinh
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d1', 'role', 'authenticated')::text, true);
 select is((select count(*)::int from public.my_reward_requests()), 0, 'giáo viên: my_reward_requests rỗng');
@@ -129,6 +137,36 @@ update public.classes set term2_start = current_date - 1, term2_end = current_da
 set local role authenticated;
 select is((select stars from public.leaderboard_for_period('term') where student_id = '00000000-0000-0000-0000-0000000000a1'), 7, 'đã tới học kỳ 2: tính học kỳ 2 (giao dịch hôm nay)');
 select is((select stars from public.leaderboard_for_period('month') where student_id = '00000000-0000-0000-0000-0000000000a1'), 7, 'tháng này: 7');
+
+-- Giáo viên: leaderboard_for_period('week') khớp leaderboard_between cùng mốc tuần
+select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d1', 'role', 'authenticated')::text, true);
+select is((select count(*)::int from public.leaderboard_for_period('week')), 3, 'giáo viên: kỳ tuần có 3 dòng');
+select is((select count(*)::int from (
+  (select * from public.leaderboard_for_period('week')
+   except select * from public.leaderboard_between(
+     date_trunc('week', now() at time zone 'Asia/Ho_Chi_Minh') at time zone 'Asia/Ho_Chi_Minh',
+     (date_trunc('week', now() at time zone 'Asia/Ho_Chi_Minh') + interval '7 days') at time zone 'Asia/Ho_Chi_Minh'))
+  union all
+  (select * from public.leaderboard_between(
+     date_trunc('week', now() at time zone 'Asia/Ho_Chi_Minh') at time zone 'Asia/Ho_Chi_Minh',
+     (date_trunc('week', now() at time zone 'Asia/Ho_Chi_Minh') + interval '7 days') at time zone 'Asia/Ho_Chi_Minh')
+   except select * from public.leaderboard_for_period('week'))) d), 0, 'for_period(week) = between(mốc tuần): các dòng bằng nhau');
+
+-- feature_rewards tắt: học sinh không đọc ảnh quà dù student_can_view_rewards bật
+reset role;
+update public.class_settings set feature_rewards = false, student_can_view_rewards = true
+ where class_id = '00000000-0000-0000-0000-0000000000c1';
+set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d3', 'role', 'authenticated')::text, true);
+select is((select count(*)::int from storage.objects where name like '%/rewards/but.png'), 0, 'feature_rewards tắt: không đọc ảnh quà');
+reset role;
+update public.class_settings set feature_rewards = true where class_id = '00000000-0000-0000-0000-0000000000c1';
+set local role authenticated;
+select is((select count(*)::int from storage.objects where name like '%/rewards/but.png'), 1, 'feature_rewards bật lại: đọc được ảnh quà');
+reset role;
+select ok(not has_function_privilege('authenticated', 'private.leaderboard_core(timestamptz,timestamptz)', 'execute'), 'authenticated không EXECUTE private.leaderboard_core');
+select ok(not has_function_privilege('anon', 'public.leaderboard_between(timestamptz,timestamptz)', 'execute'), 'anon không EXECUTE leaderboard_between');
+select ok(not has_function_privilege('public', 'private.leaderboard_core(timestamptz,timestamptz)', 'execute'), 'PUBLIC không EXECUTE private.leaderboard_core');
 
 -- anon không có EXECUTE
 reset role;
