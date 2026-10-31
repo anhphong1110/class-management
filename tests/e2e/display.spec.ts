@@ -92,7 +92,10 @@ test('Hôm nay học gì theo ngày Việt Nam, tôn trọng thứ Bảy', async
     sql(`update public.class_settings set timetable_saturday = true where class_id = '${CLASS_ID}'`)
     await page.reload()
     if (wd === 6) await expect(rows.first()).toContainText(`Tiết 1${subjects[5]}`)
-    else await expect(rows).toHaveCount(0)
+    else {
+      await expect(page.getByText('Hôm nay không có tiết học.')).toBeVisible()
+      await expect(rows).toHaveCount(0)
+    }
   }
 })
 

@@ -1,4 +1,6 @@
 import { weekdayInVietnam } from '@/lib/domain/date'
+import { PERIODS, slotKey } from '@/lib/timetable/layout'
+import { paletteFor } from '@/lib/timetable/palette'
 
 /** Năm khối của trang trình chiếu, theo thứ tự tự động chuyển. */
 export const DISPLAY_BLOCKS = ['top5', 'week', 'highlight', 'today', 'pinned'] as const
@@ -17,4 +19,26 @@ export function selectDisplayWeekday(now: Date, saturdayOn: boolean): number | n
   if (d === 0) return null
   if (d === 6 && !saturdayOn) return null
   return d
+}
+
+export type DisplayLesson = { label: string; subject: string; bg: string; ink: string }
+
+/** Tiết học hôm nay (theo ngày Việt Nam của `now`); ô trống hoặc môn không còn thì bỏ qua. */
+export function buildTodayLessons(
+  slots: Record<string, string | null>,
+  subjects: { id: string; name: string; color: string }[],
+  now: Date,
+  saturdayOn: boolean,
+): DisplayLesson[] {
+  const weekday = selectDisplayWeekday(now, saturdayOn)
+  if (weekday === null) return []
+  const byId = new Map(subjects.map((s) => [s.id, s]))
+  const out: DisplayLesson[] = []
+  for (const { session, period } of PERIODS) {
+    const subject = byId.get(slots[slotKey(weekday, session, period)] ?? '')
+    if (!subject) continue
+    const { bg, ink } = paletteFor(subject.color)
+    out.push({ label: session === 'morning' ? `Tiết ${period}` : `Chiều · Tiết ${period}`, subject: subject.name, bg, ink })
+  }
+  return out
 }

@@ -7,17 +7,15 @@ import { getAnnouncements } from '@/lib/announcements/queries'
 import type { AnnouncementView } from '@/lib/announcements/types'
 import { getGroups } from '@/lib/stars/queries'
 import { getTimetable } from '@/lib/timetable/queries'
-import { PERIODS, slotKey } from '@/lib/timetable/layout'
-import { paletteFor } from '@/lib/timetable/palette'
-import { buildHighlight, selectDisplayWeekday } from './logic'
+import { buildHighlight, buildTodayLessons, type DisplayLesson } from './logic'
 
-export { buildHighlight, selectDisplayWeekday } from './logic'
+export { buildHighlight, buildTodayLessons, selectDisplayWeekday } from './logic'
 
 type LbRow = { student_id: string; full_name: string; avatar_id: string | null; stars: number | string; rank: number | string }
 
 export type DisplayTop5Row = { id: string; name: string; stars: number; rank: number; avatar: AvatarValue; crown: boolean }
 export type DisplayWeekRow = { id: string; name: string; stars: number }
-export type DisplayLesson = { label: string; subject: string; bg: string; ink: string }
+export type { DisplayLesson }
 
 export type DisplayData = {
   cls: { schoolYear: string; className: string; slogan: string }
@@ -77,17 +75,7 @@ export async function getDisplayData(classId: string, now: Date = new Date()): P
   const t = (totalsRes.data ?? [])[0]
   const weekTotal = Math.max(0, Number(t?.awarded ?? 0) - Number(t?.penalized ?? 0))
 
-  const weekday = selectDisplayWeekday(now, timetable.saturday)
-  const subjectsById = new Map(timetable.subjects.map((s) => [s.id, s]))
-  const today: DisplayLesson[] = []
-  if (weekday !== null) {
-    for (const { session, period } of PERIODS) {
-      const subject = subjectsById.get(timetable.slots[slotKey(weekday, session, period)] ?? '')
-      if (!subject) continue
-      const { bg, ink } = paletteFor(subject.color)
-      today.push({ label: session === 'morning' ? `Tiết ${period}` : `Chiều · Tiết ${period}`, subject: subject.name, bg, ink })
-    }
-  }
+  const today = buildTodayLessons(timetable.slots, timetable.subjects, now, timetable.saturday)
 
   return {
     cls: { schoolYear: cls.school_year, className: cls.class_name, slogan: cls.slogan },
