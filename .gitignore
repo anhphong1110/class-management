@@ -6,3 +6,10 @@ node_modules/
 .vercel/
 supabase/.temp/
 .superpowers/
+.pnpm-debug.log*
+/coverage
+/out/
+*.tsbuildinfo
+next-env.d.ts
+/test-results/
+/playwright-report/
