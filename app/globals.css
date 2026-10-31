@@ -4,8 +4,11 @@
   --primary: #6675e8;
 }
 
-@theme {
+@theme inline {
   --color-primary: var(--primary);
+}
+
+@theme {
   --color-primary-strong: #4f5bd5;
   --color-lavender: #b9a7f8;
   --color-pink: #f46fa5;
