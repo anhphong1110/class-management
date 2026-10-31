@@ -1,0 +1,25 @@
+{
+  "_note": "local test passwords only - never use for a real deployment",
+  "users": [
+    {
+      "username": "co.khanh",
+      "role": "teacher",
+      "displayName": "Cô Khanh",
+      "password": "Q9pBTuReTefx"
+    },
+    {
+      "username": "hs.minhanh",
+      "role": "student",
+      "displayName": "Nguyễn Minh Anh",
+      "studentCode": "HS01",
+      "password": "eVnwJXLscV0G"
+    },
+    {
+      "username": "hs.hamy",
+      "role": "student",
+      "displayName": "Võ Hà My",
+      "studentCode": "HS05",
+      "password": "Gi_Flv07i607"
+    }
+  ]
+}

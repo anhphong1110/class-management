@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "db:test": "supabase test db"
+    "db:test": "supabase test db",
+    "seed:dev": "tsx --env-file=.env.local scripts/seed-dev-users.ts",
+    "create-teacher": "tsx --env-file=.env.local scripts/create-teacher.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
