@@ -95,6 +95,16 @@ export async function awardBadge(badgeId: string, studentId: string): Promise<Re
   return {}
 }
 
+export async function revokeBadge(badgeId: string, studentId: string): Promise<Result> {
+  await requireTeacher()
+  if (!uuid.safeParse(badgeId).success || !uuid.safeParse(studentId).success) return invalid()
+  const supabase = await createServerSupabase()
+  const { error } = await supabase.rpc('revoke_badge', { p_badge_id: badgeId, p_student_id: studentId })
+  if (error) return { error: toVietnameseMessage(error.message) }
+  refresh()
+  return {}
+}
+
 export async function setFeatureMissions(on: boolean): Promise<Result> {
   const user = await requireTeacher()
   if (typeof on !== 'boolean') return invalid()

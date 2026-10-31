@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { Button } from '@/components/ui/Button'
+import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { Toggle } from '@/components/ui/Toggle'
 import { toVietnameseMessage } from '@/lib/errors'
 import { MISSION_PERIODS, MISSION_PERIOD_LABELS, type MissionPeriod } from '@/lib/missions/period'
 import type { MissionsData } from '@/lib/missions/queries'
-import { awardBadge, completeMission, saveMission, setFeatureMissions, toggleMission } from './actions'
+import { awardBadge, completeMission, revokeBadge, saveMission, setFeatureMissions, toggleMission } from './actions'
 
 type Result = { error?: string; message?: string }
 type Student = { id: string; fullName: string }
@@ -29,6 +31,7 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
   const [gridNote, setGridNote] = useState<Note>(null)
   const [badgeNote, setBadgeNote] = useState<Note>(null)
   const [msg, setMsg] = useState('')
+  const [revoking, setRevoking] = useState<MissionsData['badges'][number] | null>(null)
   const [busy, startTransition] = useTransition()
 
   const person = students.find((s) => s.id === who) ?? null
@@ -110,6 +113,17 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
     run(
       () => awardBadge(b.id, person.id),
       () => setMsg(`Đã trao "${b.name}" cho ${person.fullName}. Huy hiệu không tự cộng sao.`),
+      (text) => setBadgeNote({ tone: 'error', text }),
+    )
+  }
+
+  function revoke(b: MissionsData['badges'][number]) {
+    if (!person) return
+    clearNotes()
+    setRevoking(null)
+    run(
+      () => revokeBadge(b.id, person.id),
+      () => setMsg(`Đã thu hồi "${b.name}" của ${person.fullName}.`),
       (text) => setBadgeNote({ tone: 'error', text }),
     )
   }
@@ -324,10 +338,32 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
               >
                 Trao huy hiệu
               </button>
+              <button
+                type="button"
+                onClick={() => setRevoking(b)}
+                disabled={busy || noPerson || !person || !b.holderIds.includes(person.id)}
+                className={`${ghost} min-h-11 w-full text-[13.5px] !text-[#8E1B3B]`}
+              >
+                Thu hồi
+              </button>
             </div>
           ))}
         </div>
       </div>
+
+      <Modal open={revoking !== null} onClose={() => setRevoking(null)} title="Thu hồi huy hiệu">
+        <p className="m-0 mb-4 text-[15.5px] font-bold">
+          Cô muốn thu hồi huy hiệu &quot;{revoking?.name}&quot; của {person?.fullName}?
+        </p>
+        <div className="flex justify-end gap-2.5">
+          <Button variant="secondary" onClick={() => setRevoking(null)}>
+            Hủy
+          </Button>
+          <Button variant="danger" disabled={busy} onClick={() => revoking && revoke(revoking)}>
+            Đồng ý thu hồi
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

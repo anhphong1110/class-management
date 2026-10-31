@@ -20,6 +20,8 @@ export type BadgeView = {
   gradient: string
   /** Số bạn đang học đã đạt. */
   count: number
+  /** Các bạn đang học đã có huy hiệu này (để chỉ cho thu hồi khi bạn đang chọn có huy hiệu). */
+  holderIds: string[]
 }
 
 export type MissionsData = {
@@ -81,6 +83,7 @@ export async function getMissionsData(classId: string, now = new Date()): Promis
       icon: b.icon,
       gradient: b.gradient,
       count: awarded.filter((a) => a.badge_id === b.id).length,
+      holderIds: awarded.filter((a) => a.badge_id === b.id).map((a) => a.student_id as string),
     })),
   }
 }

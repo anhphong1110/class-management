@@ -40,6 +40,7 @@ const MESSAGES: Record<string, string> = {
   announcement_not_found: 'Thông báo này không còn nữa.',
   already_completed: 'Bạn này đã hoàn thành nhiệm vụ trong kỳ này.',
   already_awarded: 'Bạn này đã có huy hiệu này.',
+  badge_not_awarded: 'Bạn này chưa có huy hiệu này.',
   mission_required: 'Cô hãy nhập tên và điều kiện hoàn thành.',
   mission_not_found: 'Nhiệm vụ này không còn nữa.',
   badge_not_found: 'Huy hiệu này không còn nữa.',

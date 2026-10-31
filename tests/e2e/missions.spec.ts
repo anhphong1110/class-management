@@ -103,6 +103,55 @@ test('trao huy hiệu không cộng sao, trao lần hai báo lỗi', async ({ pa
   expect(count).toBe(1)
 })
 
+test('ghi nhận nhầm: hoàn tác ở /thi-dua thì ghi nhận lại được trong cùng kỳ', async ({ page }) => {
+  await open(page)
+  const m = card(page, 'Hoàn thành nhiệm vụ học tập')
+  await page.getByLabel('Ghi nhận cho').selectOption({ label: 'Võ Hà My' })
+  await m.getByRole('button', { name: 'Ghi nhận thêm 1 bạn' }).click()
+  await expect(m).toContainText('1/10 bạn đã hoàn thành')
+  expect(await stars(5)).toBe(3)
+
+  await page.goto('/thi-dua')
+  const row = page.getByTestId('history').getByTestId('history-row').filter({ hasText: 'Nhiệm vụ: Hoàn thành nhiệm vụ học tập' })
+  await row.getByRole('button', { name: 'Hoàn tác' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Đồng ý hoàn tác' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Đã hoàn tác.' })).toBeVisible()
+  expect(await stars(5)).toBe(0)
+
+  await page.goto('/nhiem-vu')
+  await expect(m).toContainText('0/10 bạn đã hoàn thành')
+  await page.getByLabel('Ghi nhận cho').selectOption({ label: 'Võ Hà My' })
+  await m.getByRole('button', { name: 'Ghi nhận thêm 1 bạn' }).click()
+  await expect(m).toContainText('1/10 bạn đã hoàn thành')
+  await expect(alert(page, 'Bạn này đã hoàn thành nhiệm vụ trong kỳ này.')).toHaveCount(0)
+  expect(await stars(5)).toBe(3)
+})
+
+test('trao nhầm huy hiệu: thu hồi có hộp xác nhận, huy hiệu biến mất', async ({ page }) => {
+  await open(page)
+  await page.getByLabel('Trao cho').selectOption({ label: 'Võ Hà My' })
+  const badge = page.getByTestId('badge-card').filter({ hasText: 'Người bạn tốt' })
+  // Chưa có huy hiệu thì không thu hồi được.
+  await expect(badge.getByRole('button', { name: 'Thu hồi' })).toBeDisabled()
+  await badge.getByRole('button', { name: 'Trao huy hiệu' }).click()
+  await expect(badge).toContainText('1 bạn đã đạt')
+
+  await badge.getByRole('button', { name: 'Thu hồi' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Thu hồi huy hiệu' })
+  await expect(dialog).toContainText('Cô muốn thu hồi huy hiệu "Người bạn tốt" của Võ Hà My?')
+  await dialog.getByRole('button', { name: 'Hủy' }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(badge).toContainText('1 bạn đã đạt')
+
+  await badge.getByRole('button', { name: 'Thu hồi' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Đồng ý thu hồi' }).click()
+  await expect(status(page, 'Đã thu hồi "Người bạn tốt" của Võ Hà My.')).toBeVisible()
+  await expect(badge).toContainText('0 bạn đã đạt')
+  await expect(badge.getByRole('button', { name: 'Thu hồi' })).toBeDisabled()
+  const { count } = await admin().from('student_badges').select('id', { count: 'exact', head: true }).eq('class_id', CLASS_ID)
+  expect(count).toBe(0)
+})
+
 test('ảnh chụp màn hình bản desktop', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop')
   await page.setViewportSize({ width: 1360, height: 1500 })
