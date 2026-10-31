@@ -12,15 +12,15 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
     <div
       data-testid="teacher-shell"
       style={{ '--primary': THEMES[theme].primary } as CSSProperties}
-      className="box-border flex min-h-screen flex-wrap gap-5 bg-bg p-4 text-ink"
+      className="box-border flex min-h-screen flex-wrap content-start gap-5 bg-bg p-4 text-ink"
     >
-      <div className="max-w-[272px] flex-[1_1_248px]">
+      <div className="min-w-0 max-w-none basis-full lg:max-w-[272px] lg:flex-[1_1_248px]">
         <Sidebar
           teacher={{ displayName: data?.user.displayName ?? '', avatar: data?.avatar ?? null }}
           classLogoUrl={data?.classLogoUrl ?? null}
         />
       </div>
-      <main className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">{children}</main>
+      <main className="flex min-w-0 basis-full lg:flex-[999_1_560px] flex-col gap-5">{children}</main>
     </div>
   )
 }

@@ -35,15 +35,32 @@ test('bấm từng link Sidebar không lỗi', async ({ page }) => {
   await expect(page).toHaveURL(/\/trinh-chieu$/)
 })
 
-test('cỡ mobile: menu cuộn ngang, chân menu ẩn, không tràn ngang', async ({ page }, info) => {
-  test.skip(info.project.name !== 'mobile')
+test('bố cục responsive', async ({ page }, info) => {
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
-  const nav = page.getByRole('navigation', { name: 'Menu chính' })
-  const dir = await nav.evaluate((el) => getComputedStyle(el.querySelector('ul')!).flexDirection)
-  expect(dir).toBe('row')
-  await expect(page.getByTestId('sidebar-foot')).toBeHidden()
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  const m = await page.evaluate(() => {
+    const aside = document.querySelector('aside')!.getBoundingClientRect()
+    const header = document.querySelector('header')!.getBoundingClientRect()
+    return {
+      asideW: aside.width,
+      gap: header.top - aside.bottom,
+      dir: getComputedStyle(document.querySelector('aside nav ul')!).flexDirection,
+      innerW: window.innerWidth,
+      fits: document.documentElement.scrollWidth <= window.innerWidth,
+    }
+  })
+  expect(m.fits).toBe(true)
+  if (info.project.name === 'desktop') {
+    expect(m.asideW).toBeGreaterThanOrEqual(248)
+    expect(m.asideW).toBeLessThanOrEqual(272)
+    expect(m.dir).toBe('column')
+    await expect(page.getByTestId('sidebar-foot')).toBeVisible()
+  } else {
+    expect(m.asideW).toBeGreaterThanOrEqual(m.innerW - 40)
+    expect(m.gap).toBeLessThanOrEqual(24)
+    expect(m.dir).toBe('row')
+    await expect(page.getByTestId('sidebar-foot')).toBeHidden()
+  }
 })
 
 test('theme pink đổi --primary và bg-primary', async ({ page }) => {
@@ -74,10 +91,20 @@ test('Đăng xuất về /dang-nhap', async ({ page }) => {
   await expect(page).toHaveURL(/\/dang-nhap/)
 })
 
+test('giáo viên xem thử /em', async ({ page }) => {
+  await login(page, 'Giáo viên', 'co.khanh')
+  await expect(page).toHaveURL(/\/tong-quan$/)
+  await page.goto('/em')
+  await expect(page).toHaveURL(/\/em$/)
+  await expect(page.getByText('Cô đang xem thử giao diện học sinh.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Xin chào/ })).toBeVisible()
+})
+
 test('học sinh: /em chào tên, /hoc-sinh bị đưa về /em', async ({ page }) => {
   await login(page, 'Học sinh', 'hs.hamy')
   await expect(page).toHaveURL(/\/em$/)
   await expect(page.getByRole('heading', { name: 'Xin chào, Hà My!' })).toBeVisible()
+  await expect(page.getByText('Cô đang xem thử')).toHaveCount(0)
   await page.goto('/hoc-sinh')
   await expect(page).toHaveURL(/\/em$/)
 })

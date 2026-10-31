@@ -1,9 +1,10 @@
 import 'server-only'
+import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import type { Role, SessionUser } from '@/lib/domain/types'
 
-export async function getSessionUser(): Promise<SessionUser | null> {
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const supabase = await createServerSupabase()
   const { data: userData } = await supabase.auth.getUser()
   const user = userData?.user
@@ -38,7 +39,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     studentId: profile.student_id ?? null,
     avatarId,
   }
-}
+})
 
 export async function requireTeacher(): Promise<SessionUser> {
   const u = await getSessionUser()
@@ -51,5 +52,11 @@ export async function requireStudent(): Promise<SessionUser> {
   const u = await getSessionUser()
   if (!u) redirect('/dang-xuat?reason=no_profile')
   if (u.role !== 'student') redirect('/tong-quan')
+  return u
+}
+
+export async function requireStudentOrTeacher(): Promise<SessionUser> {
+  const u = await getSessionUser()
+  if (!u || (u.role !== 'student' && u.role !== 'teacher')) redirect('/dang-xuat?reason=no_profile')
   return u
 }

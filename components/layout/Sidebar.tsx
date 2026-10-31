@@ -46,12 +46,12 @@ export function Sidebar({ active, teacher, classLogoUrl }: Props) {
           <span className="text-[#FFD36B]">NĂM 8</span>
         </div>
       </div>
-      <nav aria-label="Menu chính">
-        <ul className="m-0 flex list-none flex-col gap-1 p-0 max-[760px]:flex-row max-[760px]:overflow-x-auto">
+      <nav aria-label="Menu chính" className="min-w-0">
+        <ul className="m-0 flex list-none flex-col gap-1 p-0 max-lg:flex-row max-lg:overflow-x-auto">
           {TEACHER_NAV.map((it) => {
             const on = it.id === activeId
             return (
-              <li key={it.id} className="max-[760px]:flex-none">
+              <li key={it.id} className="max-lg:flex-none">
                 <Link
                   href={it.href}
                   aria-current={on ? 'page' : undefined}
@@ -82,7 +82,7 @@ export function Sidebar({ active, teacher, classLogoUrl }: Props) {
       </nav>
       <div
         data-testid="sidebar-foot"
-        className="flex items-center gap-2.5 rounded-[20px] bg-white/10 p-3.5 max-[760px]:hidden"
+        className="flex items-center gap-2.5 rounded-[20px] bg-white/10 p-3.5 max-lg:hidden"
       >
         <AvatarImage avatar={teacher.avatar} size={44} />
         <div className="leading-tight">
