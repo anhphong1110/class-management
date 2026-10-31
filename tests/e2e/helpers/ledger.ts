@@ -152,3 +152,29 @@ export async function resetAnnouncements() {
   if (data?.length) await store.remove(data.map((f) => `${CLASS_ID}/announcements/${f.name}`))
   sql(`delete from public.announcements where class_id = '${CLASS_ID}'`)
 }
+
+const SEED_MISSIONS: [string, string, string, string, number, boolean][] = [
+  ['d0001', 'Hoàn thành nhiệm vụ học tập', 'week', 'Làm đủ bài tập về nhà các ngày trong tuần.', 3, true],
+  ['d0002', 'Đọc sách trong tuần', 'week', 'Đọc ít nhất 1 cuốn sách và kể lại cho cô nghe.', 2, true],
+  ['d0003', 'Giúp đỡ bạn bè', 'month', 'Được cô ghi nhận giúp bạn ít nhất 3 lần.', 0, true],
+  ['d0004', 'Giữ vệ sinh lớp', 'week', 'Tổ trực nhật hoàn thành đủ các buổi.', 2, true],
+  ['d0005', 'Có tiến bộ', 'month', 'Điểm kiểm tra tăng so với tháng trước.', 5, false],
+]
+
+/** Xóa hoàn thành nhiệm vụ và huy hiệu đã trao, bỏ nhiệm vụ/huy hiệu thêm trong test, khôi phục seed và bật lại tính năng. */
+export function resetMissions() {
+  const ids = SEED_MISSIONS.map(([id]) => `'00000000-0000-0000-0000-0000000${id}'`).join(',')
+  sql(`
+    begin;
+    delete from public.mission_completions where class_id = '${CLASS_ID}';
+    delete from public.student_badges where class_id = '${CLASS_ID}';
+    delete from public.missions where class_id = '${CLASS_ID}' and id not in (${ids});
+    delete from public.badges where class_id = '${CLASS_ID}' and is_demo = false;
+    ${SEED_MISSIONS.map(
+      ([id, name, period, cond, stars, active]) =>
+        `update public.missions set name = '${name}', period = '${period}', condition = '${cond}', reward_stars = ${stars}, active = ${active} where id = '00000000-0000-0000-0000-0000000${id}';`,
+    ).join('\n    ')}
+    update public.class_settings set feature_missions = true where class_id = '${CLASS_ID}';
+    commit;
+  `)
+}

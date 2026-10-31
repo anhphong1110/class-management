@@ -38,6 +38,11 @@ const MESSAGES: Record<string, string> = {
   saturday_off: 'Lớp chưa bật học thứ Bảy.',
   announcement_required: 'Cô hãy nhập tiêu đề và nội dung.',
   announcement_not_found: 'Thông báo này không còn nữa.',
+  already_completed: 'Bạn này đã hoàn thành nhiệm vụ trong kỳ này.',
+  already_awarded: 'Bạn này đã có huy hiệu này.',
+  mission_required: 'Cô hãy nhập tên và điều kiện hoàn thành.',
+  mission_not_found: 'Nhiệm vụ này không còn nữa.',
+  badge_not_found: 'Huy hiệu này không còn nữa.',
   invalid_input: 'Thông tin chưa hợp lệ, cô kiểm tra lại nhé.',
 }
 

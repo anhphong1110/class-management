@@ -84,3 +84,17 @@ insert into public.rewards (id, class_id, name, cost, description, icon, stock, 
   ('00000000-0000-0000-0000-0000000e0003', '00000000-0000-0000-0000-000000000058', 'Bút dễ thương', 25, 'Bút gel hình ngôi sao, mực xanh tím.', 'pen', 8, true),
   ('00000000-0000-0000-0000-0000000e0004', '00000000-0000-0000-0000-000000000058', 'Huy hiệu phi hành gia', 30, 'Huy hiệu kim loại cài áo đồng phục.', 'badge', 12, true),
   ('00000000-0000-0000-0000-0000000e0005', '00000000-0000-0000-0000-000000000058', 'Quà bí mật', 50, 'Một bất ngờ do cô Khanh chuẩn bị.', 'gift', 5, true);
+
+insert into public.missions (id, class_id, name, period, condition, reward_stars, active, is_demo) values
+  ('00000000-0000-0000-0000-0000000d0001', '00000000-0000-0000-0000-000000000058', 'Hoàn thành nhiệm vụ học tập', 'week', 'Làm đủ bài tập về nhà các ngày trong tuần.', 3, true, true),
+  ('00000000-0000-0000-0000-0000000d0002', '00000000-0000-0000-0000-000000000058', 'Đọc sách trong tuần', 'week', 'Đọc ít nhất 1 cuốn sách và kể lại cho cô nghe.', 2, true, true),
+  ('00000000-0000-0000-0000-0000000d0003', '00000000-0000-0000-0000-000000000058', 'Giúp đỡ bạn bè', 'month', 'Được cô ghi nhận giúp bạn ít nhất 3 lần.', 0, true, true),
+  ('00000000-0000-0000-0000-0000000d0004', '00000000-0000-0000-0000-000000000058', 'Giữ vệ sinh lớp', 'week', 'Tổ trực nhật hoàn thành đủ các buổi.', 2, true, true),
+  ('00000000-0000-0000-0000-0000000d0005', '00000000-0000-0000-0000-000000000058', 'Có tiến bộ', 'month', 'Điểm kiểm tra tăng so với tháng trước.', 5, false, true);
+
+insert into public.badges (id, class_id, name, icon, gradient, is_demo) values
+  ('00000000-0000-0000-0000-0000000f0001', '00000000-0000-0000-0000-000000000058', 'Phi hành gia chăm chỉ', 'M12 14a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM8.5 13.5L7 22l5-3 5 3-1.5-8.5', 'linear-gradient(135deg,#F5A81C,#FFD76F)', true),
+  ('00000000-0000-0000-0000-0000000f0002', '00000000-0000-0000-0000-000000000058', 'Ngôi sao tiến bộ', 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', 'linear-gradient(135deg,#6675E8,#B9A7F8)', true),
+  ('00000000-0000-0000-0000-0000000f0003', '00000000-0000-0000-0000-000000000058', 'Nhà thám hiểm tri thức', 'M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1zM12 15l-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22 22 0 0 1-4 2z', 'linear-gradient(135deg,#3B3FA8,#7A58E0)', true),
+  ('00000000-0000-0000-0000-0000000f0004', '00000000-0000-0000-0000-000000000058', 'Người bạn tốt', 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z', 'linear-gradient(135deg,#E5334F,#FF9DB5)', true),
+  ('00000000-0000-0000-0000-0000000f0005', '00000000-0000-0000-0000-000000000058', 'Siêu sao đọc sách', 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M9 7h6', 'linear-gradient(135deg,#2BB5A4,#80DDD0)', true);
