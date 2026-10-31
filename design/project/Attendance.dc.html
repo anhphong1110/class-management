@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Điểm danh – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button{font-family:'Nunito',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="attendance" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Điểm danh phi hành đoàn" subtitle="Ghi nhận chuyên cần mỗi ngày" hint-size="100%,84px"></dc-import>
+
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+<div style="display:flex;align-items:center;gap:14px">
+<div style="width:56px;height:56px;border-radius:18px;background:#EEF0FF;color:#3441B5;display:flex;align-items:center;justify-content:center">
+<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></svg>
+</div>
+<div><div style="font-size:13.5px;font-weight:700;color:#5B5890">Ngày điểm danh</div><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.15">Thứ Bảy, 31/10/2026</div></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<button type="button" style="min-height:44px;padding:0 18px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:15px;cursor:pointer">Chọn ngày</button>
+<button type="button" onClick="{{allPresent}}" style="min-height:44px;padding:0 20px;border-radius:14px;border:0;background:#12794F;color:#fff;font-weight:800;font-size:15px;cursor:pointer">Tất cả có mặt</button>
+<button type="button" onClick="{{clearAll}}" style="min-height:44px;padding:0 18px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#4A476E;font-weight:800;font-size:15px;cursor:pointer">Bỏ chọn hết</button>
+<button type="button" onClick="{{save}}" style="min-height:44px;padding:0 22px;border-radius:14px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:15px;cursor:pointer">Lưu điểm danh</button>
+</div>
+</div>
+
+<sc-if value="{{saved}}" hint-placeholder-val="{{false}}">
+<div role="status" style="background:#DDF6F1;color:#0B5A4D;border-radius:18px;padding:14px 18px;font-weight:700;font-size:15px">Đã ghi nhận điểm danh trên màn hình này. Đây là bản thiết kế, chưa lưu vào cơ sở dữ liệu thật.</div>
+</sc-if>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:12px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<div style="background:#fff;border-radius:22px;padding:14px 16px;box-shadow:0 4px 14px rgba(102,117,232,.08);display:flex;flex-direction:column;gap:10px;border:2px solid {{r.ring}}">
+<div style="display:flex;align-items:center;gap:12px">
+<dc-import name="Avatar" hair="{{r.hair}}" hair-color="{{r.hairColor}}" skin="{{r.skin}}" bg="{{r.avBg}}" size="52" hint-size="52px,52px"></dc-import>
+<div style="min-width:0;flex:1"><div style="font-weight:800;font-size:16.5px">{{r.name}}</div><div style="font-size:13px;color:#5B5890">{{r.code}} · {{r.statusText}}</div></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{r.btns}}" as="b" hint-placeholder-count="4">
+<button type="button" aria-pressed="{{b.on}}" onClick="{{b.pick}}" style="flex:1 1 90px;min-height:44px;padding:0 10px;border-radius:12px;font-weight:800;font-size:13.5px;cursor:pointer;background:{{b.bg}};color:{{b.color}};border:1.5px solid {{b.border}}">{{b.label}}</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="background:linear-gradient(120deg,#33378F,#5C4FD8);color:#fff;border-radius:26px;padding:22px 24px;display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;justify-content:space-between">
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px">Tổng kết hôm nay</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px 24px">
+<sc-for list="{{totals}}" as="t" hint-placeholder-count="6">
+<div style="display:flex;flex-direction:column;align-items:center;min-width:72px"><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;line-height:1.1;color:{{t.color}}">{{t.value}}</div><div style="font-size:13px;color:#E4E7FF;font-weight:700">{{t.label}}</div></div>
+</sc-for>
+</div>
+</div>
+
+<div style="background:#fff;border-radius:26px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Lịch sử điểm danh theo ngày</h2><span style="font-size:13.5px;color:#5B5890">Cô có thể chỉnh lại các ngày trước</span></div>
+<div style="overflow-x:auto">
+<div style="min-width:560px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{history}}" as="h" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:1.6fr repeat(4,1fr) 1fr;gap:8px;align-items:center;background:#F6F4FF;border-radius:14px;padding:10px 14px;font-size:14.5px;font-weight:700">
+<div>{{h.date}}</div><div style="color:#12794F">{{h.present}} có mặt</div><div style="color:#B02A4B">{{h.absent}} vắng</div><div style="color:#2154B0">{{h.excused}} có phép</div><div style="color:#7A5400">{{h.late}} đi trễ</div>
+<a href="Attendance.dc.html" style="color:#4F5BD5;text-align:right">Chỉnh sửa</a>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1260}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { st: {}, saved: false };
+}
+renderVals() {
+const S = [
+['Nguyễn Minh Anh','b','#6B3F2A','#FFD9B8','#FFD6E8'],
+['Trần Gia Bảo','a','#2B2B3B','#F5C49C','#CFF3EC'],
+['Lê Khánh Chi','c','#3A2A4D','#FFD9B8','#D9D3FF'],
+['Phạm Đức Dũng','a','#6B3F2A','#E8B088','#FFE9B8'],
+['Võ Hà My','b','#2B2B3B','#FFD9B8','#D9D3FF'],
+['Đặng Quốc Huy','a','#3A2A4D','#F5C49C','#CFF3EC'],
+['Bùi Thảo Nhi','c','#8A4B2D','#FFD9B8','#FFD6E8'],
+['Hoàng Tuấn Kiệt','a','#2B2B3B','#E8B088','#D9D3FF'],
+['Ngô Bảo Ngọc','b','#6B3F2A','#F5C49C','#FFE9B8'],
+['Đỗ Anh Thư','c','#2B2B3B','#FFD9B8','#CFF3EC']
+];
+const OPT = [
+['present','Có mặt','#12794F','#FFFFFF'],
+['absent','Vắng không phép','#C0314E','#FFFFFF'],
+['excused','Vắng có phép','#2563C9','#FFFFFF'],
+['late','Đi trễ','#FFC857','#4A3300']
+];
+const text = { present:'Có mặt', absent:'Vắng không phép', excused:'Vắng có phép', late:'Đi trễ' };
+const st = this.state.st;
+const set = (id, v) => this.setState({ st: { ...this.state.st, [id]: v }, saved: false });
+const rows = S.map(([name,hair,hairColor,skin,avBg], i) => {
+const id = 'hs' + i;
+const cur = st[id] || null;
+const o = OPT.find(x => x[0] === cur);
+return {
+name, hair, hairColor, skin, avBg,
+code: 'HS' + String(i + 1).padStart(2, '0'),
+statusText: cur ? text[cur] : 'Chưa điểm danh',
+ring: o ? o[2] : 'transparent',
+btns: OPT.map(([k,label,bg,color]) => {
+const on = cur === k;
+return { label, on, pick: () => set(id, on ? null : k), bg: on ? bg : '#FFFFFF', color: on ? color : '#3A3769', border: on ? bg : '#D9D5F2' };
+})
+};
+});
+const count = k => S.filter((_, i) => st['hs' + i] === k).length;
+const marked = S.filter((_, i) => st['hs' + i]).length;
+return {
+rows,
+saved: this.state.saved,
+allPresent: () => { const n = {}; S.forEach((_, i) => { n['hs' + i] = 'present'; }); this.setState({ st: n, saved: false }); },
+clearAll: () => this.setState({ st: {}, saved: false }),
+save: () => this.setState({ saved: true }),
+totals: [
+{ label:'Tổng số', value:String(S.length), color:'#FFFFFF' },
+{ label:'Có mặt', value:String(count('present')), color:'#7FE3B5' },
+{ label:'Vắng', value:String(count('absent')), color:'#FF9DB5' },
+{ label:'Đi trễ', value:String(count('late')), color:'#FFD36B' },
+{ label:'Có phép', value:String(count('excused')), color:'#A9C6FF' },
+{ label:'Chưa điểm danh', value:String(S.length - marked), color:'#FFFFFF' }
+],
+history: [
+{ date:'Thứ Sáu, 30/10', present:9, absent:0, excused:1, late:0 },
+{ date:'Thứ Năm, 29/10', present:10, absent:0, excused:0, late:0 },
+{ date:'Thứ Tư, 28/10', present:8, absent:1, excused:0, late:1 },
+{ date:'Thứ Ba, 27/10', present:9, absent:0, excused:0, late:1 },
+{ date:'Thứ Hai, 26/10', present:10, absent:0, excused:0, late:0 }
+]
+};
+}
+}
+</script>
+</body>
+</html>

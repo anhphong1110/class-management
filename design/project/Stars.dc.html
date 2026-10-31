@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Trạm thi đua – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button,input{font-family:'Nunito',system-ui,sans-serif}
+@keyframes flyA{0%{transform:translateY(0) scale(.4);opacity:0}20%{opacity:1}100%{transform:translateY(-110px) scale(1.2);opacity:0}}
+@keyframes flyB{0%{transform:translateY(0) scale(.4);opacity:0}20%{opacity:1}100%{transform:translateY(-110px) scale(1.2);opacity:0}}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="stars" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Trạm năng lượng ngôi sao" subtitle="Cộng, trừ sao và ghi lý do cho phi hành đoàn" hint-size="100%,84px"></dc-import>
+
+<!-- Step 1 -->
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">1. Chọn học sinh <span style="font-size:15px;color:#5B5890;font-family:'Nunito',sans-serif;font-weight:700">(đã chọn {{selCount}})</span></h2>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button type="button" onClick="{{selectAll}}" style="min-height:44px;padding:0 18px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14.5px;cursor:pointer">Chọn cả lớp</button>
+<button type="button" onClick="{{selectNone}}" style="min-height:44px;padding:0 18px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#4A476E;font-weight:800;font-size:14.5px;cursor:pointer">Bỏ chọn</button>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+<span style="font-weight:800;font-size:14.5px;color:#4A476E">Chọn cả tổ:</span>
+<sc-for list="{{groupBtns}}" as="g" hint-placeholder-count="4">
+<button type="button" aria-pressed="{{g.on}}" onClick="{{g.pick}}" style="min-height:44px;padding:0 16px;border-radius:999px;font-weight:800;font-size:14.5px;cursor:pointer;background:{{g.bg}};color:{{g.color}};border:2px solid {{g.border}}">{{g.label}}</button>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
+<sc-for list="{{students}}" as="s" hint-placeholder-count="10">
+<button type="button" aria-pressed="{{s.on}}" onClick="{{s.toggle}}" style="display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;min-height:64px;border-radius:18px;cursor:pointer;background:{{s.bg}};border:2px solid {{s.border}};color:#231F4D">
+<dc-import name="Avatar" hair="{{s.hair}}" hair-color="{{s.hairColor}}" skin="{{s.skin}}" bg="{{s.avBg}}" size="46" hint-size="46px,46px"></dc-import>
+<span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;font-size:14.5px;line-height:1.2">{{s.name}}</span><span style="font-size:12.5px;color:#5B5890;font-weight:700">{{s.avail}} sao khả dụng</span></span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<!-- Step 2+3 -->
+<div style="position:relative;background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:18px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">2. Chọn thao tác và lý do</h2>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button type="button" aria-pressed="{{isAdd}}" onClick="{{setAdd}}" style="flex:1 1 180px;min-height:56px;border-radius:18px;font-weight:800;font-size:18px;cursor:pointer;background:{{addBg}};color:{{addInk}};border:2px solid {{addBd}}">+ Cộng sao</button>
+<button type="button" aria-pressed="{{isSub}}" onClick="{{setSub}}" style="flex:1 1 180px;min-height:56px;border-radius:18px;font-weight:800;font-size:18px;cursor:pointer;background:{{subBg}};color:{{subInk}};border:2px solid {{subBd}}">− Trừ sao</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-weight:800;font-size:14.5px;color:#4A476E">Số sao</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+<sc-for list="{{amounts}}" as="a" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{a.on}}" onClick="{{a.pick}}" style="min-width:64px;min-height:48px;padding:0 14px;border-radius:14px;font-weight:800;font-size:17px;cursor:pointer;background:{{a.bg}};color:{{a.color}};border:2px solid {{a.border}}">{{a.label}}</button>
+</sc-for>
+<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:#4A476E">Tùy chỉnh
+<input type="number" min="1" value="{{custom}}" onInput="{{onCustom}}" placeholder="Số khác" style="width:100px;min-height:48px;box-sizing:border-box;border-radius:14px;border:2px solid #D9D5F2;padding:0 12px;font-size:16px;font-weight:700;color:#231F4D">
+</label>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-weight:800;font-size:14.5px;color:#4A476E">Tiêu chí</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{criteria}}" as="c" hint-placeholder-count="7">
+<button type="button" aria-pressed="{{c.on}}" onClick="{{c.pick}}" style="min-height:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:14.5px;cursor:pointer;background:{{c.bg}};color:{{c.color}};border:2px solid {{c.border}}">{{c.label}} <b>{{c.pts}}</b></button>
+</sc-for>
+</div>
+</div>
+<label style="display:flex;flex-direction:column;gap:6px;font-weight:800;font-size:14.5px;color:#4A476E">Ghi chú / lý do khác
+<input type="text" value="{{note}}" onInput="{{onNote}}" placeholder="Cô nhập thêm lý do nếu cần" style="min-height:48px;box-sizing:border-box;border-radius:14px;border:2px solid #D9D5F2;padding:0 14px;font-size:16px;font-weight:600;color:#231F4D">
+</label>
+
+<sc-if value="{{err}}" hint-placeholder-val="{{false}}">
+<div role="alert" style="background:#FFE3EA;color:#8E1B3B;border-radius:14px;padding:12px 16px;font-weight:700;font-size:15px">{{err}}</div>
+</sc-if>
+<sc-if value="{{msg}}" hint-placeholder-val="{{false}}">
+<div role="status" style="background:#DDF6F1;color:#0B5A4D;border-radius:14px;padding:12px 16px;font-weight:700;font-size:15px">{{msg}}</div>
+</sc-if>
+<sc-if value="{{confirming}}" hint-placeholder-val="{{false}}">
+<div role="alertdialog" aria-label="Xác nhận trừ sao" style="background:#FFF4F7;border:2px solid #C0314E;border-radius:18px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+<div style="font-weight:700;font-size:15.5px;max-width:520px">{{confirmText}}</div>
+<div style="display:flex;gap:10px"><button type="button" onClick="{{cancelConfirm}}" style="min-height:44px;padding:0 18px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;font-weight:800;cursor:pointer;color:#4A476E">Hủy</button><button type="button" onClick="{{apply}}" style="min-height:44px;padding:0 20px;border-radius:14px;border:0;background:#C0314E;color:#fff;font-weight:800;cursor:pointer">Đồng ý trừ sao</button></div>
+</div>
+</sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+<div style="font-size:14px;color:#5B5890;font-weight:700">{{summary}}</div>
+<button type="button" onClick="{{submit}}" style="min-height:56px;padding:0 32px;border-radius:18px;border:0;font-weight:800;font-size:18px;cursor:pointer;background:{{goBg}};color:{{goInk}}">{{goLabel}}</button>
+</div>
+<sc-if value="{{flash}}" hint-placeholder-val="{{false}}">
+<div aria-hidden="true" style="position:absolute;right:48px;bottom:84px;width:180px;height:120px;pointer-events:none">
+<sc-for list="{{flyStars}}" as="f" hint-placeholder-count="7">
+<svg viewBox="0 0 24 24" width="30" height="30" style="position:absolute;left:{{f.x}}px;bottom:0;opacity:0;animation:{{f.anim}} 1.4s ease-out {{f.delay}}s 1 both"><polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857" stroke="#E0A020" stroke-width="1.2" stroke-linejoin="round"/></svg>
+</sc-for>
+</div>
+</sc-if>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+<!-- History -->
+<div style="flex:1 1 420px;min-width:0;background:#fff;border-radius:26px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Lịch sử giao dịch sao</h2>
+<div style="font-size:13.5px;color:#5B5890">Hoàn tác sẽ tạo thêm một bản ghi mới, không xóa bản ghi cũ.</div>
+<sc-for list="{{log}}" as="l" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;background:#F6F4FF;border-radius:16px;padding:10px 14px">
+<div style="flex:0 0 auto;min-width:46px;text-align:center;font-weight:800;border-radius:12px;padding:6px 8px;background:{{l.tint}};color:{{l.ink}}">{{l.delta}}</div>
+<div style="min-width:0;flex:1"><div style="font-weight:800;font-size:14.5px">{{l.who}}</div><div style="font-size:13px;color:#5B5890">{{l.reason}} · {{l.time}} · {{l.by}}</div></div>
+<button type="button" onClick="{{l.undo}}" style="min-height:44px;padding:0 12px;border-radius:12px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:13px;cursor:pointer;opacity:{{l.undoOp}}">{{l.undoLabel}}</button>
+</div>
+</sc-for>
+</div>
+<!-- Criteria management -->
+<div style="flex:1 1 320px;min-width:0;background:#fff;border-radius:26px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Quản lý tiêu chí</h2><button type="button" style="min-height:44px;padding:0 16px;border-radius:14px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:14px;cursor:pointer">+ Thêm tiêu chí</button></div>
+<div style="font-size:13.5px;color:#5B5890">Cô có thể sửa tên, số sao mặc định hoặc xóa từng tiêu chí.</div>
+<sc-for list="{{manage}}" as="m" hint-placeholder-count="6">
+<div style="display:flex;align-items:center;gap:10px;border-radius:14px;padding:8px 12px;background:#F6F4FF">
+<span style="flex:0 0 auto;min-width:36px;text-align:center;font-weight:800;font-size:13px;border-radius:10px;padding:4px 8px;background:{{m.tint}};color:{{m.ink}}">{{m.pts}}</span>
+<span style="flex:1;min-width:0;font-weight:700;font-size:14.5px">{{m.label}}</span>
+<button type="button" aria-label="Sửa tiêu chí" style="width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:#3441B5;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+<button type="button" aria-label="Xóa tiêu chí" style="width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:#B02A4B;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1320}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+mode: 'add', sel: {}, amount: 2, custom: '', crit: null, note: '', confirm: false, flash: 0, msg: '', err: '',
+avail: [78, 64, 92, 41, 55, 60, 32, 48, 27, 40],
+log: [
+{ ids: [0], delta: 3, reason: 'Giúp đỡ bạn bè', time: '10 phút trước', by: 'Cô Khanh', undone: false, rev: false },
+{ ids: [1], delta: 2, reason: 'Hoàn thành tốt nhiệm vụ', time: '25 phút trước', by: 'Cô Khanh', undone: false, rev: false },
+{ ids: [3], delta: -1, reason: 'Quên đồ dùng học tập', time: '1 giờ trước', by: 'Cô Khanh', undone: false, rev: false }
+]
+};
+}
+renderVals() {
+const S = [
+['Nguyễn Minh Anh','b','#6B3F2A','#FFD9B8','#FFD6E8'],
+['Trần Gia Bảo','a','#2B2B3B','#F5C49C','#CFF3EC'],
+['Lê Khánh Chi','c','#3A2A4D','#FFD9B8','#D9D3FF'],
+['Phạm Đức Dũng','a','#6B3F2A','#E8B088','#FFE9B8'],
+['Võ Hà My','b','#2B2B3B','#FFD9B8','#D9D3FF'],
+['Đặng Quốc Huy','a','#3A2A4D','#F5C49C','#CFF3EC'],
+['Bùi Thảo Nhi','c','#8A4B2D','#FFD9B8','#FFD6E8'],
+['Hoàn Tuấn Kiệt','a','#2B2B3B','#E8B088','#D9D3FF'],
+['Ngô Bảo Ngọc','b','#6B3F2A','#F5C49C','#FFE9B8'],
+['Đỗ Anh Thư','c','#2B2B3B','#FFD9B8','#CFF3EC']
+].map((x, i) => x);
+S[7][0] = 'Hoàng Tuấn Kiệt';
+const ADD = [['Phát biểu xây dựng bài',1],['Hoàn thành tốt nhiệm vụ',2],['Có tiến bộ trong học tập',3],['Giúp đỡ bạn bè',2],['Thực hiện tốt nội quy',1],['Việc tốt',3],['Thành tích nổi bật',5]];
+const SUB = [['Quên đồ dùng học tập',1],['Chưa hoàn thành nhiệm vụ',1],['Mất trật tự',1],['Chưa thực hiện nội quy',2],['Đi học trễ',1]];
+const st = this.state;
+const isAdd = st.mode === 'add';
+const sign = isAdd ? 1 : -1;
+const names = ids => ids.length <= 2 ? ids.map(i => S[i][0]).join(', ') : S[ids[0]][0] + ', ' + S[ids[1]][0] + ' và ' + (ids.length - 2) + ' bạn khác';
+const selIds = S.map((_, i) => i).filter(i => st.sel[i]);
+const customN = parseInt(st.custom, 10);
+const amt = st.custom !== '' && customN > 0 ? customN : st.amount;
+const critList = isAdd ? ADD : SUB;
+const reasonText = () => {
+const parts = [];
+if (st.crit !== null && critList[st.crit]) parts.push(critList[st.crit][0]);
+if (st.note.trim()) parts.push(st.note.trim());
+return parts.join(' – ');
+};
+const timeNow = 'Vừa xong';
+const doApply = () => {
+const ids = selIds; const delta = sign * amt;
+const avail = st.avail.slice();
+ids.forEach(i => { avail[i] += delta; });
+const log = [{ ids, delta, reason: reasonText(), time: timeNow, by: 'Cô Khanh', undone: false, rev: false }, ...st.log].slice(0, 6);
+this.setState({ avail, log, confirm: false, err: '', flash: st.flash + 1,
+msg: (isAdd ? 'Đã cộng ' : 'Đã trừ ') + amt + ' sao cho ' + names(ids) + '. Số sao đã cập nhật trên màn hình.' });
+};
+const validate = () => {
+if (!selIds.length) return 'Cô hãy chọn ít nhất một học sinh.';
+if (!(amt > 0)) return 'Số sao phải lớn hơn 0.';
+if (!reasonText()) return 'Cô hãy chọn một tiêu chí hoặc nhập lý do.';
+if (!isAdd) {
+const low = selIds.filter(i => st.avail[i] < amt);
+if (low.length) return 'Không đủ sao khả dụng để trừ: ' + names(low) + '. Cô hãy giảm số sao hoặc xử lý riêng.';
+}
+return '';
+};
+const setMode = m => () => this.setState({ mode: m, crit: null, amount: m === 'add' ? 2 : 1, custom: '', confirm: false, err: '', msg: '' });
+const amounts = (isAdd ? [1,2,3,5,10] : [1,2,3,5]).map(v => {
+const on = st.custom === '' && st.amount === v;
+return { label: (isAdd ? '+' : '−') + v, on, pick: () => this.setState({ amount: v, custom: '', err: '' }), bg: on ? (isAdd ? '#FFC857' : '#C0314E') : '#fff', color: on ? (isAdd ? '#4A3300' : '#fff') : '#3A3769', border: on ? (isAdd ? '#E0A020' : '#C0314E') : '#D9D5F2' };
+});
+const goBg = isAdd ? '#FFC857' : '#C0314E';
+const undo = (idx) => () => {
+const e = st.log[idx];
+if (e.undone || e.rev) return;
+const inv = -e.delta;
+const avail = st.avail.slice();
+const bad = e.ids.filter(i => avail[i] + inv < 0);
+if (bad.length) { this.setState({ err: 'Không thể hoàn tác vì ' + names(bad) + ' không đủ sao khả dụng.', msg: '' }); return; }
+e.ids.forEach(i => { avail[i] += inv; });
+const log = st.log.map((x, j) => j === idx ? { ...x, undone: true } : x);
+this.setState({ avail, err: '', msg: 'Đã hoàn tác. Hệ thống ghi thêm một bản ghi mới, bản ghi cũ vẫn được giữ.',
+log: [{ ids: e.ids, delta: inv, reason: 'Hoàn tác: ' + e.reason, time: timeNow, by: 'Cô Khanh', undone: false, rev: true }, ...log].slice(0, 6) });
+};
+return {
+selCount: selIds.length,
+groupBtns: [[0,1,2],[3,4,5],[6,7],[8,9]].map((m, k) => {
+const all = m.every(i => st.sel[i]);
+return { label: 'Tổ ' + (k + 1) + ' (' + m.length + ' bạn)', on: all, pick: () => { const s = { ...st.sel }; m.forEach(i => { s[i] = !all; }); this.setState({ sel: s, err: '' }); }, bg: all ? '#EEF0FF' : '#fff', color: all ? '#2C37A8' : '#3A3769', border: all ? '#4F5BD5' : '#D9D5F2' };
+}),
+students: S.map(([name,hair,hairColor,skin,avBg], i) => {
+const on = !!st.sel[i];
+return { name, hair, hairColor, skin, avBg, avail: st.avail[i], on, toggle: () => this.setState({ sel: { ...st.sel, [i]: !on }, err: '' }), bg: on ? '#EEF0FF' : '#FFFFFF', border: on ? '#4F5BD5' : '#E4E0F7' };
+}),
+selectAll: () => { const s = {}; S.forEach((_, i) => { s[i] = true; }); this.setState({ sel: s, err: '' }); },
+selectNone: () => this.setState({ sel: {}, err: '' }),
+isAdd, isSub: !isAdd,
+setAdd: setMode('add'), setSub: setMode('sub'),
+addBg: isAdd ? '#FFC857' : '#fff', addInk: isAdd ? '#4A3300' : '#3A3769', addBd: isAdd ? '#E0A020' : '#D9D5F2',
+subBg: !isAdd ? '#C0314E' : '#fff', subInk: !isAdd ? '#fff' : '#3A3769', subBd: !isAdd ? '#C0314E' : '#D9D5F2',
+amounts,
+custom: st.custom,
+onCustom: e => this.setState({ custom: e.target.value, err: '' }),
+note: st.note,
+onNote: e => this.setState({ note: e.target.value, err: '' }),
+criteria: critList.map(([label, pts], i) => {
+const on = st.crit === i;
+return { label, pts: (isAdd ? '+' : '−') + pts, on, pick: () => this.setState({ crit: on ? null : i, amount: on ? st.amount : pts, custom: '', err: '' }), bg: on ? '#EEF0FF' : '#fff', color: on ? '#2C37A8' : '#3A3769', border: on ? '#4F5BD5' : '#D9D5F2' };
+}),
+err: st.err, msg: st.msg,
+confirming: st.confirm,
+confirmText: 'Cô muốn trừ ' + amt + ' sao của ' + names(selIds) + ' với lý do "' + reasonText() + '"?',
+cancelConfirm: () => this.setState({ confirm: false }),
+apply: () => { const v = validate(); if (v) this.setState({ err: v, confirm: false }); else doApply(); },
+summary: selIds.length ? ((isAdd ? 'Cộng ' : 'Trừ ') + amt + ' sao cho ' + selIds.length + ' học sinh') : 'Chưa chọn học sinh',
+goBg, goInk: isAdd ? '#4A3300' : '#fff',
+goLabel: isAdd ? 'Xác nhận cộng sao' : 'Xác nhận trừ sao',
+submit: () => {
+const v = validate();
+if (v) { this.setState({ err: v, msg: '', confirm: false }); return; }
+if (isAdd) doApply(); else this.setState({ confirm: true, err: '', msg: '' });
+},
+flash: st.flash > 0 && isAdd && !st.confirm && st.msg.indexOf('Đã cộng') === 0,
+flyStars: [0,1,2,3,4,5,6].map(k => ({ x: 8 + k * 22, delay: (k * 0.09).toFixed(2), anim: st.flash % 2 ? 'flyA' : 'flyB' })),
+log: st.log.map((e, idx) => ({
+who: names(e.ids), reason: e.reason, time: e.time, by: e.by,
+delta: (e.delta > 0 ? '+' : '−') + Math.abs(e.delta),
+tint: e.delta > 0 ? '#FFF1CC' : '#FFE3EE', ink: e.delta > 0 ? '#7A4E00' : '#9E2257',
+undo: undo(idx), undoLabel: e.rev ? 'Đã ghi' : (e.undone ? 'Đã hoàn tác' : 'Hoàn tác'), undoOp: (e.rev || e.undone) ? 0.5 : 1
+})),
+manage: [...ADD.map(([l, p]) => ({ label: l, pts: '+' + p, tint: '#FFF1CC', ink: '#7A4E00' })), ...SUB.map(([l, p]) => ({ label: l, pts: '−' + p, tint: '#FFE3EE', ink: '#9E2257' }))]
+};
+}
+}
+</script>
+</body>
+</html>

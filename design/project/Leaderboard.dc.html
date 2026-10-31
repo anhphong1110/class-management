@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Bảng xếp hạng – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button{font-family:'Nunito',system-ui,sans-serif}
+@keyframes tw{0%,100%{opacity:.3}50%{opacity:1}}
+.tw{animation:tw 3s ease-in-out infinite}
+.tw2{animation:tw 4s ease-in-out 1s infinite}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="rank" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Bảng xếp hạng phi hành gia xuất sắc" subtitle="Xếp theo sao thi đua, không tính sao đã dùng đổi quà" hint-size="100%,84px"></dc-import>
+
+<div style="display:flex;flex-wrap:wrap;gap:8px;background:#fff;border-radius:22px;padding:10px;box-shadow:0 6px 20px rgba(102,117,232,.10)" role="tablist">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="flex:1 1 120px;min-height:48px;border-radius:16px;border:0;font-weight:800;font-size:15.5px;cursor:pointer;background:{{t.bg}};color:{{t.color}}">{{t.label}}</button>
+</sc-for>
+</div>
+
+<!-- Podium -->
+<div style="position:relative;overflow:hidden;border-radius:30px;background:linear-gradient(180deg,#2B2E7E 0%,#4C47C4 70%,#7B63E0 100%);padding:28px 24px 0;display:flex;flex-direction:column;align-items:center;gap:8px">
+<svg viewBox="0 0 1000 200" width="100%" height="100%" preserveAspectRatio="none" aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:100%">
+<g class="tw"><circle cx="90" cy="40" r="3" fill="#FFE08A"/><circle cx="330" cy="26" r="2" fill="#fff"/><circle cx="640" cy="50" r="3" fill="#FFE08A"/><circle cx="900" cy="30" r="2.5" fill="#fff"/></g>
+<g class="tw2"><circle cx="190" cy="120" r="2" fill="#fff"/><circle cx="780" cy="110" r="2.5" fill="#FFE08A"/><circle cx="500" cy="22" r="2" fill="#fff"/></g>
+</svg>
+<div style="position:relative;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;color:#fff;text-align:center">Bục vinh danh – {{periodName}}</div>
+<div style="position:relative;display:flex;gap:14px;align-items:flex-end;justify-content:center;width:100%;max-width:760px">
+<sc-for list="{{podium}}" as="p" hint-placeholder-count="3">
+<div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center">
+<dc-import name="Avatar" hair="{{p.hair}}" hair-color="{{p.hairColor}}" skin="{{p.skin}}" bg="{{p.avBg}}" crown="{{p.crown}}" size="{{p.size}}" hint-size="96px,96px"></dc-import>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:17px;color:#fff;text-align:center;line-height:1.2;margin-top:4px">{{p.name}}</div>
+<div style="display:flex;align-items:center;gap:5px;font-weight:800;font-size:16px;color:#FFE08A;margin-bottom:8px"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857"/></svg>{{p.stars}} sao</div>
+<div style="width:100%;height:{{p.h}}px;border-radius:20px 20px 0 0;background:{{p.block}};display:flex;flex-direction:column;align-items:center;padding-top:14px;gap:6px;box-sizing:border-box">
+<div style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;color:{{p.ink}}">{{p.rank}}</div>
+<div style="font-weight:800;font-size:14px;color:{{p.ink}}">{{p.medal}}</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<!-- List -->
+<div style="background:#fff;border-radius:28px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:24px;font-weight:800">{{listTitle}}</h2>
+<button type="button" onClick="{{toggleAll}}" style="min-height:44px;padding:0 20px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14.5px;cursor:pointer">{{toggleLabel}}</button>
+</div>
+<div style="font-size:13.5px;color:#5B5890">Bằng điểm thì cùng thứ hạng. Hệ thống không ưu tiên theo giới tính hay tên.</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:14px;border-radius:20px;padding:10px 16px;background:{{r.bg}}">
+<div style="flex:0 0 auto;width:42px;height:42px;border-radius:50%;background:{{r.badge}};color:{{r.badgeInk}};display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">{{r.rank}}</div>
+<dc-import name="Avatar" hair="{{r.hair}}" hair-color="{{r.hairColor}}" skin="{{r.skin}}" bg="{{r.avBg}}" size="52" hint-size="52px,52px"></dc-import>
+<div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:6px">
+<div style="font-weight:800;font-size:16.5px">{{r.name}}</div>
+<div style="height:10px;border-radius:6px;background:#E9E6FA;overflow:hidden"><div style="height:100%;border-radius:6px;background:linear-gradient(90deg,#6675E8,#F46FA5);width:{{r.pct}}%"></div></div>
+</div>
+<div style="flex:0 0 auto;display:flex;align-items:center;gap:6px;font-weight:800;font-size:19px;color:#7A4E00"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857" stroke="#E0A020" stroke-width="1.2" stroke-linejoin="round"/></svg>{{r.stars}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1300}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { period: 'year', all: false };
+}
+renderVals() {
+const S = [
+['Nguyễn Minh Anh','b','#6B3F2A','#FFD9B8','#FFD6E8'],
+['Trần Gia Bảo','a','#2B2B3B','#F5C49C','#CFF3EC'],
+['Lê Khánh Chi','c','#3A2A4D','#FFD9B8','#D9D3FF'],
+['Phạm Đức Dũng','a','#6B3F2A','#E8B088','#FFE9B8'],
+['Võ Hà My','b','#2B2B3B','#FFD9B8','#D9D3FF'],
+['Đặng Quốc Huy','a','#3A2A4D','#F5C49C','#CFF3EC'],
+['Bùi Thảo Nhi','c','#8A4B2D','#FFD9B8','#FFD6E8'],
+['Hoàng Tuấn Kiệt','a','#2B2B3B','#E8B088','#D9D3FF'],
+['Ngô Bảo Ngọc','b','#6B3F2A','#F5C49C','#FFE9B8'],
+['Đỗ Anh Thư','c','#2B2B3B','#FFD9B8','#CFF3EC']
+];
+const DATA = {
+week: [18,15,12,11,10,9,8,7,6,5],
+month: [48,45,41,38,38,30,27,22,18,15],
+term: [96,88,85,72,70,63,55,52,46,40],
+year: [128,119,112,96,91,84,77,70,63,55]
+};
+const NAMES = { week:'Tuần này', month:'Tháng này', term:'Học kỳ', year:'Cả năm' };
+const st = this.state;
+const vals = DATA[st.period];
+const sorted = S.map((s, i) => ({ s, v: vals[i], i })).sort((a, b) => b.v - a.v || a.i - b.i);
+let prev = null, prevRank = 0;
+sorted.forEach((x, k) => { x.rank = (prev !== null && x.v === prev) ? prevRank : k + 1; prev = x.v; prevRank = x.rank; });
+const max = sorted[0].v;
+const toRow = x => ({ name: x.s[0], hair: x.s[1], hairColor: x.s[2], skin: x.s[3], avBg: x.s[4], stars: x.v, rank: x.rank });
+const pod = {
+1: { h: 150, block: 'linear-gradient(180deg,#FFD76F,#F5A81C)', ink: '#4A3300', medal: 'Huy chương vàng', size: '118', crown: '1' },
+2: { h: 112, block: 'linear-gradient(180deg,#EEF1FA,#B9C0D8)', ink: '#2F3550', medal: 'Huy chương bạc', size: '92', crown: '0' },
+3: { h: 84, block: 'linear-gradient(180deg,#FBD2B6,#E09A6C)', ink: '#512810', medal: 'Huy chương đồng', size: '92', crown: '0' }
+};
+const top3 = sorted.slice(0, 3).map(toRow);
+const podOrder = [top3[1], top3[0], top3[2]];
+const podium = podOrder.map(r => { const p = pod[r.rank] || pod[3]; return { ...r, ...p, rank: r.rank }; });
+const rowsAll = sorted.map(x => {
+const r = toRow(x);
+const hi = r.rank <= 3;
+return { ...r, pct: Math.round(x.v / max * 100), bg: hi ? '#FFF8E6' : '#F6F4FF', badge: r.rank === 1 ? '#FFC857' : r.rank === 2 ? '#DDE2F0' : r.rank === 3 ? '#F3BC97' : '#E4E0F7', badgeInk: r.rank <= 3 ? '#3A2A00' : '#4A476E' };
+});
+return {
+tabs: Object.keys(NAMES).map(k => { const on = st.period === k; return { label: NAMES[k], on, pick: () => this.setState({ period: k }), bg: on ? '#4F5BD5' : '#F6F4FF', color: on ? '#fff' : '#3A3769' }; }),
+periodName: NAMES[st.period],
+podium,
+rows: st.all ? rowsAll : rowsAll.slice(0, 5),
+listTitle: st.all ? 'Toàn bộ bảng xếp hạng (' + rowsAll.length + ' bạn)' : 'Top 5 ngôi sao sáng nhất',
+toggleLabel: st.all ? 'Chỉ xem Top 5' : 'Xem toàn bộ bảng',
+toggleAll: () => this.setState({ all: !st.all })
+};
+}
+}
+</script>
+</body>
+</html>

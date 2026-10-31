@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Thống kê – Báo cáo – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button{font-family:'Nunito',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="report" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Thống kê – Báo cáo" subtitle="Dành riêng cho giáo viên" hint-size="100%,84px"></dc-import>
+
+<div style="background:#fff;border-radius:26px;padding:14px 18px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+<div style="display:flex;flex-wrap:wrap;gap:8px" role="tablist">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="min-height:48px;padding:0 20px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;background:{{t.bg}};color:{{t.color}};border:2px solid {{t.border}}">{{t.label}}</button>
+</sc-for>
+<button type="button" style="min-height:48px;padding:0 18px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;background:#fff;color:#3441B5;border:2px solid #D9D5F2">Chọn ngày</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<button type="button" onClick="{{exportCsv}}" style="min-height:48px;padding:0 18px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14.5px;cursor:pointer">Xuất CSV</button>
+<button type="button" onClick="{{exportXlsx}}" style="min-height:48px;padding:0 18px;border-radius:14px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:14.5px;cursor:pointer">Xuất Excel</button>
+</div>
+</div>
+<sc-if value="{{msg}}" hint-placeholder-val="{{false}}"><div role="status" style="background:#DDF6F1;color:#0B5A4D;border-radius:14px;padding:12px 16px;font-weight:700;font-size:15px">{{msg}}</div></sc-if>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px">
+<sc-for list="{{kpis}}" as="k" hint-placeholder-count="5">
+<div style="background:#fff;border-radius:22px;padding:16px 18px;box-shadow:0 6px 20px rgba(102,117,232,.10)"><div style="font-size:13.5px;font-weight:700;color:#5B5890">{{k.label}}</div><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:32px;line-height:1.15;color:{{k.color}}">{{k.value}}</div></div>
+</sc-for>
+</div>
+
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Sao cộng và sao trừ theo {{unit}}</h2>
+<div style="display:flex;gap:14px;font-size:13.5px;font-weight:700"><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#4F5BD5"></span>Sao cộng</span><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#C0314E"></span>Sao trừ</span></div>
+</div>
+<div style="overflow-x:auto">
+<div style="min-width:{{chartMin}}px;display:flex;align-items:flex-end;gap:12px;height:230px;padding-top:10px;border-bottom:2px solid #E4E0F7">
+<sc-for list="{{bars}}" as="b" hint-placeholder-count="5">
+<div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px">
+<div style="display:flex;align-items:flex-end;gap:4px;height:190px">
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><span style="font-size:12px;font-weight:800;color:#2C37A8">{{b.add}}</span><div style="width:22px;height:{{b.ah}}px;border-radius:6px 6px 0 0;background:#4F5BD5"></div></div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><span style="font-size:12px;font-weight:800;color:#8E1B3B">{{b.sub}}</span><div style="width:22px;height:{{b.sh}}px;border-radius:6px 6px 0 0;background:#C0314E"></div></div>
+</div>
+<div style="font-size:13px;font-weight:700;color:#4A476E;padding-top:4px">{{b.label}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:stretch">
+<div style="flex:1 1 360px;min-width:0;background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Tình hình chuyên cần</h2>
+<div style="display:flex;height:34px;border-radius:12px;overflow:hidden" role="img" aria-label="Tỉ lệ chuyên cần">
+<sc-for list="{{attend}}" as="a" hint-placeholder-count="4"><div style="width:{{a.pct}}%;background:{{a.bg}}"></div></sc-for>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<sc-for list="{{attend}}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px"><span style="width:14px;height:14px;border-radius:4px;background:{{a.bg}}"></span>{{a.label}}: {{a.pct}}%</div></sc-for>
+</div>
+<div style="font-weight:800;font-size:14.5px;color:#4A476E;margin-top:4px">Cần quan tâm (vắng nhiều nhất)</div>
+<sc-for list="{{lowAtt}}" as="l" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;background:#F6F4FF;border-radius:12px;padding:8px 12px;font-weight:700;font-size:14.5px"><span>{{l.name}}</span><span style="color:#8E1B3B">{{l.days}} buổi vắng</span></div></sc-for>
+</div>
+<div style="flex:1 1 360px;min-width:0;background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Tiêu chí thường gặp</h2>
+<sc-for list="{{criteria}}" as="c" hint-placeholder-count="8">
+<div style="display:flex;flex-direction:column;gap:3px"><div style="display:flex;justify-content:space-between;font-weight:700;font-size:14.5px"><span>{{c.label}}</span><span style="color:{{c.ink}}">{{c.n}} lần</span></div><div style="height:10px;border-radius:6px;background:#EEEBFA"><div style="height:100%;border-radius:6px;width:{{c.pct}}%;background:{{c.bg}}"></div></div></div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:stretch">
+<div style="flex:1 1 360px;min-width:0;background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:10px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Học sinh tiến bộ</h2>
+<div style="font-size:13.5px;color:#5B5890">So với kỳ trước, tính theo sao thi đua nhận được.</div>
+<sc-for list="{{progress}}" as="p" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:12px;background:#F6F4FF;border-radius:16px;padding:8px 12px">
+<dc-import name="Avatar" hair="{{p.hair}}" hair-color="{{p.hairColor}}" skin="{{p.skin}}" bg="{{p.avBg}}" size="40" hint-size="40px,40px"></dc-import>
+<div style="flex:1;font-weight:800;font-size:15px">{{p.name}}</div>
+<span style="font-weight:800;font-size:14px;border-radius:999px;padding:4px 12px;background:#DDF6F1;color:#0B5A4D">+{{p.up}} sao</span>
+</div>
+</sc-for>
+</div>
+<div style="flex:1 1 360px;min-width:0;background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Phần thưởng đã đổi</h2>
+<sc-for list="{{gifts}}" as="g" hint-placeholder-count="5">
+<div style="display:flex;flex-direction:column;gap:3px"><div style="display:flex;justify-content:space-between;font-weight:700;font-size:14.5px"><span>{{g.label}}</span><span style="color:#5E35B1">{{g.n}} lượt</span></div><div style="height:10px;border-radius:6px;background:#EEEBFA"><div style="height:100%;border-radius:6px;width:{{g.pct}}%;background:#7A58E0"></div></div></div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1500}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { period: 'month', msg: '' };
+}
+renderVals() {
+const D = {
+week: { name: 'Tuần này', unit: 'ngày', f: 1, labels: ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6'], add: [14,18,16,20,18], sub: [2,1,3,1,0], att: 97, gifts: 4 },
+month: { name: 'Tháng này', unit: 'tuần', f: 4, labels: ['Tuần 1','Tuần 2','Tuần 3','Tuần 4'], add: [62,71,58,86], sub: [8,5,9,7], att: 96, gifts: 9 },
+term: { name: 'Học kỳ', unit: 'tháng', f: 14, labels: ['T9','T10','T11','T12','T1'], add: [210,260,240,280,200], sub: [24,30,22,28,18], att: 95, gifts: 21 },
+year: { name: 'Cả năm', unit: 'tháng', f: 28, labels: ['T9','T10','T11','T12','T1','T2','T3','T4','T5'], add: [210,260,240,280,200,220,250,270,230], sub: [24,30,22,28,18,20,26,22,19], att: 95, gifts: 38 }
+};
+const d = D[this.state.period];
+const sum = a => a.reduce((x, y) => x + y, 0);
+const max = Math.max(...d.add, ...d.sub);
+const S = [['Nguyễn Minh Anh','b','#6B3F2A','#FFD9B8','#FFD6E8'],['Trần Gia Bảo','a','#2B2B3B','#F5C49C','#CFF3EC'],['Lê Khánh Chi','c','#3A2A4D','#FFD9B8','#D9D3FF'],['Phạm Đức Dũng','a','#6B3F2A','#E8B088','#FFE9B8'],['Võ Hà My','b','#2B2B3B','#FFD9B8','#D9D3FF'],['Hoàng Tuấn Kiệt','a','#2B2B3B','#E8B088','#D9D3FF']];
+const ADD = [['Phát biểu xây dựng bài',18],['Hoàn thành tốt nhiệm vụ',15],['Giúp đỡ bạn bè',12],['Việc tốt',6],['Có tiến bộ trong học tập',5]];
+const SUB = [['Quên đồ dùng học tập',4],['Mất trật tự',3],['Chưa hoàn thành nhiệm vụ',2],['Đi học trễ',2]];
+const crit = [...ADD.map(([l, n]) => [l, Math.round(n * d.f / 4) || 1, '#4F5BD5', '#2C37A8']), ...SUB.map(([l, n]) => [l, Math.round(n * d.f / 4) || 1, '#C0314E', '#8E1B3B'])];
+const cmax = Math.max(...crit.map(c => c[1]));
+const lateP = 2, exP = 1;
+const presentP = d.att - 0;
+const absentP = 100 - d.att - lateP;
+const GIFT = [['Sticker vũ trụ', 12], ['Bookmark tên lửa', 9], ['Bút dễ thương', 7], ['Huy hiệu phi hành gia', 6], ['Quà bí mật', 4]];
+const gs = GIFT.map(([l, n]) => [l, Math.max(1, Math.round(n / 38 * d.gifts))]);
+const gmax = Math.max(...gs.map(g => g[1]));
+const setP = k => () => this.setState({ period: k, msg: '' });
+return {
+tabs: Object.keys(D).map(k => { const on = this.state.period === k; return { label: D[k].name, on, pick: setP(k), bg: on ? '#4F5BD5' : '#fff', color: on ? '#fff' : '#3A3769', border: on ? '#4F5BD5' : '#D9D5F2' }; }),
+exportCsv: () => this.setState({ msg: 'Khi hệ thống chạy thật, nút này tải báo cáo "' + d.name + '" dạng CSV.' }),
+exportXlsx: () => this.setState({ msg: 'Khi hệ thống chạy thật, nút này tải báo cáo "' + d.name + '" dạng Excel.' }),
+msg: this.state.msg,
+unit: d.unit,
+kpis: [
+{ label: 'Sao đã cộng', value: '+' + sum(d.add), color: '#2C37A8' },
+{ label: 'Sao đã trừ', value: '-' + sum(d.sub), color: '#8E1B3B' },
+{ label: 'Tỉ lệ chuyên cần', value: d.att + '%', color: '#0B5A4D' },
+{ label: 'Lượt đổi quà', value: String(d.gifts), color: '#5E35B1' },
+{ label: 'Học sinh tiến bộ', value: String(d.f > 3 ? 5 : 3), color: '#7A4E00' }
+],
+bars: d.labels.map((label, i) => ({ label, add: d.add[i], sub: d.sub[i], ah: Math.max(4, Math.round(d.add[i] / max * 150)), sh: Math.max(4, Math.round(d.sub[i] / max * 150)) })),
+chartMin: d.labels.length * 78,
+attend: [
+{ label: 'Có mặt', pct: presentP - exP - 1, bg: '#12794F' },
+{ label: 'Đi trễ', pct: lateP, bg: '#FFC857' },
+{ label: 'Vắng có phép', pct: exP + 1, bg: '#2563C9' },
+{ label: 'Vắng không phép', pct: Math.max(absentP, 0), bg: '#C0314E' }
+],
+lowAtt: [{ name: 'Bùi Thảo Nhi', days: Math.max(1, Math.round(d.f / 3)) }, { name: 'Phạm Đức Dũng', days: Math.max(1, Math.round(d.f / 4)) }],
+criteria: crit.map(([label, n, bg, ink]) => ({ label, n, bg, ink, pct: Math.round(n / cmax * 100) })),
+progress: S.slice(0, 5).map((s, i) => ({ name: s[0], hair: s[1], hairColor: s[2], skin: s[3], avBg: s[4], up: Math.max(1, Math.round((12 - i * 2) * d.f / 4)) })),
+gifts: gs.map(([label, n]) => ({ label, n, pct: Math.round(n / gmax * 100) }))
+};
+}
+}
+</script>
+</body>
+</html>

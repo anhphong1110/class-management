@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Thời khóa biểu – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button,select,input{font-family:'Nunito',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="timetable" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Lịch bay của phi hành gia" subtitle="Thời khóa biểu lớp 5/8 · Học kỳ I" hint-size="100%,84px"></dc-import>
+
+<div style="background:#fff;border-radius:26px;padding:20px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{views}}" as="v" hint-placeholder-count="2">
+<button type="button" aria-pressed="{{v.on}}" onClick="{{v.pick}}" style="min-height:48px;padding:0 22px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;background:{{v.bg}};color:{{v.color}};border:2px solid {{v.border}}">{{v.label}}</button>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<button type="button" style="min-height:48px;padding:0 16px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14.5px;cursor:pointer">Sao chép thời khóa biểu</button>
+<button type="button" style="min-height:48px;padding:0 16px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14.5px;cursor:pointer">In / Xuất</button>
+</div>
+</div>
+
+<sc-if value="{{isDay}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{dayChips}}" as="d" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{d.on}}" onClick="{{d.pick}}" style="min-height:44px;padding:0 18px;border-radius:999px;font-weight:800;font-size:14.5px;cursor:pointer;background:{{d.bg}};color:{{d.color}};border:2px solid {{d.border}}">{{d.label}}</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{hasEdit}}" hint-placeholder-val="{{false}}">
+<div role="region" aria-label="Sửa tiết học" style="background:#EEF0FF;border:2px solid #4F5BD5;border-radius:20px;padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+<div style="font-weight:800;font-size:15.5px">Đang sửa: {{editLabel}}</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px">Môn học
+<select onChange="{{onSubject}}" aria-label="Chọn môn học" style="min-height:44px;border-radius:12px;border:2px solid #B9B5E8;padding:0 12px;font-size:15px;font-weight:700;background:#fff;color:#231F4D">
+<sc-for list="{{subjectOptions}}" as="o" hint-placeholder-count="10"><option value="{{o.name}}" selected="{{o.on}}">{{o.name}}</option></sc-for>
+</select>
+</label>
+<button type="button" onClick="{{closeEdit}}" style="min-height:44px;padding:0 18px;border-radius:12px;border:0;background:#4F5BD5;color:#fff;font-weight:800;cursor:pointer">Xong</button>
+</div>
+</div>
+</sc-if>
+
+<div style="background:#fff;border-radius:28px;padding:20px;box-shadow:0 6px 20px rgba(102,117,232,.10)">
+<div style="overflow-x:auto">
+<div style="min-width:{{minW}}px;display:flex;flex-direction:column;gap:8px">
+<div style="display:grid;grid-template-columns:{{cols}};gap:8px">
+<sc-for list="{{heads}}" as="h" hint-placeholder-count="6">
+<div style="text-align:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px;border-radius:14px;padding:10px 6px;background:{{h.bg}};color:{{h.color}}">{{h.label}}</div>
+</sc-for>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<div>
+<sc-if value="{{r.isBreak}}" hint-placeholder-val="{{false}}"><div style="text-align:center;font-weight:800;font-size:13px;letter-spacing:.1em;color:#3441B5;background:#EEF0FF;border-radius:12px;padding:6px">{{r.title}}</div></sc-if>
+<sc-if value="{{r.isRow}}" hint-placeholder-val="{{true}}">
+<div style="display:grid;grid-template-columns:{{cols}};gap:8px">
+<div style="display:flex;align-items:center;justify-content:center;border-radius:14px;background:#F6F4FF;padding:8px 4px;min-height:60px;font-weight:800;font-size:15px">{{r.label}}</div>
+<sc-for list="{{r.cells}}" as="c" hint-placeholder-count="5">
+<button type="button" onClick="{{c.edit}}" style="min-height:60px;border-radius:14px;cursor:pointer;font-weight:800;font-size:14.5px;line-height:1.25;padding:8px 6px;background:{{c.bg}};color:{{c.ink}};border:2px solid {{c.border}}">{{c.subject}}</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="background:#fff;border-radius:28px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<div>
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Danh sách môn học của lớp</h2>
+<div style="font-size:14px;color:#5B5890">Cô đổi tên, đổi màu, thêm hoặc xóa môn. Môn đang có trong thời khóa biểu thì chưa xóa được.</div>
+</div>
+<sc-if value="{{msg}}" hint-placeholder-val="{{false}}"><div role="status" style="background:#FFF1CC;color:#5E3E00;border-radius:12px;padding:10px 14px;font-weight:700;font-size:14.5px">{{msg}}</div></sc-if>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+<sc-for list="{{subjects}}" as="s" hint-placeholder-count="12">
+<div style="display:flex;align-items:center;gap:8px;border-radius:16px;padding:8px 10px;background:{{s.bg}}">
+<button type="button" onClick="{{s.cycle}}" aria-label="Đổi màu môn {{s.name}}" style="flex:0 0 auto;width:44px;height:44px;border-radius:12px;border:2px solid {{s.ink}};background:{{s.bg}};cursor:pointer;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border-radius:50%;background:{{s.ink}}"></span></button>
+<input type="text" value="{{s.name}}" onInput="{{s.rename}}" aria-label="Tên môn học" style="flex:1;min-width:0;min-height:44px;box-sizing:border-box;border-radius:12px;border:2px solid transparent;background:rgba(255,255,255,.7);padding:0 10px;font-size:15px;font-weight:800;color:{{s.ink}}">
+<button type="button" onClick="{{s.remove}}" aria-label="Xóa môn {{s.name}}" style="flex:0 0 auto;width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:#9E2257;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+<input type="text" value="{{newName}}" onInput="{{onNew}}" placeholder="Tên môn mới, ví dụ: Công nghệ" aria-label="Tên môn mới" style="flex:1 1 240px;min-height:48px;box-sizing:border-box;border-radius:14px;border:2px solid #D9D5F2;padding:0 14px;font-size:16px;font-weight:600;color:#231F4D">
+<button type="button" onClick="{{addSubject}}" style="min-height:48px;padding:0 22px;border-radius:14px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:15px;cursor:pointer">+ Thêm môn</button>
+</div>
+</div>
+<div style="font-size:13.5px;color:#5B5890">Học sinh chỉ được xem. Thay đổi trên màn hình này chưa lưu vào cơ sở dữ liệu thật.</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1500}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+view: 'week', day: 4, edit: null, newName: '', msg: '',
+subjects: [
+{ name: 'Toán', ci: 0 }, { name: 'Tiếng Việt', ci: 1 }, { name: 'Tiếng Anh', ci: 2 }, { name: 'Khoa học', ci: 3 },
+{ name: 'Lịch sử – Địa lý', ci: 4 }, { name: 'Đạo đức', ci: 5 }, { name: 'Thể dục', ci: 6 }, { name: 'Mĩ thuật', ci: 7 },
+{ name: 'Âm nhạc', ci: 8 }, { name: 'Tin học', ci: 9 }, { name: 'HĐ trải nghiệm', ci: 10 }, { name: 'Sinh hoạt lớp', ci: 10 }
+],
+tt: [
+['Toán','Tiếng Việt','Toán','Tiếng Việt','Đạo đức','Khoa học','Lịch sử – Địa lý','Thể dục'],
+['Tiếng Việt','Toán','Tiếng Anh','Toán','Tiếng Việt','Mĩ thuật','Tin học','Tiếng Anh'],
+['Toán','Tiếng Việt','Khoa học','Tiếng Anh','Toán','Thể dục','Âm nhạc','Tiếng Việt'],
+['Tiếng Anh','Toán','Tiếng Việt','Lịch sử – Địa lý','Khoa học','Tin học','HĐ trải nghiệm','Toán'],
+['Tiếng Việt','Toán','Thể dục','Tiếng Anh','Toán','Sinh hoạt lớp','HĐ trải nghiệm','Tiếng Việt']
+]
+};
+}
+renderVals() {
+const PAL = [['#E8EBFF','#2C37A8'],['#FFE3EE','#8E1B3B'],['#DDF6F1','#0B5A4D'],['#E3F4FF','#0F5E8F'],['#FFF1CC','#6E4700'],['#F0E8FF','#5E35B1'],['#FFE6D6','#7A3510'],['#FFDDF4','#7E1D69'],['#E9E5FF','#4A33A8'],['#E6F5D9','#2B6110'],['#EDEDF7','#3A3769']];
+const DAYS = ['Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu'];
+const LABELS = ['Tiết 1','Tiết 2','Tiết 3','Tiết 4','Tiết 5','Tiết 1','Tiết 2','Tiết 3'];
+const st = this.state;
+const colOf = name => { const s = st.subjects.find(x => x.name === name); return PAL[s ? s.ci % PAL.length : 10]; };
+const cell = (d, p) => {
+const sub = st.tt[d][p]; const c = colOf(sub);
+const on = st.edit && st.edit.d === d && st.edit.p === p;
+return { subject: sub, bg: c[0], ink: c[1], border: on ? '#4F5BD5' : 'transparent', edit: () => this.setState({ edit: { d, p } }) };
+};
+const days = st.view === 'week' ? [0,1,2,3,4] : [st.day];
+const rows = [];
+rows.push({ isBreak: true, isRow: false, title: 'BUỔI SÁNG · 5 TIẾT' });
+[0,1,2,3,4].forEach(p => rows.push({ isBreak: false, isRow: true, label: LABELS[p], cells: days.map(d => cell(d, p)) }));
+rows.push({ isBreak: true, isRow: false, title: 'BUỔI CHIỀU' });
+[5,6,7].forEach(p => rows.push({ isBreak: false, isRow: true, label: LABELS[p], cells: days.map(d => cell(d, p)) }));
+const heads = [{ label: 'Tiết', bg: '#fff', color: '#5B5890' }, ...days.map(d => ({ label: DAYS[d], bg: d === 4 ? '#4F5BD5' : '#EEF0FF', color: d === 4 ? '#fff' : '#2C37A8' }))];
+const ed = st.edit;
+const used = name => st.tt.some(r => r.indexOf(name) >= 0);
+return {
+views: [['week','Cả tuần'],['day','Theo ngày']].map(([k, label]) => { const on = st.view === k; return { label, on, pick: () => this.setState({ view: k }), bg: on ? '#4F5BD5' : '#fff', color: on ? '#fff' : '#3A3769', border: on ? '#4F5BD5' : '#D9D5F2' }; }),
+isDay: st.view === 'day',
+dayChips: DAYS.map((label, i) => { const on = st.day === i; return { label, on, pick: () => this.setState({ day: i }), bg: on ? '#EEF0FF' : '#fff', color: on ? '#2C37A8' : '#3A3769', border: on ? '#4F5BD5' : '#D9D5F2' }; }),
+heads, rows,
+cols: '84px ' + days.map(() => 'minmax(0,1fr)').join(' '),
+minW: st.view === 'week' ? 760 : 320,
+hasEdit: !!ed,
+editLabel: ed ? DAYS[ed.d] + ', ' + (ed.p < 5 ? 'sáng ' : 'chiều ') + LABELS[ed.p].toLowerCase() : '',
+subjectOptions: st.subjects.map(s => ({ name: s.name, on: ed ? st.tt[ed.d][ed.p] === s.name : false })),
+onSubject: e => { if (!ed) return; const tt = st.tt.map((r, d) => d === ed.d ? r.map((s, p) => p === ed.p ? e.target.value : s) : r); this.setState({ tt }); },
+closeEdit: () => this.setState({ edit: null }),
+msg: st.msg,
+newName: st.newName,
+onNew: e => this.setState({ newName: e.target.value }),
+addSubject: () => {
+const n = st.newName.trim();
+if (!n) { this.setState({ msg: 'Cô hãy nhập tên môn học.' }); return; }
+if (st.subjects.some(s => s.name.toLowerCase() === n.toLowerCase())) { this.setState({ msg: 'Môn "' + n + '" đã có trong danh sách.' }); return; }
+this.setState({ subjects: [...st.subjects, { name: n, ci: st.subjects.length % 10 }], newName: '', msg: '' });
+},
+subjects: st.subjects.map((s, i) => {
+const c = PAL[s.ci % PAL.length];
+return {
+name: s.name, bg: c[0], ink: c[1],
+cycle: () => this.setState({ subjects: st.subjects.map((x, j) => j === i ? { ...x, ci: (x.ci + 1) % PAL.length } : x) }),
+rename: e => {
+const v = e.target.value; const old = s.name;
+this.setState({ subjects: st.subjects.map((x, j) => j === i ? { ...x, name: v } : x), tt: st.tt.map(r => r.map(x => x === old ? v : x)), msg: '' });
+},
+remove: () => {
+if (used(s.name)) { this.setState({ msg: 'Môn "' + s.name + '" đang có trong thời khóa biểu. Cô hãy đổi các tiết đó sang môn khác trước khi xóa.' }); return; }
+this.setState({ subjects: st.subjects.filter((x, j) => j !== i), msg: '' });
+}
+};
+})
+};
+}
+}
+</script>
+</body>
+</html>

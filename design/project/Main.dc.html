@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Tổng quan – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+.qa:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(79,91,213,.22)}
+.qa{transition:transform .15s,box-shadow .15s}
+@keyframes tw{0%,100%{opacity:.35}50%{opacity:1}}
+.tw{animation:tw 3s ease-in-out infinite}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="home" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Tổng quan" subtitle="Trạm chỉ huy của lớp 5/8" hint-size="100%,84px"></dc-import>
+
+<!-- Hero -->
+<div style="position:relative;overflow:hidden;border-radius:28px;background:linear-gradient(120deg,#33378F 0%,#5C4FD8 55%,#9A66E6 100%);color:#fff;padding:32px 36px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;justify-content:space-between">
+<div style="flex:1 1 320px;display:flex;flex-direction:column;gap:10px;position:relative;z-index:1">
+<div style="font-weight:800;font-size:13px;letter-spacing:.12em;color:#FFE08A">CÙNG HỌC – CÙNG CHƠI – CÙNG TỎA SÁNG</div>
+<h1 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:44px;line-height:1.1;font-weight:800">Xin chào, cô Khanh!</h1>
+<p style="margin:0;font-size:18px;line-height:1.5;max-width:460px;color:#EEF0FF">Chào mừng cô trở lại Trạm không gian Năm 8. Hôm nay cả phi hành đoàn đã sẵn sàng cất cánh.</p>
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+<a href="Attendance.dc.html" style="background:#FFC857;color:#3B2A00;font-weight:800;border-radius:999px;padding:12px 22px;min-height:44px;box-sizing:border-box;display:inline-flex;align-items:center">Bắt đầu điểm danh</a>
+<a href="Stars.dc.html" style="background:rgba(255,255,255,.16);color:#fff;font-weight:700;border-radius:999px;padding:12px 22px;min-height:44px;box-sizing:border-box;display:inline-flex;align-items:center;border:1.5px solid rgba(255,255,255,.5)">Cộng sao cho lớp</a>
+</div>
+</div>
+<svg viewBox="0 0 320 200" width="300" height="188" aria-hidden="true" style="flex:0 0 auto;max-width:100%">
+<defs>
+<radialGradient id="mp1" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#FFE9B0"></stop><stop offset=".55" stop-color="#FFB86B"></stop><stop offset="1" stop-color="#E5718F"></stop></radialGradient>
+<linearGradient id="mr1" x1="0" x2="1"><stop offset="0" stop-color="#fff"></stop><stop offset="1" stop-color="#D8D2FF"></stop></linearGradient>
+</defs>
+<g class="tw"><circle cx="40" cy="30" r="3" fill="#FFE08A"></circle><circle cx="290" cy="40" r="2.5" fill="#fff"></circle><circle cx="260" cy="170" r="3" fill="#FFE08A"></circle><circle cx="70" cy="170" r="2" fill="#fff"></circle></g>
+<ellipse cx="170" cy="110" rx="118" ry="26" fill="none" stroke="#FFD7F0" stroke-width="7" opacity=".55" transform="rotate(-18 170 110)"></ellipse>
+<circle cx="170" cy="105" r="62" fill="url(#mp1)"></circle>
+<path d="M120 80 Q170 62 222 84" stroke="#fff" stroke-opacity=".35" stroke-width="8" fill="none" stroke-linecap="round"></path>
+<path d="M114 118 Q170 136 226 112" stroke="#C2557A" stroke-opacity=".3" stroke-width="7" fill="none" stroke-linecap="round"></path>
+<ellipse cx="170" cy="110" rx="118" ry="26" fill="none" stroke="#FFD7F0" stroke-width="7" opacity=".9" transform="rotate(-18 170 110)" stroke-dasharray="120 400" stroke-dashoffset="-190"></ellipse>
+<g transform="translate(236 30) rotate(35)">
+<path d="M0 -34 C14 -22 14 6 8 22 L-8 22 C-14 6 -14 -22 0 -34Z" fill="url(#mr1)"></path>
+<circle cx="0" cy="-8" r="7" fill="#6675E8"></circle><circle cx="-2" cy="-10" r="2.2" fill="#fff" opacity=".8"></circle>
+<path d="M-8 14 L-18 28 L-6 22Z M8 14 L18 28 L6 22Z" fill="#F46FA5"></path>
+<path d="M-5 22 L0 40 L5 22Z" fill="#FFC857"></path>
+</g>
+</svg>
+</div>
+
+<!-- Stats -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+<sc-for list="{{stats}}" as="st" hint-placeholder-count="6">
+<div style="background:#fff;border-radius:22px;padding:18px 20px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;align-items:center;gap:14px">
+<div style="width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:{{st.tint}}">
+<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="{{st.ink}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{st.d}}"></path></svg>
+</div>
+<div style="display:flex;flex-direction:column;min-width:0">
+<div style="font-size:14px;font-weight:700;color:#5B5890">{{st.label}}</div>
+<div style="font-family:'Baloo 2',sans-serif;font-size:32px;font-weight:800;line-height:1.1;color:#231F4D">{{st.value}}</div>
+<div style="font-size:12.5px;color:#5B5890">{{st.sub}}</div>
+</div>
+</div>
+</sc-for>
+</div>
+
+<!-- Top 3 -->
+<div style="background:#fff;border-radius:28px;padding:26px 28px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center">
+<div>
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:800">Top 3 phi hành gia xuất sắc</h2>
+<div style="font-size:14px;color:#5B5890">Xếp theo sao thi đua tích lũy, không bị trừ khi đổi quà</div>
+</div>
+<a href="Leaderboard.dc.html" style="background:#4F5BD5;color:#fff;font-weight:800;border-radius:999px;padding:11px 22px;min-height:44px;box-sizing:border-box;display:inline-flex;align-items:center">Xem bảng xếp hạng</a>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;align-items:flex-end;padding-top:6px">
+<sc-for list="{{top3}}" as="t" hint-placeholder-count="3">
+<div style="flex:1 1 200px;max-width:280px;border-radius:24px;padding:20px 16px 18px;display:flex;flex-direction:column;align-items:center;gap:6px;background:{{t.bg}};text-align:center;position:relative;overflow:hidden">
+<dc-import name="Avatar" hair="{{t.hair}}" hair-color="{{t.hairColor}}" skin="{{t.skin}}" bg="{{t.avBg}}" crown="{{t.crown}}" size="{{t.size}}" hint-size="96px,96px"></dc-import>
+<div style="font-weight:800;font-size:13px;border-radius:999px;padding:4px 14px;background:{{t.medalBg}};color:{{t.medalInk}}">{{t.medal}}</div>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:20px;line-height:1.2">{{t.name}}</div>
+<div style="display:flex;align-items:center;gap:6px;font-weight:800;font-size:18px;color:#7A4E00">
+<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857" stroke="#E0A020" stroke-width="1.2" stroke-linejoin="round"></polygon></svg>
+{{t.stars}} sao
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<!-- Quick actions -->
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:24px;font-weight:800">Thao tác nhanh</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px">
+<sc-for list="{{actions}}" as="a" hint-placeholder-count="5">
+<a href="{{a.href}}" class="qa" style="border-radius:22px;padding:20px 12px;min-height:120px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:{{a.bg}};color:{{a.ink}};font-weight:800;font-size:16px;text-align:center">
+<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="{{a.ink}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{a.d}}"></path></svg>
+{{a.label}}
+</a>
+</sc-for>
+</div>
+</div>
+
+<!-- Activity + announcements -->
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:stretch">
+<div style="flex:1 1 340px;min-width:0;background:#fff;border-radius:26px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Hoạt động gần đây</h2>
+<sc-for list="{{activity}}" as="ac" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:12px">
+<div style="flex:0 0 auto;min-width:48px;text-align:center;font-weight:800;font-size:14px;border-radius:12px;padding:6px 8px;background:{{ac.tint}};color:{{ac.ink}}">{{ac.delta}}</div>
+<div style="min-width:0;flex:1"><div style="font-weight:700;font-size:15px">{{ac.text}}</div><div style="font-size:13px;color:#5B5890">{{ac.meta}}</div></div>
+</div>
+</sc-for>
+</div>
+<div style="flex:1 1 340px;min-width:0;background:#fff;border-radius:26px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Tín hiệu từ trạm chỉ huy</h2><a href="Announcements.dc.html" style="font-size:14px;font-weight:700;color:#4F5BD5">Xem tất cả</a></div>
+<sc-for list="{{news}}" as="n" hint-placeholder-count="3">
+<div style="border-radius:16px;padding:14px 16px;background:#F6F4FF;display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px;background:{{n.tint}};color:{{n.ink}}">{{n.tag}}</span><span style="font-size:12.5px;color:#5B5890">{{n.date}}</span></div>
+<div style="font-weight:800;font-size:15.5px">{{n.title}}</div>
+<div style="font-size:14px;color:#4A476E;line-height:1.45">{{n.body}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1380}}'>
+class Component extends DCLogic {
+renderVals() {
+const mk = (r, name, stars, hair, hairColor, skin, avBg) => ({ name, stars, hair, hairColor, skin, avBg });
+const gold = { medal:'Hạng 1', medalBg:'#FFC857', medalInk:'#4A3300', bg:'linear-gradient(180deg,#FFF4D1,#FFFFFF)', size:'124', crown:'1' };
+const silver = { medal:'Hạng 2', medalBg:'#DDE2F0', medalInk:'#2F3550', bg:'linear-gradient(180deg,#ECEFFA,#FFFFFF)', size:'96', crown:'0' };
+const bronze = { medal:'Hạng 3', medalBg:'#F3BC97', medalInk:'#512810', bg:'linear-gradient(180deg,#FFE8D8,#FFFFFF)', size:'96', crown:'0' };
+return {
+stats: [
+{ label:'Tổng số học sinh', value:'10', sub:'đang học trong lớp', tint:'#E8EBFF', ink:'#3F4BC4', d:'M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M20 20v-1a4 4 0 0 0-3-3.8M16 4.2a3.5 3.5 0 0 1 0 6.6' },
+{ label:'Có mặt hôm nay', value:'9/10', sub:'1 bạn đi trễ', tint:'#DDF6F1', ink:'#0E7C6F', d:'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9' },
+{ label:'Vắng hôm nay', value:'1', sub:'vắng có phép', tint:'#FFE3EE', ink:'#B02A63', d:'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 8l5 5M22 8l-5 5' },
+{ label:'Sao thi đua tuần này', value:'+86', sub:'đã trừ 7 sao', tint:'#FFF1CC', ink:'#8A5A00', d:'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z' },
+{ label:'Lượt đổi quà', value:'4', sub:'1 yêu cầu chờ duyệt', tint:'#F0E8FF', ink:'#6A3FC0', d:'M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z' },
+{ label:'Học sinh nổi bật', value:'3', sub:'đạt mốc 100 sao', tint:'#E3F4FF', ink:'#12689C', d:'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3' }
+],
+top3: [
+{ ...silver, ...mk(2,'Trần Gia Bảo',119,'a','#2B2B3B','#F5C49C','#CFF3EC') },
+{ ...gold, ...mk(1,'Nguyễn Minh Anh',128,'b','#6B3F2A','#FFD9B8','#FFD6E8') },
+{ ...bronze, ...mk(3,'Lê Khánh Chi',112,'c','#3A2A4D','#FFD9B8','#D9D3FF') }
+],
+actions: [
+{ label:'Điểm danh', href:'Attendance.dc.html', bg:'#DDF6F1', ink:'#0B6B5F', d:'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9' },
+{ label:'Cộng sao', href:'Stars.dc.html', bg:'#FFF1CC', ink:'#7A4E00', d:'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z' },
+{ label:'Trừ sao', href:'Stars.dc.html', bg:'#FFE3EE', ink:'#9E2257', d:'M5 12h14' },
+{ label:'Đổi quà', href:'Rewards.dc.html', bg:'#F0E8FF', ink:'#5E35B1', d:'M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z' },
+{ label:'Xem bảng xếp hạng', href:'Leaderboard.dc.html', bg:'#E3F4FF', ink:'#0F5E8F', d:'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3' }
+],
+activity: [
+{ delta:'+3', tint:'#FFF1CC', ink:'#7A4E00', text:'Nguyễn Minh Anh – Giúp đỡ bạn bè', meta:'Cô Khanh · 10 phút trước' },
+{ delta:'+2', tint:'#FFF1CC', ink:'#7A4E00', text:'Trần Gia Bảo – Hoàn thành tốt nhiệm vụ', meta:'Cô Khanh · 25 phút trước' },
+{ delta:'-1', tint:'#FFE3EE', ink:'#9E2257', text:'Phạm Đức Dũng – Quên đồ dùng học tập', meta:'Cô Khanh · 1 giờ trước' },
+{ delta:'Quà', tint:'#F0E8FF', ink:'#5E35B1', text:'Bùi Thảo Nhi gửi yêu cầu đổi Bút dễ thương', meta:'Chờ duyệt · 2 giờ trước' },
+{ delta:'+5', tint:'#FFF1CC', ink:'#7A4E00', text:'Lê Khánh Chi – Thành tích nổi bật', meta:'Cô Khanh · Hôm qua' }
+],
+news: [
+{ tag:'Nhắc bài', tint:'#E8EBFF', ink:'#3441B5', date:'Hôm nay', title:'Ôn tập Toán: phân số và số thập phân', body:'Các bạn hoàn thành trang 45 trong vở bài tập trước thứ Hai.' },
+{ tag:'Lịch kiểm tra', tint:'#FFE3EE', ink:'#9E2257', date:'Thứ Năm, 05/11', title:'Kiểm tra Tiếng Việt giữa kỳ', body:'Mang theo bút mực và thước kẻ. Ôn lại bài đọc tuần 9.' },
+{ tag:'Hoạt động', tint:'#DDF6F1', ink:'#0B6B5F', date:'Thứ Sáu, 13/11', title:'Ngày hội đọc sách của lớp', body:'Mỗi bạn mang một cuốn sách yêu thích để chia sẻ cùng cả lớp.' }
+]
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Avatar phi hành gia nhí</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}</style>
+</helmet>
+<div style="width:{{px}};height:{{px}};flex:0 0 auto;display:block">
+<svg viewBox="0 0 120 120" width="100%" height="100%" role="img" aria-label="Avatar phi hành gia nhí" style="display:block">
+<defs>
+<radialGradient id="avHi" cx="34%" cy="26%" r="62%"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<radialGradient id="avSh" cx="50%" cy="42%" r="62%"><stop offset=".62" stop-color="#7a3b2e" stop-opacity="0"/><stop offset="1" stop-color="#7a3b2e" stop-opacity=".3"/></radialGradient>
+<radialGradient id="avHair" cx="40%" cy="20%" r="80%"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></radialGradient>
+<clipPath id="avClip"><circle cx="60" cy="60" r="58"/></clipPath>
+</defs>
+<circle cx="60" cy="60" r="58" fill="{{bg}}"/>
+<circle cx="60" cy="60" r="58" fill="url(#avHi)" opacity=".5"/>
+<g clip-path="url(#avClip)">
+<!-- shoulders / uniform -->
+<path d="M14 124 C14 100 34 92 60 92 C86 92 106 100 106 124Z" fill="#FFFFFF"/>
+<path d="M14 124 C14 100 34 92 60 92 C86 92 106 100 106 124Z" fill="#6675E8" opacity=".10"/>
+<path d="M46 93 L60 116 L74 93 Q60 99 46 93Z" fill="#E5334F"/>
+<path d="M52 97 L60 108 L68 97Z" fill="#fff" opacity=".22"/>
+<circle cx="60" cy="100" r="4.2" fill="#C8203B"/>
+<path d="M56 104 L50 122 L58 120Z M64 104 L70 122 L62 120Z" fill="#E5334F"/>
+<!-- star pin -->
+<polygon points="86,104 88,109 93,109.4 89.2,112.6 90.4,117.6 86,115 81.6,117.6 82.8,112.6 79,109.4 84,109" fill="#FFC857" stroke="#E0A020" stroke-width=".8" stroke-linejoin="round"/>
+</g>
+<!-- hair back (pigtails / bob) -->
+<g opacity="{{pigOp}}"><circle cx="24" cy="66" r="12" fill="{{hairColor}}"/><circle cx="96" cy="66" r="12" fill="{{hairColor}}"/><circle cx="24" cy="66" r="12" fill="url(#avHair)"/><circle cx="96" cy="66" r="12" fill="url(#avHair)"/><rect x="27" y="52" width="8" height="5" rx="2.5" fill="#F46FA5"/><rect x="85" y="52" width="8" height="5" rx="2.5" fill="#F46FA5"/></g>
+<g opacity="{{bobOp}}"><path d="M26 54 C20 80 26 90 36 90 L42 60Z M94 54 C100 80 94 90 84 90 L78 60Z" fill="{{hairColor}}"/><path d="M26 54 C20 80 26 90 36 90 L42 60Z M94 54 C100 80 94 90 84 90 L78 60Z" fill="url(#avHair)"/></g>
+<!-- ears -->
+<circle cx="28.5" cy="60" r="5.5" fill="{{skin}}"/><circle cx="91.5" cy="60" r="5.5" fill="{{skin}}"/>
+<!-- head -->
+<circle cx="60" cy="56" r="32" fill="{{skin}}"/>
+<circle cx="60" cy="56" r="32" fill="url(#avSh)"/>
+<circle cx="60" cy="56" r="32" fill="url(#avHi)" opacity=".7"/>
+<!-- hair top -->
+<path d="M27 56 C22 26 50 18 62 20 C86 20 99 36 93 58 C89 45 80 39 60 39 C42 39 32 46 27 56Z" fill="{{hairColor}}"/>
+<path d="M27 56 C22 26 50 18 62 20 C86 20 99 36 93 58 C89 45 80 39 60 39 C42 39 32 46 27 56Z" fill="url(#avHair)"/>
+<path d="M45 30 Q58 24 72 28" stroke="#fff" stroke-opacity=".4" stroke-width="3" fill="none" stroke-linecap="round"/>
+<g opacity="{{tuftOp}}"><path d="M58 21 C54 11 66 8 70 15 C66 14 62 16 62 21Z" fill="{{hairColor}}"/></g>
+<!-- face -->
+<ellipse cx="46" cy="60" rx="5.2" ry="6.6" fill="#2B2350"/><ellipse cx="74" cy="60" rx="5.2" ry="6.6" fill="#2B2350"/>
+<circle cx="44.2" cy="57.2" r="2.2" fill="#fff"/><circle cx="72.2" cy="57.2" r="2.2" fill="#fff"/>
+<circle cx="48" cy="63" r="1.1" fill="#fff" opacity=".8"/><circle cx="76" cy="63" r="1.1" fill="#fff" opacity=".8"/>
+<ellipse cx="37" cy="70" rx="6" ry="3.6" fill="#FF7FAE" opacity=".5"/><ellipse cx="83" cy="70" rx="6" ry="3.6" fill="#FF7FAE" opacity=".5"/>
+<path d="M54 71 Q60 77.5 66 71" stroke="#B0475E" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+<!-- helmet glass -->
+<circle cx="60" cy="56" r="40" fill="#fff" opacity=".10"/>
+<circle cx="60" cy="56" r="40" fill="none" stroke="#fff" stroke-width="3" opacity=".85"/>
+<path d="M28 34 A38 38 0 0 1 48 20" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" opacity=".9"/>
+<circle cx="32" cy="30" r="1.8" fill="#fff" opacity=".9"/>
+<!-- crown -->
+<g opacity="{{crownOp}}">
+<path d="M42 20 L45 5 L54 14 L60 1 L66 14 L75 5 L78 20 Z" fill="#FFC857" stroke="#E0A020" stroke-width="1.4" stroke-linejoin="round"/>
+<rect x="42" y="17" width="36" height="5" rx="2" fill="#F5A81C"/>
+<circle cx="60" cy="19.5" r="2" fill="#F46FA5"/><circle cx="50" cy="19.5" r="1.5" fill="#6675E8"/><circle cx="70" cy="19.5" r="1.5" fill="#6675E8"/>
+<path d="M95 14 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6z M20 20 l1.2 3 3 1.2 -3 1.2 -1.2 3 -1.2 -3 -3 -1.2 3 -1.2z" fill="#FFE08A"/>
+</g>
+</svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"hair":{"editor":null,"default":"a"},"hairColor":{"editor":null,"default":"#3A2A4D"},"skin":{"editor":null,"default":"#FFD9B8"},"bg":{"editor":null,"default":"#D9D3FF"},"crown":{"editor":null,"default":"0"},"size":{"editor":null,"default":"120"},"$preview":{"width":120,"height":120}}'>
+class Component extends DCLogic {
+renderVals() {
+const p = this.props;
+const hair = p.hair || 'a';
+return {
+px: (p.size || '120') + 'px',
+hairColor: p.hairColor || '#3A2A4D',
+skin: p.skin || '#FFD9B8',
+bg: p.bg || '#D9D3FF',
+pigOp: hair === 'b' ? 1 : 0,
+bobOp: hair === 'c' ? 1 : 0,
+tuftOp: hair === 'a' ? 1 : 0,
+crownOp: (p.crown === '1' || p.crown === 1 || p.crown === true) ? 1 : 0
+};
+}
+}
+</script>
+</body>
+</html>

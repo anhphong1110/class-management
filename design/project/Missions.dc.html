@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Nhiệm vụ và huy hiệu – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button,input,select{font-family:'Nunito',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="missions" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Nhiệm vụ phi hành gia" subtitle="Nhiệm vụ và huy hiệu cho cả lớp" hint-size="100%,84px"></dc-import>
+
+<div style="background:#fff;border-radius:26px;padding:16px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+<div><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">Tính năng nhiệm vụ</div><div style="font-size:14px;color:#5B5890">Tắt thì học sinh không thấy nhiệm vụ và huy hiệu.</div></div>
+<button type="button" role="switch" aria-checked="{{on}}" onClick="{{flipOn}}" style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 16px 0 10px;border-radius:14px;border:2px solid #D9D5F2;background:#fff;font-weight:800;font-size:14.5px;color:#231F4D;cursor:pointer"><span style="width:46px;height:27px;border-radius:14px;background:{{track}};position:relative"><span style="position:absolute;top:3px;left:{{knob}}px;width:21px;height:21px;border-radius:50%;background:#fff"></span></span>{{onLabel}}</button>
+</div>
+
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Tạo nhiệm vụ mới</h2>
+<div style="display:flex;flex-wrap:wrap;gap:12px">
+<label style="flex:2 1 240px;display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">Tên nhiệm vụ
+<input type="text" value="{{fName}}" onInput="{{setName}}" placeholder="Ví dụ: Đọc 2 cuốn sách trong tuần" style="min-height:48px;box-sizing:border-box;border-radius:12px;border:2px solid #D9D5F2;padding:0 14px;font-size:16px;font-weight:700;color:#231F4D"></label>
+<label style="flex:1 1 150px;display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">Thời gian
+<select onChange="{{setPeriod}}" style="min-height:48px;border-radius:12px;border:2px solid #D9D5F2;padding:0 12px;font-size:16px;font-weight:700;color:#231F4D;background:#fff"><sc-for list="{{periodOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.on}}">{{o.v}}</option></sc-for></select></label>
+<label style="flex:1 1 130px;display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">Thưởng (sao)
+<input type="number" min="0" value="{{fStars}}" onInput="{{setStars}}" style="min-height:48px;box-sizing:border-box;border-radius:12px;border:2px solid #D9D5F2;padding:0 12px;font-size:16px;font-weight:700;color:#231F4D"></label>
+</div>
+<label style="display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">Điều kiện hoàn thành
+<input type="text" value="{{fCond}}" onInput="{{setCond}}" placeholder="Ví dụ: Cô xác nhận sau khi em kể lại nội dung" style="min-height:48px;box-sizing:border-box;border-radius:12px;border:2px solid #D9D5F2;padding:0 14px;font-size:16px;font-weight:600;color:#231F4D"></label>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+<div style="font-size:13.5px;color:#5B5890;max-width:520px">Nhiệm vụ không tự cộng sao, trừ khi cô nhập số sao thưởng (để 0 nếu chỉ trao huy hiệu).</div>
+<button type="button" onClick="{{add}}" style="min-height:52px;padding:0 26px;border-radius:14px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:16px;cursor:pointer">+ Thêm nhiệm vụ</button>
+</div>
+<sc-if value="{{err}}" hint-placeholder-val="{{false}}"><div role="alert" style="background:#FFE3EA;color:#8E1B3B;border-radius:12px;padding:10px 14px;font-weight:700;font-size:14.5px">{{err}}</div></sc-if>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px">
+<sc-for list="{{missions}}" as="m" hint-placeholder-count="5">
+<div style="background:#fff;border-radius:24px;padding:20px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:8px;opacity:{{m.op}}">
+<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;line-height:1.2">{{m.name}}</div><span style="flex:0 0 auto;font-size:12.5px;font-weight:800;border-radius:999px;padding:3px 12px;background:#E8EBFF;color:#2C37A8">{{m.period}}</span></div>
+<div style="font-size:14px;color:#4A476E;line-height:1.45">{{m.cond}}</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+<span style="font-size:13px;font-weight:800;border-radius:999px;padding:3px 12px;background:#FFF1CC;color:#6E4700">{{m.reward}}</span>
+<span style="font-size:13px;font-weight:700;color:#5B5890">{{m.done}}/10 bạn đã hoàn thành</span>
+</div>
+<div style="display:flex;gap:8px;margin-top:4px">
+<button type="button" onClick="{{m.markDone}}" style="flex:1;min-height:46px;border-radius:12px;border:0;background:#12794F;color:#fff;font-weight:800;font-size:14px;cursor:pointer">Ghi nhận thêm 1 bạn</button>
+<button type="button" onClick="{{m.toggle}}" style="min-height:46px;padding:0 14px;border-radius:12px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14px;cursor:pointer">{{m.toggleLabel}}</button>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="background:#fff;border-radius:28px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Huy hiệu</h2>
+<sc-if value="{{msg}}" hint-placeholder-val="{{false}}"><div role="status" style="background:#DDF6F1;color:#0B5A4D;border-radius:12px;padding:10px 14px;font-weight:700;font-size:14.5px">{{msg}}</div></sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-weight:800;font-size:14.5px;color:#4A476E">
+<label style="display:flex;align-items:center;gap:8px">Trao cho
+<select onChange="{{setWho}}" style="min-height:48px;border-radius:12px;border:2px solid #D9D5F2;padding:0 12px;font-size:15px;font-weight:700;color:#231F4D;background:#fff"><sc-for list="{{people}}" as="p" hint-placeholder-count="10"><option value="{{p.i}}" selected="{{p.on}}">{{p.name}}</option></sc-for></select></label>
+<span style="font-size:13.5px;font-weight:600;color:#5B5890">rồi bấm "Trao huy hiệu" ở huy hiệu muốn trao.</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+<sc-for list="{{badges}}" as="b" hint-placeholder-count="5">
+<div style="border-radius:20px;padding:16px;background:#F6F4FF;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+<div style="width:68px;height:68px;border-radius:50%;background:{{b.grad}};display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="34" height="34" fill="rgba(255,255,255,.3)" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{b.d}}"/></svg></div>
+<div style="font-weight:800;font-size:15px;line-height:1.25">{{b.name}}</div>
+<div style="font-size:13px;color:#5B5890;font-weight:700">{{b.count}} bạn đã đạt</div>
+<button type="button" onClick="{{b.give}}" style="min-height:44px;width:100%;border-radius:12px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:13.5px;cursor:pointer">Trao huy hiệu</button>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1500}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+on: true, who: 0, msg: '', err: '', fName: '', fCond: '', fStars: 0, fPeriod: 'Tuần này',
+missions: [
+{ name: 'Hoàn thành nhiệm vụ học tập', period: 'Tuần này', cond: 'Làm đủ bài tập về nhà các ngày trong tuần.', stars: 3, done: 6, active: true },
+{ name: 'Đọc sách trong tuần', period: 'Tuần này', cond: 'Đọc ít nhất 1 cuốn sách và kể lại cho cô nghe.', stars: 2, done: 4, active: true },
+{ name: 'Giúp đỡ bạn bè', period: 'Tháng này', cond: 'Được cô ghi nhận giúp bạn ít nhất 3 lần.', stars: 0, done: 3, active: true },
+{ name: 'Giữ vệ sinh lớp', period: 'Tuần này', cond: 'Tổ trực nhật hoàn thành đủ các buổi.', stars: 2, done: 8, active: true },
+{ name: 'Có tiến bộ', period: 'Tháng này', cond: 'Điểm kiểm tra tăng so với tháng trước.', stars: 5, done: 2, active: false }
+],
+badges: [
+{ name: 'Phi hành gia chăm chỉ', count: 4, d: 'M12 14a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM8.5 13.5L7 22l5-3 5 3-1.5-8.5', grad: 'linear-gradient(135deg,#F5A81C,#FFD76F)' },
+{ name: 'Ngôi sao tiến bộ', count: 2, d: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', grad: 'linear-gradient(135deg,#6675E8,#B9A7F8)' },
+{ name: 'Nhà thám hiểm tri thức', count: 3, d: 'M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1zM12 15l-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22 22 0 0 1-4 2z', grad: 'linear-gradient(135deg,#3B3FA8,#7A58E0)' },
+{ name: 'Người bạn tốt', count: 5, d: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z', grad: 'linear-gradient(135deg,#E5334F,#FF9DB5)' },
+{ name: 'Siêu sao đọc sách', count: 1, d: 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M9 7h6', grad: 'linear-gradient(135deg,#2BB5A4,#80DDD0)' }
+]
+};
+}
+renderVals() {
+const st = this.state;
+const NAMES = ['Nguyễn Minh Anh','Trần Gia Bảo','Lê Khánh Chi','Phạm Đức Dũng','Võ Hà My','Đặng Quốc Huy','Bùi Thảo Nhi','Hoàng Tuấn Kiệt','Ngô Bảo Ngọc','Đỗ Anh Thư'];
+const upM = (i, fn) => this.setState({ missions: st.missions.map((m, j) => j === i ? fn(m) : m) });
+return {
+on: st.on, flipOn: () => this.setState({ on: !st.on }), track: st.on ? '#4F5BD5' : '#B9B5E8', knob: st.on ? 22 : 3, onLabel: st.on ? 'Đang bật' : 'Đang tắt',
+fName: st.fName, fCond: st.fCond, fStars: st.fStars,
+setName: e => this.setState({ fName: e.target.value, err: '' }),
+setCond: e => this.setState({ fCond: e.target.value, err: '' }),
+setStars: e => { const v = parseInt(e.target.value, 10); this.setState({ fStars: v >= 0 ? v : 0 }); },
+setPeriod: e => this.setState({ fPeriod: e.target.value }),
+periodOpts: ['Hôm nay','Tuần này','Tháng này','Học kỳ'].map(v => ({ v, on: st.fPeriod === v })),
+err: st.err, msg: st.msg,
+add: () => {
+if (!st.fName.trim() || !st.fCond.trim()) { this.setState({ err: 'Cô hãy nhập tên và điều kiện hoàn thành.' }); return; }
+this.setState({ missions: [...st.missions, { name: st.fName.trim(), period: st.fPeriod, cond: st.fCond.trim(), stars: st.fStars, done: 0, active: true }], fName: '', fCond: '', fStars: 0, err: '', msg: 'Đã thêm nhiệm vụ mới.' });
+},
+missions: st.missions.map((m, i) => ({
+name: m.name, period: m.period, cond: m.cond, done: m.done, op: m.active ? 1 : 0.55,
+reward: m.stars > 0 ? '+' + m.stars + ' sao khi hoàn thành' : 'Chỉ trao huy hiệu',
+toggleLabel: m.active ? 'Tạm dừng' : 'Mở lại',
+toggle: () => upM(i, x => ({ ...x, active: !x.active })),
+markDone: () => { if (m.done >= 10) return; upM(i, x => ({ ...x, done: x.done + 1 })); }
+})),
+people: NAMES.map((name, i) => ({ i, name, on: st.who === i })),
+setWho: e => this.setState({ who: parseInt(e.target.value, 10) }),
+badges: st.badges.map((b, i) => ({ ...b, give: () => this.setState({ badges: st.badges.map((x, j) => j === i ? { ...x, count: Math.min(10, x.count + 1) } : x), msg: 'Đã trao "' + b.name + '" cho ' + NAMES[st.who] + '. Huy hiệu không tự cộng sao.' }) }))
+};
+}
+}
+</script>
+</body>
+</html>

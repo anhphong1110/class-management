@@ -1,0 +1,40 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Attendance.dc.html": { "expand": "fill", "h": 1260, "is_interactive": true, "title": "Điểm danh", "w": 1360, "x": 0, "y": 1500 },
+    "Avatar.dc.html": { "h": 120, "title": "Avatar chibi (dùng chung)", "w": 120, "x": 0, "y": 5900 },
+    "Header.dc.html": { "h": 96, "title": "Thanh đầu trang (dùng chung)", "w": 1080, "x": 560, "y": 5900 },
+    "Leaderboard.dc.html": { "expand": "fill", "h": 1300, "is_interactive": true, "title": "Bảng xếp hạng", "w": 1360, "x": 2880, "y": 1500 },
+    "Login.dc.html": { "expand": "fill", "h": 860, "is_interactive": true, "title": "Đăng nhập", "w": 1360, "x": 0, "y": 0 },
+    "Main.dc.html": { "expand": "fill", "h": 1380, "is_interactive": true, "title": "Tổng quan", "w": 1360, "x": 1440, "y": 0 },
+    "Rewards.dc.html": { "expand": "fill", "h": 1500, "is_interactive": true, "title": "Trạm đổi quà", "w": 1360, "x": 0, "y": 2940 },
+    "Sidebar.dc.html": { "h": 900, "title": "Thanh menu (dùng chung)", "w": 272, "x": 200, "y": 5900 },
+    "Stars.dc.html": { "expand": "fill", "h": 1400, "is_interactive": true, "title": "Trạm thi đua", "w": 1360, "x": 1440, "y": 1500 },
+    "Students.dc.html": { "expand": "fill", "h": 1700, "is_interactive": true, "title": "Quản lý học sinh", "w": 1360, "x": 2880, "y": 0 },
+    "Timetable.dc.html": { "expand": "fill", "h": 1500, "is_interactive": true, "title": "Thời khóa biểu", "w": 1360, "x": 1440, "y": 2940 },
+    "Reports.dc.html": { "expand": "fill", "h": 1500, "is_interactive": true, "title": "Thống kê – Báo cáo", "w": 1360, "x": 2880, "y": 2940 },
+    "Random.dc.html": { "expand": "fill", "h": 1100, "is_interactive": true, "title": "Gọi tên ngẫu nhiên", "w": 1360, "x": 0, "y": 4640 },
+    "Profile.dc.html": { "expand": "fill", "h": 1300, "is_interactive": true, "title": "Hồ sơ và avatar", "w": 1360, "x": 1440, "y": 4640 },
+    "Settings.dc.html": { "expand": "fill", "h": 1700, "is_interactive": true, "title": "Cài đặt", "w": 1360, "x": 2880, "y": 4640 },
+    "Announcements.dc.html": { "expand": "fill", "h": 1300, "is_interactive": true, "title": "Thông báo", "w": 1360, "x": 1440, "y": 7200 },
+    "Missions.dc.html": { "expand": "fill", "h": 1500, "is_interactive": true, "title": "Nhiệm vụ và huy hiệu", "w": 1360, "x": 2880, "y": 7200 },
+    "Display.dc.html": { "expand": "fill", "h": 900, "is_interactive": true, "title": "Chế độ trình chiếu lớp học", "w": 1600, "x": 0, "y": 8800 },
+    "Student.dc.html": { "expand": "fill", "h": 1200, "is_interactive": true, "title": "Giao diện học sinh (Võ Hà My)", "w": 1360, "x": 0, "y": 7200 }
+  },
+  "createdOnFiles": { "at": "2026-10-31T09:00:00Z", "v": 1 },
+  "designSystems": [],
+  "launch": { "view": "canvas" },
+  "notes": {
+    "t1": { "kind": "title1", "maxW": 4240, "text": "TRẠM KHÔNG GIAN NĂM 8 — Giao diện giáo viên (bản thiết kế, dữ liệu demo)", "w": 240, "x": 0, "y": -300 },
+    "t3": { "kind": "title1", "maxW": 4240, "text": "Giao diện học sinh, Thông báo, Nhiệm vụ và huy hiệu, Chế độ trình chiếu", "w": 240, "x": 0, "y": 6900 },
+    "t2": { "kind": "title1", "maxW": 1640, "text": "Thành phần dùng chung", "w": 240, "x": 0, "y": 5720 }
+  },
+  "order": [
+    "Login.dc.html", "Main.dc.html", "Students.dc.html", "Attendance.dc.html", "Stars.dc.html",
+    "Leaderboard.dc.html", "Rewards.dc.html", "Timetable.dc.html", "Reports.dc.html", "Random.dc.html",
+    "Profile.dc.html", "Settings.dc.html", "Student.dc.html", "Announcements.dc.html", "Missions.dc.html", "Display.dc.html", "Avatar.dc.html", "Sidebar.dc.html", "Header.dc.html"
+  ],
+  "pages": [],
+  "title": "Trạm không gian Năm 8"
+}

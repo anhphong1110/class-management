@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Cài đặt – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button,input{font-family:'Nunito',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="settings" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Cài đặt" subtitle="Thiết lập lớp học, quyền học sinh và dữ liệu" hint-size="100%,84px"></dc-import>
+
+<sc-if value="{{msg}}" hint-placeholder-val="{{false}}"><div role="status" style="background:#DDF6F1;color:#0B5A4D;border-radius:14px;padding:12px 16px;font-weight:700;font-size:15px">{{msg}}</div></sc-if>
+
+<!-- 1 Info -->
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Thông tin lớp</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+<sc-for list="{{fields}}" as="f" hint-placeholder-count="5">
+<label style="display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">{{f.label}}
+<input type="text" value="{{f.value}}" onInput="{{f.set}}" style="min-height:48px;box-sizing:border-box;border-radius:12px;border:2px solid #D9D5F2;padding:0 14px;font-size:16px;font-weight:700;color:#231F4D">
+</label>
+</sc-for>
+</div>
+</div>
+
+<!-- 2 Look -->
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Logo, ảnh bìa và màu giao diện</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<sc-for list="{{uploads}}" as="u" hint-placeholder-count="3">
+<button type="button" onClick="{{u.pick}}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:120px;border-radius:20px;border:2px dashed #8E86D8;background:#F6F4FF;color:#3441B5;font-weight:800;font-size:14px;cursor:pointer;text-align:center;padding:10px">
+<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>{{u.label}}
+</button>
+</sc-for>
+</div>
+<div style="font-weight:800;font-size:14px;color:#4A476E">Màu chủ đạo</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<sc-for list="{{themes}}" as="t" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{t.on}}" aria-label="{{t.label}}" onClick="{{t.pick}}" style="display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px 0 8px;border-radius:999px;cursor:pointer;background:#fff;border:2px solid {{t.border}};font-weight:800;font-size:14px;color:#231F4D"><span style="width:32px;height:32px;border-radius:50%;background:{{t.c}}"></span>{{t.label}}</button>
+</sc-for>
+</div>
+</div>
+
+<!-- 3 Rewards rules + stars -->
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:stretch">
+<div style="flex:1 1 380px;min-width:0;background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Quy định thi đua và đổi quà</h2>
+<sc-for list="{{ruleToggles}}" as="r" hint-placeholder-count="5">
+<button type="button" role="switch" aria-checked="{{r.on}}" onClick="{{r.flip}}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:6px 14px;border-radius:16px;border:2px solid #E4E0F7;background:#fff;text-align:left;cursor:pointer;color:#231F4D"><span style="display:flex;flex-direction:column"><span style="font-weight:800;font-size:15px">{{r.label}}</span><span style="font-size:13px;color:#5B5890;font-weight:600">{{r.hint}}</span></span><span style="flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:{{r.track}};position:relative"><span style="position:absolute;top:3px;left:{{r.knob}}px;width:21px;height:21px;border-radius:50%;background:#fff"></span></span></button>
+</sc-for>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-weight:800;font-size:14.5px;color:#4A476E">
+<label style="display:flex;align-items:center;gap:8px">Tối đa lượt đổi quà mỗi tuần
+<input type="number" min="1" value="{{weekLimit}}" onInput="{{setLimit}}" style="width:84px;min-height:48px;box-sizing:border-box;border-radius:12px;border:2px solid #D9D5F2;padding:0 10px;font-size:16px;font-weight:700;color:#231F4D"></label>
+</div>
+<div style="font-weight:800;font-size:14px;color:#4A476E">Mức sao gợi ý (cộng)</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="5"><button type="button" onClick="{{s.remove}}" aria-label="Xóa mức {{s.label}}" style="min-height:44px;min-width:56px;padding:0 12px;border-radius:12px;border:2px solid #E0A020;background:#FFF1CC;color:#4A3300;font-weight:800;font-size:15px;cursor:pointer">{{s.label}} ×</button></sc-for>
+<button type="button" onClick="{{addStep}}" style="min-height:44px;padding:0 14px;border-radius:12px;border:2px dashed #8E86D8;background:#fff;color:#3441B5;font-weight:800;font-size:14px;cursor:pointer">+ Thêm mức</button>
+</div>
+<a href="Stars.dc.html" style="font-weight:800;font-size:14.5px;color:#4F5BD5">Sửa tiêu chí cộng/trừ sao ở Trạm thi đua</a>
+</div>
+
+<div style="flex:1 1 380px;min-width:0;background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Bật/tắt tính năng</h2>
+<sc-for list="{{featToggles}}" as="r" hint-placeholder-count="5">
+<button type="button" role="switch" aria-checked="{{r.on}}" onClick="{{r.flip}}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:6px 14px;border-radius:16px;border:2px solid #E4E0F7;background:#fff;text-align:left;cursor:pointer;color:#231F4D"><span style="display:flex;flex-direction:column"><span style="font-weight:800;font-size:15px">{{r.label}}</span><span style="font-size:13px;color:#5B5890;font-weight:600">{{r.hint}}</span></span><span style="flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:{{r.track}};position:relative"><span style="position:absolute;top:3px;left:{{r.knob}}px;width:21px;height:21px;border-radius:50%;background:#fff"></span></span></button>
+</sc-for>
+<h2 style="margin:10px 0 0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Học sinh được xem</h2>
+<sc-for list="{{viewToggles}}" as="r" hint-placeholder-count="6">
+<button type="button" role="switch" aria-checked="{{r.on}}" onClick="{{r.flip}}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;padding:4px 14px;border-radius:16px;border:2px solid #E4E0F7;background:#fff;text-align:left;cursor:pointer;color:#231F4D"><span style="font-weight:800;font-size:15px">{{r.label}}</span><span style="flex:0 0 auto;width:46px;height:27px;border-radius:14px;background:{{r.track}};position:relative"><span style="position:absolute;top:3px;left:{{r.knob}}px;width:21px;height:21px;border-radius:50%;background:#fff"></span></span></button>
+</sc-for>
+</div>
+</div>
+
+<!-- Accounts -->
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center"><h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Tài khoản học sinh</h2><button type="button" onClick="{{createAll}}" style="min-height:48px;padding:0 18px;border-radius:14px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:14.5px;cursor:pointer">Tạo tài khoản hàng loạt</button></div>
+<div style="font-size:13.5px;color:#5B5890">Mật khẩu không bao giờ hiển thị. Cô chỉ có thể đặt lại, học sinh sẽ nhận mật khẩu tạm.</div>
+<div style="overflow-x:auto"><div style="min-width:560px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{accounts}}" as="a" hint-placeholder-count="10">
+<div style="display:grid;grid-template-columns:1.6fr 1.3fr 1fr 1.2fr;gap:10px;align-items:center;background:#F6F4FF;border-radius:14px;padding:6px 14px">
+<div style="font-weight:800;font-size:15px">{{a.name}}</div>
+<div style="font-size:14px;color:#4A476E;font-weight:700">{{a.user}}</div>
+<button type="button" role="switch" aria-checked="{{a.on}}" onClick="{{a.flip}}" style="display:flex;align-items:center;gap:8px;min-height:44px;border:0;background:transparent;font-weight:800;font-size:13.5px;color:#231F4D;cursor:pointer"><span style="width:44px;height:26px;border-radius:13px;background:{{a.track}};position:relative"><span style="position:absolute;top:3px;left:{{a.knob}}px;width:20px;height:20px;border-radius:50%;background:#fff"></span></span>{{a.label}}</button>
+<button type="button" onClick="{{a.reset}}" style="min-height:44px;border-radius:12px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:13.5px;cursor:pointer">Đặt lại mật khẩu</button>
+</div>
+</sc-for>
+</div></div>
+</div>
+
+<!-- Data -->
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Năm học và dữ liệu</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+<sc-for list="{{dataActions}}" as="d" hint-placeholder-count="4">
+<button type="button" onClick="{{d.go}}" style="text-align:left;min-height:96px;padding:14px 16px;border-radius:20px;border:2px solid {{d.border}};background:{{d.bg}};cursor:pointer;color:#231F4D;display:flex;flex-direction:column;gap:4px"><span style="font-weight:800;font-size:16px;color:{{d.ink}}">{{d.label}}</span><span style="font-size:13.5px;color:#4A476E;font-weight:600;line-height:1.4">{{d.hint}}</span></button>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1700}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+vals: { school: 'Tiểu học Chính Nghĩa', cls: 'Năm 8 (5/8)', year: '2026 – 2027', teacher: 'Cô Khanh', slogan: 'Cùng học – Cùng chơi – Cùng tỏa sáng' },
+flags: { approve: true, reserve: true, onlyEnough: true, mission: true, random: true, display: true, gift: true, v_profile: true, v_hist: true, v_rank: true, v_gift: true, v_tt: true, v_news: true, v_att: false },
+limit: 2, theme: 0, steps: [1, 2, 3, 5, 10],
+acc: [true, true, true, true, true, true, true, true, true, false], msg: ''
+};
+}
+renderVals() {
+const st = this.state;
+const flip = k => () => this.setState({ flags: { ...st.flags, [k]: !st.flags[k] } });
+const tg = (k, label, hint) => ({ label, hint, on: !!st.flags[k], flip: flip(k), track: st.flags[k] ? '#4F5BD5' : '#B9B5E8', knob: st.flags[k] ? 22 : 3 });
+const say = m => () => this.setState({ msg: m });
+const NAMES = ['Nguyễn Minh Anh','Trần Gia Bảo','Lê Khánh Chi','Phạm Đức Dũng','Võ Hà My','Đặng Quốc Huy','Bùi Thảo Nhi','Hoàng Tuấn Kiệt','Ngô Bảo Ngọc','Đỗ Anh Thư'];
+const USERS = ['hs.minhanh','hs.giabao','hs.khanhchi','hs.ducdung','hs.hamy','hs.quochuy','hs.thaonhi','hs.tuankiet','hs.baongoc','hs.anhthu'];
+const THEMES = [['Xanh tím','#6675E8'],['Hồng sen','#F46FA5'],['Xanh mint','#2BB5A4'],['Vàng sao','#F5A81C']];
+const F = [['school','Tên trường'],['cls','Tên lớp'],['year','Năm học'],['teacher','Giáo viên chủ nhiệm'],['slogan','Slogan']];
+return {
+msg: st.msg,
+fields: F.map(([k, label]) => ({ label, value: st.vals[k], set: e => this.setState({ vals: { ...st.vals, [k]: e.target.value } }) })),
+uploads: [['Logo trường','Đã dùng logo trường Tiểu học Chính Nghĩa khi có file'],['Logo lớp','Đã dùng logo lớp 5/8 khi có file'],['Ảnh bìa lớp','Ảnh bìa hiện ở trang chủ']].map(([label, m]) => ({ label: 'Tải lên ' + label.toLowerCase(), pick: say('Khi hệ thống chạy thật, cô chọn file từ máy cho "' + label + '". ' + m + '.') })),
+themes: THEMES.map(([label, c], i) => ({ label, c, on: st.theme === i, border: st.theme === i ? '#231F4D' : '#E4E0F7', pick: () => this.setState({ theme: i }) })),
+ruleToggles: [
+tg('approve', 'Giáo viên duyệt mọi yêu cầu đổi quà', 'Tắt thì học sinh đổi quà xong là trừ sao ngay'),
+tg('reserve', 'Giữ trước sao và quà khi gửi yêu cầu', 'Tránh bán vượt số lượng quà'),
+tg('onlyEnough', 'Chỉ cho đổi khi đủ sao khả dụng', 'Không bao giờ để số dư sao âm')
+],
+weekLimit: st.limit,
+setLimit: e => { const v = parseInt(e.target.value, 10); this.setState({ limit: v > 0 ? v : '' }); },
+steps: st.steps.map((v, i) => ({ label: '+' + v, remove: () => this.setState({ steps: st.steps.filter((_, j) => j !== i) }) })),
+addStep: () => { const n = (st.steps.length ? Math.max(...st.steps) : 0) + 1; this.setState({ steps: [...st.steps, n].sort((a, b) => a - b) }); },
+featToggles: [
+tg('mission', 'Nhiệm vụ và huy hiệu', 'Giáo viên tạo nhiệm vụ, học sinh nhận huy hiệu'),
+tg('random', 'Gọi tên ngẫu nhiên', 'Hiện trang quay số trong menu'),
+tg('display', 'Chế độ trình chiếu lớp học', 'Toàn màn hình, không hiện dữ liệu riêng tư'),
+tg('gift', 'Trạm đổi quà', 'Tắt thì học sinh không thấy trang quà')
+],
+viewToggles: [
+tg('v_profile', 'Hồ sơ của mình'), tg('v_hist', 'Lịch sử sao của mình'), tg('v_rank', 'Bảng xếp hạng'),
+tg('v_gift', 'Phần thưởng và đổi quà'), tg('v_tt', 'Thời khóa biểu'), tg('v_news', 'Thông báo'), tg('v_att', 'Lịch sử điểm danh của mình')
+],
+accounts: NAMES.map((name, i) => ({ name, user: USERS[i], on: st.acc[i], label: st.acc[i] ? 'Được đăng nhập' : 'Đã khóa', track: st.acc[i] ? '#4F5BD5' : '#B9B5E8', knob: st.acc[i] ? 21 : 3, flip: () => this.setState({ acc: st.acc.map((v, j) => j === i ? !v : v) }), reset: say('Đã gửi mật khẩu tạm cho ' + name + '. Mật khẩu thật không hiển thị cho cô.') })),
+createAll: say('Khi hệ thống chạy thật, nút này tạo tài khoản cho cả lớp và xuất danh sách mật khẩu tạm.'),
+dataActions: [
+{ label: 'Sao lưu dữ liệu', hint: 'Tải bản sao lưu toàn bộ lớp (học sinh, sao, điểm danh, quà).', bg: '#F6F4FF', border: '#E4E0F7', ink: '#231F4D', go: say('Khi hệ thống chạy thật, cô tải được file sao lưu tại đây.') },
+{ label: 'Khôi phục từ bản sao lưu', hint: 'Chọn file sao lưu để quay lại dữ liệu cũ.', bg: '#F6F4FF', border: '#E4E0F7', ink: '#231F4D', go: say('Khi hệ thống chạy thật, cô chọn file sao lưu để khôi phục.') },
+{ label: 'Lưu trữ năm học 2026 – 2027', hint: 'Đóng sổ năm học, mở năm mới mà không ghi đè lịch sử cũ.', bg: '#EEF0FF', border: '#4F5BD5', ink: '#2C37A8', go: say('Khi hệ thống chạy thật, năm học được lưu trữ riêng và năm mới bắt đầu với sao về 0.') },
+{ label: 'Xóa dữ liệu demo', hint: 'Xóa 10 học sinh mẫu để nhập danh sách thật. Cần xác nhận.', bg: '#FFF4F7', border: '#C0314E', ink: '#8E1B3B', go: say('Cần xác nhận trước khi xóa. Hiện đây là bản thiết kế nên chưa xóa gì.') }
+]
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Thông báo – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button,input,textarea,select{font-family:'Nunito',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="news" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Tín hiệu từ trạm chỉ huy" subtitle="Đăng thông báo, nhắc bài, lịch kiểm tra cho lớp" hint-size="100%,84px"></dc-import>
+
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">{{formTitle}}</h2>
+<div style="display:flex;flex-wrap:wrap;gap:12px">
+<label style="flex:2 1 260px;display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">Tiêu đề
+<input type="text" value="{{title}}" onInput="{{onTitle}}" placeholder="Ví dụ: Nhắc bài Toán" style="min-height:48px;box-sizing:border-box;border-radius:12px;border:2px solid #D9D5F2;padding:0 14px;font-size:16px;font-weight:700;color:#231F4D"></label>
+<label style="flex:1 1 180px;display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">Loại
+<select onChange="{{onType}}" style="min-height:48px;border-radius:12px;border:2px solid #D9D5F2;padding:0 12px;font-size:16px;font-weight:700;color:#231F4D;background:#fff">
+<sc-for list="{{typeOpts}}" as="o" hint-placeholder-count="5"><option value="{{o.v}}" selected="{{o.on}}">{{o.v}}</option></sc-for>
+</select></label>
+</div>
+<label style="display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">Nội dung
+<textarea rows="3" value="{{body}}" onInput="{{onBody}}" placeholder="Cô viết nội dung thông báo ở đây" style="box-sizing:border-box;border-radius:12px;border:2px solid #D9D5F2;padding:12px 14px;font-size:16px;font-weight:600;color:#231F4D;resize:vertical"></textarea></label>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<button type="button" onClick="{{attach}}" style="min-height:48px;padding:0 16px;border-radius:14px;border:2px dashed #8E86D8;background:#F6F4FF;color:#3441B5;font-weight:800;font-size:14px;cursor:pointer">Đính kèm hình ảnh</button>
+<button type="button" role="switch" aria-checked="{{pin}}" onClick="{{flipPin}}" style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 16px 0 10px;border-radius:14px;border:2px solid #D9D5F2;background:#fff;font-weight:700;font-size:14.5px;color:#231F4D;cursor:pointer"><span style="width:44px;height:26px;border-radius:13px;background:{{pinTrack}};position:relative"><span style="position:absolute;top:3px;left:{{pinKnob}}px;width:20px;height:20px;border-radius:50%;background:#fff"></span></span>Ghim lên đầu</button>
+</div>
+<div style="display:flex;gap:10px">
+<sc-if value="{{editing}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{cancel}}" style="min-height:52px;padding:0 20px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#4A476E;font-weight:800;cursor:pointer">Hủy sửa</button></sc-if>
+<button type="button" onClick="{{post}}" style="min-height:52px;padding:0 28px;border-radius:14px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:16px;cursor:pointer">{{postLabel}}</button>
+</div>
+</div>
+<sc-if value="{{err}}" hint-placeholder-val="{{false}}"><div role="alert" style="background:#FFE3EA;color:#8E1B3B;border-radius:12px;padding:10px 14px;font-weight:700;font-size:14.5px">{{err}}</div></sc-if>
+<sc-if value="{{msg}}" hint-placeholder-val="{{false}}"><div role="status" style="background:#DDF6F1;color:#0B5A4D;border-radius:12px;padding:10px 14px;font-weight:700;font-size:14.5px">{{msg}}</div></sc-if>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{items}}" as="n" hint-placeholder-count="4">
+<div style="background:#fff;border-radius:24px;padding:20px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:8px;border:2px solid {{n.bd}}">
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between">
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:12.5px;font-weight:800;border-radius:999px;padding:3px 12px;background:{{n.tint}};color:{{n.ink}}">{{n.type}}</span><span style="font-size:13px;color:#5B5890">{{n.date}}</span><span style="font-size:12.5px;font-weight:800;color:#7A4E00">{{n.pinText}}</span></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<button type="button" onClick="{{n.togglePin}}" style="min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:13.5px;cursor:pointer">{{n.pinLabel}}</button>
+<button type="button" onClick="{{n.edit}}" style="min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:13.5px;cursor:pointer">Sửa</button>
+<button type="button" onClick="{{n.remove}}" style="min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid {{n.delBd}};background:{{n.delBg}};color:#A22441;font-weight:800;font-size:13.5px;cursor:pointer">{{n.delLabel}}</button>
+</div>
+</div>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:21px">{{n.title}}</div>
+<div style="font-size:15px;color:#4A476E;line-height:1.5">{{n.body}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1300}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+nextId: 4, edit: null, del: null, title: '', body: '', type: 'Thông báo chung', pin: false, err: '', msg: '',
+items: [
+{ id: 1, type: 'Nhắc bài', title: 'Ôn tập Toán: phân số và số thập phân', body: 'Các bạn hoàn thành trang 45 trong vở bài tập trước thứ Hai.', date: 'Hôm nay', pinned: true },
+{ id: 2, type: 'Lịch kiểm tra', title: 'Kiểm tra Tiếng Việt giữa kỳ', body: 'Mang theo bút mực và thước kẻ. Ôn lại bài đọc tuần 9.', date: '05/11/2026', pinned: false },
+{ id: 3, type: 'Hoạt động', title: 'Ngày hội đọc sách của lớp', body: 'Mỗi bạn mang một cuốn sách yêu thích để chia sẻ cùng cả lớp.', date: '13/11/2026', pinned: false }
+]
+};
+}
+renderVals() {
+const st = this.state;
+const TYPES = ['Thông báo chung','Nhắc bài','Lịch kiểm tra','Hoạt động','Sự kiện của lớp'];
+const COL = { 'Thông báo chung': ['#E8EBFF','#2C37A8'], 'Nhắc bài': ['#E8EBFF','#2C37A8'], 'Lịch kiểm tra': ['#FFE3EE','#8E1B3B'], 'Hoạt động': ['#DDF6F1','#0B5A4D'], 'Sự kiện của lớp': ['#FFF1CC','#6E4700'] };
+const reset = extra => this.setState({ edit: null, title: '', body: '', type: 'Thông báo chung', pin: false, err: '', ...extra });
+const sorted = st.items.slice().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.id - a.id);
+return {
+formTitle: st.edit !== null ? 'Sửa thông báo' : 'Đăng thông báo mới',
+postLabel: st.edit !== null ? 'Lưu thay đổi' : 'Đăng thông báo',
+editing: st.edit !== null,
+title: st.title, body: st.body, pin: st.pin, pinTrack: st.pin ? '#4F5BD5' : '#B9B5E8', pinKnob: st.pin ? 21 : 3,
+onTitle: e => this.setState({ title: e.target.value, err: '' }),
+onBody: e => this.setState({ body: e.target.value, err: '' }),
+onType: e => this.setState({ type: e.target.value }),
+typeOpts: TYPES.map(v => ({ v, on: st.type === v })),
+flipPin: () => this.setState({ pin: !st.pin }),
+attach: () => this.setState({ msg: 'Khi hệ thống chạy thật, cô chọn hình từ máy để đính kèm vào thông báo.' }),
+cancel: () => reset({ msg: '' }),
+err: st.err, msg: st.msg,
+post: () => {
+if (!st.title.trim() || !st.body.trim()) { this.setState({ err: 'Cô hãy nhập tiêu đề và nội dung.', msg: '' }); return; }
+if (st.edit !== null) {
+this.setState({ items: st.items.map(x => x.id === st.edit ? { ...x, title: st.title.trim(), body: st.body.trim(), type: st.type, pinned: st.pin } : x) });
+reset({ msg: 'Đã lưu thay đổi. Học sinh thấy nội dung mới.' });
+} else {
+this.setState({ items: [...st.items, { id: st.nextId, type: st.type, title: st.title.trim(), body: st.body.trim(), date: 'Vừa đăng', pinned: st.pin }], nextId: st.nextId + 1 });
+reset({ msg: 'Đã đăng thông báo. Học sinh sẽ thấy ở trang Thông báo.' });
+}
+},
+items: sorted.map(n => {
+const c = COL[n.type] || COL['Thông báo chung'];
+const asking = st.del === n.id;
+return {
+type: n.type, title: n.title, body: n.body, date: n.date, tint: c[0], ink: c[1],
+bd: n.pinned ? '#FFC857' : 'transparent', pinText: n.pinned ? 'Đang ghim' : '', pinLabel: n.pinned ? 'Bỏ ghim' : 'Ghim',
+togglePin: () => this.setState({ items: st.items.map(x => x.id === n.id ? { ...x, pinned: !x.pinned } : x) }),
+edit: () => this.setState({ edit: n.id, title: n.title, body: n.body, type: n.type, pin: n.pinned, err: '', msg: '' }),
+remove: () => { if (asking) this.setState({ items: st.items.filter(x => x.id !== n.id), del: null, msg: 'Đã xóa thông báo.' }); else this.setState({ del: n.id }); },
+delLabel: asking ? 'Bấm lần nữa để xóa' : 'Xóa', delBg: asking ? '#FFE3EA' : '#fff', delBd: asking ? '#C0314E' : '#D9D5F2'
+};
+})
+};
+}
+}
+</script>
+</body>
+</html>

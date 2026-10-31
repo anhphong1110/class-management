@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Quản lý học sinh – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button,input,select{font-family:'Nunito',system-ui,sans-serif}
+.sc:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(79,91,213,.20)}
+.sc{transition:transform .15s,box-shadow .15s}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="students" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Quản lý học sinh" subtitle="Danh sách phi hành đoàn lớp 5/8" hint-size="100%,84px"></dc-import>
+
+<div style="background:#fff;border-radius:26px;padding:20px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center">
+<div style="display:flex;flex-wrap:wrap;gap:10px;flex:1 1 360px">
+<label style="flex:1 1 220px;display:flex;align-items:center;gap:8px;min-height:48px;box-sizing:border-box;border-radius:14px;border:2px solid #D9D5F2;padding:0 14px;background:#fff">
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#5B5890" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+<input type="search" value="{{q}}" onInput="{{onSearch}}" placeholder="Tìm theo tên hoặc mã học sinh" aria-label="Tìm học sinh" style="flex:1;min-width:0;border:0;outline:0;font-size:16px;font-weight:600;color:#231F4D;background:transparent">
+</label>
+<label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:#4A476E">Sắp xếp
+<select onChange="{{onSort}}" aria-label="Sắp xếp" style="min-height:48px;border-radius:14px;border:2px solid #D9D5F2;padding:0 12px;font-size:15px;font-weight:700;color:#231F4D;background:#fff">
+<option value="name">Theo tên (A–Z)</option>
+<option value="stars">Theo số sao</option>
+<option value="no">Theo số thứ tự</option>
+</select>
+</label>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<button type="button" style="min-height:48px;padding:0 20px;border-radius:14px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:15px;cursor:pointer">+ Thêm học sinh</button>
+<button type="button" style="min-height:48px;padding:0 16px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14.5px;cursor:pointer">Nhập Excel / CSV</button>
+<button type="button" style="min-height:48px;padding:0 16px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14.5px;cursor:pointer">Xuất Excel</button>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+<button type="button" aria-pressed="{{f.on}}" onClick="{{f.pick}}" style="min-height:44px;padding:0 16px;border-radius:999px;font-weight:800;font-size:14px;cursor:pointer;background:{{f.bg}};color:{{f.color}};border:2px solid {{f.border}}">{{f.label}}</button>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{viewBtns}}" as="v" hint-placeholder-count="2">
+<button type="button" aria-pressed="{{v.on}}" onClick="{{v.pick}}" style="min-height:48px;padding:0 24px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;background:{{v.bg}};color:{{v.color}};border:2px solid {{v.border}}">{{v.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{showGroups}}" hint-placeholder-val="{{false}}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px">
+<sc-for list="{{groupCards}}" as="g" hint-placeholder-count="4">
+<div style="background:#fff;border-radius:26px;padding:20px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+<div><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">{{g.title}}</div><div style="font-size:13.5px;color:#5B5890;font-weight:700">{{g.count}} bạn · {{g.stars}} sao tích lũy</div></div>
+<a href="Stars.dc.html" style="min-height:44px;padding:0 16px;border-radius:14px;background:#FFC857;color:#3B2A00;font-weight:800;font-size:14px;display:inline-flex;align-items:center">Cộng sao cả tổ</a>
+</div>
+<sc-for list="{{g.members}}" as="m" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:8px;border-radius:18px;padding:10px 12px;background:#F6F4FF">
+<div style="display:flex;align-items:center;gap:10px">
+<dc-import name="Avatar" hair="{{m.hair}}" hair-color="{{m.hairColor}}" skin="{{m.skin}}" bg="{{m.avBg}}" size="44" hint-size="44px,44px"></dc-import>
+<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15px">{{m.name}}</div><span style="font-size:12px;font-weight:800;border-radius:999px;padding:2px 10px;background:{{m.roleBg}};color:{{m.roleInk}}">{{m.role}}</span></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+<button type="button" onClick="{{m.setLeader}}" style="min-height:44px;padding:0 12px;border-radius:12px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:13px;cursor:pointer">Đặt tổ trưởng</button>
+<button type="button" onClick="{{m.setDeputy}}" style="min-height:44px;padding:0 12px;border-radius:12px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:13px;cursor:pointer">Đặt tổ phó</button>
+<label style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;color:#4A476E">Chuyển sang
+<select onChange="{{m.move}}" aria-label="Chuyển tổ" style="min-height:44px;border-radius:12px;border:2px solid #D9D5F2;padding:0 8px;font-size:14px;font-weight:700;background:#fff;color:#231F4D">
+<sc-for list="{{m.opts}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}" selected="{{o.on}}">{{o.label}}</option></sc-for>
+</select>
+</label>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{hasProfile}}" hint-placeholder-val="{{false}}">
+<div style="background:linear-gradient(135deg,#ECE9FF,#FFFFFF);border:2px solid #B9A7F8;border-radius:30px;padding:24px;display:flex;flex-direction:column;gap:18px" role="region" aria-label="Hồ sơ phi hành gia">
+<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center">
+<dc-import name="Avatar" hair="{{p.hair}}" hair-color="{{p.hairColor}}" skin="{{p.skin}}" bg="{{p.avBg}}" crown="{{p.crown}}" size="124" hint-size="124px,124px"></dc-import>
+<div style="flex:1 1 240px;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:13px;font-weight:800;letter-spacing:.1em;color:#4F5BD5">HỒ SƠ PHI HÀNH GIA</div>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;line-height:1.1">{{p.name}}</div>
+<div style="font-size:14.5px;color:#5B5890;font-weight:700">Mã {{p.code}} · Số thứ tự {{p.no}} · Đang học</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+<sc-for list="{{p.badges}}" as="b" hint-placeholder-count="2"><span style="font-size:12.5px;font-weight:800;border-radius:999px;padding:4px 12px;background:#FFF1CC;color:#6E4700">{{b}}</span></sc-for>
+</div>
+</div>
+<button type="button" onClick="{{closeProfile}}" style="min-height:44px;padding:0 18px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14.5px;cursor:pointer;align-self:flex-start">Đóng hồ sơ</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+<sc-for list="{{p.stats}}" as="s" hint-placeholder-count="4">
+<div style="background:#fff;border-radius:18px;padding:14px 16px"><div style="font-size:13px;font-weight:700;color:#5B5890">{{s.label}}</div><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.15">{{s.value}}</div></div>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:16px">
+<div style="flex:1 1 300px;background:#fff;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Lịch sử cộng/trừ sao</div>
+<sc-for list="{{p.hist}}" as="h" hint-placeholder-count="3"><div style="display:flex;gap:10px;align-items:center"><span style="min-width:40px;text-align:center;font-weight:800;border-radius:10px;padding:4px 8px;background:{{h.tint}};color:{{h.ink}}">{{h.delta}}</span><span style="font-size:14.5px;font-weight:600">{{h.text}}<span style="color:#5B5890"> · {{h.date}}</span></span></div></sc-for>
+</div>
+<div style="flex:1 1 300px;background:#fff;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Lịch sử đổi quà</div>
+<sc-for list="{{p.gifts}}" as="g" hint-placeholder-count="1"><div style="display:flex;justify-content:space-between;gap:10px;font-size:14.5px;font-weight:600"><span>{{g.name}} <span style="color:#5B5890">· {{g.date}}</span></span><span style="font-weight:800;color:#0B5A4D">{{g.status}}</span></div></sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+<div style="background:#fff;border-radius:26px;padding:40px 24px;text-align:center;box-shadow:0 6px 20px rgba(102,117,232,.10)"><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px">Chưa tìm thấy phi hành gia nào</div><div style="color:#5B5890;font-size:15px">Cô thử đổi từ khóa hoặc bộ lọc nhé.</div></div>
+</sc-if>
+
+<sc-if value="{{showAll}}" hint-placeholder-val="{{true}}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">
+<sc-for list="{{cards}}" as="c" hint-placeholder-count="10">
+<button type="button" class="sc" onClick="{{c.open}}" style="text-align:center;cursor:pointer;background:#fff;border:2px solid {{c.border}};border-radius:26px;padding:20px 14px 16px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;align-items:center;gap:6px;color:#231F4D">
+<dc-import name="Avatar" hair="{{c.hair}}" hair-color="{{c.hairColor}}" skin="{{c.skin}}" bg="{{c.avBg}}" size="92" hint-size="92px,92px"></dc-import>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;line-height:1.2">{{c.name}}</div>
+<div style="font-size:13px;color:#5B5890;font-weight:700">Mã {{c.code}} · {{c.group}}</div>
+<div style="display:flex;align-items:center;gap:6px;font-weight:800;font-size:17px;color:#7A4E00"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857" stroke="#E0A020" stroke-width="1.2" stroke-linejoin="round"/></svg>{{c.total}} sao</div>
+<span style="font-size:12.5px;font-weight:800;border-radius:999px;padding:4px 12px;background:{{c.tint}};color:{{c.ink}}">{{c.today}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1240}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { q: '', sort: 'name', filter: 'all', sel: null, view: 'all', groups: [
+{ members: [0, 1, 2], leader: 0, deputy: 1 },
+{ members: [3, 4, 5], leader: 4, deputy: 3 },
+{ members: [6, 7], leader: 7, deputy: 6 },
+{ members: [8, 9], leader: 9, deputy: 8 }
+] };
+}
+renderVals() {
+const S = [
+['Nguyễn Minh Anh','b','#6B3F2A','#FFD9B8','#FFD6E8',128,78,'ok',100],
+['Trần Gia Bảo','a','#2B2B3B','#F5C49C','#CFF3EC',119,64,'ok',98],
+['Lê Khánh Chi','c','#3A2A4D','#FFD9B8','#D9D3FF',112,92,'ok',100],
+['Phạm Đức Dũng','a','#6B3F2A','#E8B088','#FFE9B8',96,41,'late',94],
+['Võ Hà My','b','#2B2B3B','#FFD9B8','#D9D3FF',91,55,'ok',99],
+['Đặng Quốc Huy','a','#3A2A4D','#F5C49C','#CFF3EC',84,60,'ok',97],
+['Bùi Thảo Nhi','c','#8A4B2D','#FFD9B8','#FFD6E8',77,32,'excused',92],
+['Hoàng Tuấn Kiệt','a','#2B2B3B','#E8B088','#D9D3FF',70,48,'ok',96],
+['Ngô Bảo Ngọc','b','#6B3F2A','#F5C49C','#FFE9B8',63,27,'ok',100],
+['Đỗ Anh Thư','c','#2B2B3B','#FFD9B8','#CFF3EC',55,40,'ok',95]
+].map((x, i) => ({ i, name: x[0], hair: x[1], hairColor: x[2], skin: x[3], avBg: x[4], total: x[5], avail: x[6], today: x[7], rate: x[8], code: 'HS' + String(i + 1).padStart(2, '0') }));
+const TODAY = { ok: ['Có mặt', '#DDF6F1', '#0B5A4D'], late: ['Đi trễ', '#FFF1CC', '#6E4700'], excused: ['Vắng có phép', '#E3EEFF', '#1F4C9E'], absent: ['Vắng', '#FFE3EA', '#8E1B3B'] };
+const norm = t => t.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[̀-ͯ]/g, '');
+const given = n => n.split(' ').slice(-1)[0] + ' ' + n;
+const st = this.state;
+const rankOf = i => 1 + S.filter(x => x.total > S[i].total).length;
+let list = S.filter(s => (norm(s.name) + ' ' + norm(s.code)).indexOf(norm(st.q.trim())) >= 0);
+if (st.filter === 'present') list = list.filter(s => s.today === 'ok' || s.today === 'late');
+if (st.filter === 'absent') list = list.filter(s => s.today === 'excused' || s.today === 'absent');
+if (st.filter === 'late') list = list.filter(s => s.today === 'late');
+if (st.sort === 'name') list = list.slice().sort((a, b) => given(a.name).localeCompare(given(b.name), 'vi'));
+if (st.sort === 'stars') list = list.slice().sort((a, b) => b.total - a.total);
+const FILTERS = [['all', 'Tất cả'], ['present', 'Có mặt hôm nay'], ['absent', 'Vắng hôm nay'], ['late', 'Đi trễ']];
+const sel = st.sel !== null ? S[st.sel] : null;
+const G = st.groups;
+const groupIdx = i => G.findIndex(g => g.members.indexOf(i) >= 0);
+const groupLabel = i => { const k = groupIdx(i); if (k < 0) return 'Chưa có tổ'; const g = G[k]; return 'Tổ ' + (k + 1) + (g.leader === i ? ' · Tổ trưởng' : g.deputy === i ? ' · Tổ phó' : ''); };
+const upd = fn => this.setState({ groups: fn(G.map(g => ({ ...g, members: g.members.slice() }))) });
+const groupCards = G.map((g, k) => ({
+title: 'Tổ ' + (k + 1), count: g.members.length, stars: g.members.reduce((a, i) => a + S[i].total, 0),
+members: g.members.map(i => ({
+name: S[i].name, hair: S[i].hair, hairColor: S[i].hairColor, skin: S[i].skin, avBg: S[i].avBg,
+role: g.leader === i ? 'Tổ trưởng' : g.deputy === i ? 'Tổ phó' : 'Thành viên',
+roleBg: g.leader === i ? '#FFC857' : g.deputy === i ? '#E3EEFF' : '#fff', roleInk: g.leader === i ? '#4A3300' : g.deputy === i ? '#1F4C9E' : '#4A476E',
+setLeader: () => upd(n => { n[k].leader = i; if (n[k].deputy === i) n[k].deputy = null; return n; }),
+setDeputy: () => upd(n => { n[k].deputy = i; if (n[k].leader === i) n[k].leader = null; return n; }),
+move: e => { const to = parseInt(e.target.value, 10); if (to === k) return; upd(n => { n[k].members = n[k].members.filter(x => x !== i); if (n[k].leader === i) n[k].leader = null; if (n[k].deputy === i) n[k].deputy = null; n[to].members.push(i); return n; }); },
+opts: G.map((_, j) => ({ v: j, label: 'Tổ ' + (j + 1), on: j === k }))
+}))
+}));
+const HIST = [
+{ delta:'+3', tint:'#FFF1CC', ink:'#6E4700', text:'Giúp đỡ bạn bè', date:'Hôm nay' },
+{ delta:'+2', tint:'#FFF1CC', ink:'#6E4700', text:'Hoàn thành tốt nhiệm vụ', date:'Hôm qua' },
+{ delta:'-1', tint:'#FFE3EE', ink:'#8E1B3B', text:'Quên đồ dùng học tập', date:'28/10' },
+{ delta:'+1', tint:'#FFF1CC', ink:'#6E4700', text:'Phát biểu xây dựng bài', date:'27/10' }
+];
+return {
+q: st.q,
+viewBtns: [['all', 'Tất cả học sinh'], ['groups', 'Chia tổ']].map(([k, label]) => { const on = st.view === k; return { label, on, pick: () => this.setState({ view: k }), bg: on ? '#4F5BD5' : '#fff', color: on ? '#fff' : '#3A3769', border: on ? '#4F5BD5' : '#D9D5F2' }; }),
+showAll: st.view === 'all', showGroups: st.view === 'groups', groupCards,
+onSearch: e => this.setState({ q: e.target.value }),
+onSort: e => this.setState({ sort: e.target.value }),
+filters: FILTERS.map(([k, label]) => { const on = st.filter === k; return { label, on, pick: () => this.setState({ filter: k }), bg: on ? '#4F5BD5' : '#fff', color: on ? '#fff' : '#3A3769', border: on ? '#4F5BD5' : '#D9D5F2' }; }),
+hasProfile: !!sel,
+closeProfile: () => this.setState({ sel: null }),
+p: sel ? {
+name: sel.name, hair: sel.hair, hairColor: sel.hairColor, skin: sel.skin, avBg: sel.avBg, code: sel.code, no: sel.i + 1,
+crown: rankOf(sel.i) === 1 ? '1' : '0',
+badges: sel.total >= 100 ? ['Phi hành gia chăm chỉ', 'Ngôi sao tiến bộ'] : ['Người bạn tốt'],
+stats: [
+{ label: 'Sao thi đua tích lũy', value: String(sel.total) },
+{ label: 'Sao khả dụng', value: String(sel.avail) },
+{ label: 'Thứ hạng cả năm', value: '#' + rankOf(sel.i) },
+{ label: 'Tỉ lệ chuyên cần', value: sel.rate + '%' }
+],
+hist: HIST,
+gifts: sel.i === 0 ? [{ name: 'Sticker vũ trụ', date: '20/10', status: 'Đã nhận' }] : sel.i === 2 ? [{ name: 'Huy hiệu phi hành gia', date: '15/10', status: 'Đã nhận' }] : [{ name: 'Chưa có lượt đổi quà', date: '', status: '' }]
+} : { name: '', hair: 'a', hairColor: '#000', skin: '#FFD9B8', avBg: '#D9D3FF', code: '', no: '', crown: '0', badges: [], stats: [], hist: [], gifts: [] },
+empty: list.length === 0,
+cards: list.map(s => { const t = TODAY[s.today]; return { name: s.name, group: groupLabel(s.i), hair: s.hair, hairColor: s.hairColor, skin: s.skin, avBg: s.avBg, code: s.code, total: s.total, today: t[0], tint: t[1], ink: t[2], open: () => this.setState({ sel: s.i }), border: st.sel === s.i ? '#4F5BD5' : 'transparent' }; })
+};
+}
+}
+</script>
+</body>
+</html>

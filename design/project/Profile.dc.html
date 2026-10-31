@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Hồ sơ và avatar – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button{font-family:'Nunito',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="profile" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Hồ sơ và avatar" subtitle="Chọn avatar cho giáo viên và học sinh từ thư viện của lớp" hint-size="100%,84px"></dc-import>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+<!-- People -->
+<div style="flex:1 1 280px;max-width:380px;background:#fff;border-radius:26px;padding:18px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:8px">
+<h2 style="margin:0 0 4px 4px;font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:800">Chọn người cần đổi avatar</h2>
+<sc-for list="{{people}}" as="p" hint-placeholder-count="11">
+<button type="button" aria-pressed="{{p.on}}" onClick="{{p.pick}}" style="display:flex;align-items:center;gap:12px;text-align:left;min-height:60px;padding:6px 12px;border-radius:18px;cursor:pointer;background:{{p.bg}};border:2px solid {{p.border}};color:#231F4D">
+<dc-import name="Avatar" hair="{{p.hair}}" hair-color="{{p.hairColor}}" skin="{{p.skin}}" bg="{{p.avBg}}" size="46" hint-size="46px,46px"></dc-import>
+<span style="display:flex;flex-direction:column"><span style="font-weight:800;font-size:15px">{{p.name}}</span><span style="font-size:12.5px;color:#5B5890;font-weight:700">{{p.role}}</span></span>
+</button>
+</sc-for>
+</div>
+
+<!-- Editor -->
+<div style="flex:999 1 420px;min-width:0;display:flex;flex-direction:column;gap:16px">
+<div style="background:linear-gradient(135deg,#ECE9FF,#FFFFFF);border:2px solid #B9A7F8;border-radius:30px;padding:24px;display:flex;flex-wrap:wrap;gap:20px;align-items:center">
+<dc-import name="Avatar" hair="{{cur.hair}}" hair-color="{{cur.hairColor}}" skin="{{cur.skin}}" bg="{{cur.avBg}}" size="150" hint-size="150px,150px"></dc-import>
+<div style="flex:1 1 220px;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:13px;font-weight:800;letter-spacing:.1em;color:#3441B5">{{cur.roleUp}}</div>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;line-height:1.1">{{cur.name}}</div>
+<div style="font-size:14.5px;color:#5B5890;font-weight:700">Avatar hiện tại: {{cur.avatarName}}</div>
+</div>
+</div>
+
+<div style="background:#fff;border-radius:28px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+<div><h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Thư viện avatar của lớp</h2><div style="font-size:14px;color:#5B5890">Chỉ gồm các avatar cô đã tải lên. Học sinh chỉ chọn được trong thư viện này.</div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px">
+<sc-for list="{{library}}" as="a" hint-placeholder-count="12">
+<button type="button" aria-pressed="{{a.on}}" onClick="{{a.pick}}" aria-label="{{a.label}}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:20px;cursor:pointer;background:{{a.bg}};border:2px solid {{a.border}};color:#231F4D">
+<dc-import name="Avatar" hair="{{a.hair}}" hair-color="{{a.hairColor}}" skin="{{a.skin}}" bg="{{a.avBg}}" size="76" hint-size="76px,76px"></dc-import>
+<span style="font-size:12.5px;font-weight:800">{{a.label}}</span>
+</button>
+</sc-for>
+<button type="button" onClick="{{upload}}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:118px;padding:10px 6px;border-radius:20px;cursor:pointer;background:#F6F4FF;border:2px dashed #8E86D8;color:#3441B5;font-weight:800;font-size:13px;text-align:center">
+<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+Tải avatar lên<br>(chỉ giáo viên)
+</button>
+</div>
+<sc-if value="{{msg}}" hint-placeholder-val="{{false}}"><div role="status" style="background:#DDF6F1;color:#0B5A4D;border-radius:14px;padding:12px 16px;font-weight:700;font-size:15px">{{msg}}</div></sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center">
+<div style="font-size:14px;color:#5B5890;font-weight:700">Đang chọn: {{pendingName}}</div>
+<button type="button" onClick="{{save}}" style="min-height:52px;padding:0 28px;border-radius:16px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:16px;cursor:pointer">Lưu avatar</button>
+</div>
+</div>
+
+<div style="background:#fff;border-radius:24px;padding:20px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+<div style="max-width:560px"><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Quyền đổi avatar của học sinh</div><div style="font-size:14px;color:#5B5890">Khi bật, học sinh tự chọn avatar trong thư viện ở trang hồ sơ của mình. Khi tắt, chỉ cô được đổi.</div></div>
+<button type="button" role="switch" aria-checked="{{allow}}" onClick="{{flipAllow}}" style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 16px 0 10px;border-radius:14px;border:2px solid #D9D5F2;background:#fff;font-weight:800;font-size:14.5px;color:#231F4D;cursor:pointer"><span style="width:44px;height:26px;border-radius:13px;background:{{allowTrack}};position:relative;flex:0 0 auto"><span style="position:absolute;top:3px;left:{{allowKnob}}px;width:20px;height:20px;border-radius:50%;background:#fff"></span></span>{{allowLabel}}</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1300}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { who: 0, avs: [6, 0, 1, 2, 3, 4, 5, 7, 8, 9, 10], pending: null, msg: '', allow: true };
+}
+renderVals() {
+const LIB = [
+['Phi hành gia 1','b','#6B3F2A','#FFD9B8','#FFD6E8'],
+['Phi hành gia 2','a','#2B2B3B','#F5C49C','#CFF3EC'],
+['Phi hành gia 3','c','#3A2A4D','#FFD9B8','#D9D3FF'],
+['Phi hành gia 4','a','#6B3F2A','#E8B088','#FFE9B8'],
+['Phi hành gia 5','b','#2B2B3B','#FFD9B8','#D9D3FF'],
+['Phi hành gia 6','a','#3A2A4D','#F5C49C','#CFF3EC'],
+['Cô giáo','c','#3A2A4D','#FFD9B8','#FFD6E8'],
+['Phi hành gia 8','c','#8A4B2D','#FFD9B8','#FFD6E8'],
+['Phi hành gia 9','a','#2B2B3B','#E8B088','#D9D3FF'],
+['Phi hành gia 10','b','#6B3F2A','#F5C49C','#FFE9B8'],
+['Phi hành gia 11','c','#2B2B3B','#FFD9B8','#CFF3EC'],
+['Phi hành gia 12','b','#8A4B2D','#E8B088','#FFE9B8']
+].map(x => ({ label: x[0], hair: x[1], hairColor: x[2], skin: x[3], avBg: x[4] }));
+const PEOPLE = [
+['Cô Khanh','Giáo viên – Admin'],
+['Nguyễn Minh Anh','Học sinh'],['Trần Gia Bảo','Học sinh'],['Lê Khánh Chi','Học sinh'],['Phạm Đức Dũng','Học sinh'],['Võ Hà My','Học sinh'],
+['Đặng Quốc Huy','Học sinh'],['Bùi Thảo Nhi','Học sinh'],['Hoàng Tuấn Kiệt','Học sinh'],['Ngô Bảo Ngọc','Học sinh'],['Đỗ Anh Thư','Học sinh']
+];
+const st = this.state;
+const pend = st.pending !== null ? st.pending : st.avs[st.who];
+const curAv = LIB[st.avs[st.who]];
+return {
+people: PEOPLE.map(([name, role], i) => { const a = LIB[st.avs[i]]; const on = st.who === i; return { name, role, hair: a.hair, hairColor: a.hairColor, skin: a.skin, avBg: a.avBg, on, pick: () => this.setState({ who: i, pending: null, msg: '' }), bg: on ? '#EEF0FF' : '#fff', border: on ? '#4F5BD5' : '#E4E0F7' }; }),
+cur: { ...curAv, name: PEOPLE[st.who][0], roleUp: PEOPLE[st.who][1].toUpperCase(), avatarName: curAv.label },
+library: LIB.map((a, i) => { const on = pend === i; return { ...a, on, pick: () => this.setState({ pending: i, msg: '' }), bg: on ? '#EEF0FF' : '#fff', border: on ? '#4F5BD5' : '#E4E0F7' }; }),
+pendingName: LIB[pend].label,
+save: () => this.setState({ avs: st.avs.map((v, i) => i === st.who ? pend : v), pending: null, msg: 'Đã đổi avatar của ' + PEOPLE[st.who][0] + '. Bản thiết kế, chưa lưu vào cơ sở dữ liệu thật.' }),
+upload: () => this.setState({ msg: 'Khi hệ thống chạy thật, cô chọn ảnh từ máy và avatar mới sẽ xuất hiện trong thư viện này.' }),
+msg: st.msg,
+allow: st.allow, flipAllow: () => this.setState({ allow: !st.allow }),
+allowTrack: st.allow ? '#4F5BD5' : '#B9B5E8', allowKnob: st.allow ? 21 : 3, allowLabel: st.allow ? 'Đang bật' : 'Đang tắt'
+};
+}
+}
+</script>
+</body>
+</html>

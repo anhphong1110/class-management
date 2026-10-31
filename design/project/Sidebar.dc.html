@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Thanh menu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif}
+a{text-decoration:none;color:inherit}
+.nv:hover{background:rgba(255,255,255,.12)}
+@media (max-width:760px){.nvlist{flex-direction:row !important;overflow-x:auto}.nvlist a{flex:0 0 auto}.nvfoot{display:none !important}}
+</style>
+</helmet>
+<div style="box-sizing:border-box;width:100%;border-radius:28px;background:linear-gradient(180deg,#25286A 0%,#33378F 100%);color:#fff;padding:20px 14px;display:flex;flex-direction:column;gap:18px;font-family:'Nunito',system-ui,sans-serif">
+<div style="display:flex;align-items:center;gap:10px;padding:0 6px">
+<div style="position:relative;width:44px;height:44px;flex:0 0 auto;border-radius:50%;overflow:hidden;background:#fff"><img src="/_blob/c29022907dd1206cfc9cde75f5d232a6" alt="Logo trường Tiểu học Chính Nghĩa" style="position:absolute;left:-1px;top:-1px;width:46px;height:46px;object-fit:cover"></div>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:13.5px;line-height:1.15;letter-spacing:.04em;color:#FFFFFF">TRƯỜNG TIỂU HỌC<br>CHÍNH NGHĨA</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;padding:0 6px">
+<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true" style="flex:0 0 auto">
+<defs><radialGradient id="sbp" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#FFE9B0"/><stop offset=".6" stop-color="#FFB86B"/><stop offset="1" stop-color="#E5718F"/></radialGradient></defs>
+<circle cx="24" cy="24" r="14" fill="url(#sbp)"/>
+<ellipse cx="24" cy="26" rx="22" ry="6" fill="none" stroke="#B9A7F8" stroke-width="3" transform="rotate(-20 24 26)"/>
+<polygon points="38,6 39.6,10 44,10.4 40.6,13.2 41.6,17.4 38,15.2 34.4,17.4 35.4,13.2 32,10.4 36.4,10" fill="#FFC857"/>
+</svg>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px;line-height:1.05;letter-spacing:.02em">TRẠM KHÔNG GIAN<br><span style="color:#FFD36B">NĂM 8</span></div>
+</div>
+<div class="nvlist" style="display:flex;flex-direction:column;gap:4px">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="10">
+<a href="{{it.href}}" class="nv" style="display:flex;align-items:center;gap:12px;min-height:44px;box-sizing:border-box;padding:8px 14px;border-radius:16px;font-weight:{{it.weight}};font-size:15px;background:{{it.bg}};color:{{it.color}};white-space:nowrap">
+<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="{{it.stroke}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="{{it.d}}"/></svg>
+{{it.label}}
+</a>
+</sc-for>
+</div>
+<div class="nvfoot" style="border-radius:20px;background:rgba(255,255,255,.10);padding:14px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px">
+<dc-import name="Avatar" hair="c" hair-color="#3A2A4D" skin="#FFD9B8" bg="#FFD6E8" size="44" hint-size="44px,44px"></dc-import>
+<div style="line-height:1.25"><div style="font-weight:800;font-size:15px">Cô Khanh</div><div style="font-size:12.5px;color:#D5D9FF">Giáo viên – Admin</div></div>
+</div>
+<div style="font-size:12px;line-height:1.4;color:#FFE08A;background:rgba(0,0,0,.2);border-radius:10px;padding:8px 10px">Bản thiết kế: dữ liệu demo, chưa lưu vào cơ sở dữ liệu thật.</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":null,"default":"home"},"$preview":{"width":272,"height":820}}'>
+class Component extends DCLogic {
+renderVals() {
+const active = this.props.active || 'home';
+const defs = [
+['home','Tổng quan','Main.dc.html','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],
+['students','Quản lý học sinh','Students.dc.html','M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M20 20v-1a4 4 0 0 0-3-3.8M16 4.2a3.5 3.5 0 0 1 0 6.6'],
+['attendance','Điểm danh','Attendance.dc.html','M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9'],
+['stars','Trạm thi đua','Stars.dc.html','M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z'],
+['rank','Bảng xếp hạng','Leaderboard.dc.html','M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3'],
+['rewards','Trạm đổi quà','Rewards.dc.html','M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z'],
+['random','Gọi tên ngẫu nhiên','Random.dc.html','M4 4h16v16H4zM8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01'],
+['timetable','Thời khóa biểu','Timetable.dc.html','M4 6h16v14H4zM4 10h16M8 3v4M16 3v4'],
+['news','Thông báo','Announcements.dc.html','M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0'],
+['missions','Nhiệm vụ và huy hiệu','Missions.dc.html','M4 22V4M4 4h13l-2 4 2 4H4'],
+['display','Chế độ trình chiếu','Display.dc.html','M3 4h18v12H3zM8 21h8M12 16v5'],
+['report','Thống kê – Báo cáo','Reports.dc.html','M4 20V10M10 20V4M16 20v-8M22 20H2'],
+['settings','Cài đặt','Settings.dc.html','M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M14 4v4M8 10v4M18 16v4'],
+['profile','Hồ sơ và avatar','Profile.dc.html','M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8']
+];
+return {
+items: defs.map(([id,label,href,d]) => {
+const on = id === active;
+return { label, href, d, weight: on ? '800' : '700', bg: on ? 'rgba(255,255,255,.18)' : 'transparent', color: on ? '#FFFFFF' : '#D5D9FF', stroke: on ? '#FFD36B' : '#D5D9FF' };
+})
+};
+}
+}
+</script>
+</body>
+</html>

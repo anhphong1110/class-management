@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Trạm đổi quà – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button{font-family:'Nunito',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="rewards" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Trạm đổi quà vũ trụ" subtitle="Cửa hàng quà tặng của phi hành đoàn" hint-size="100%,84px"></dc-import>
+
+<div style="border-radius:26px;background:linear-gradient(120deg,#33378F,#7A58E0);color:#fff;padding:22px 26px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+<div style="max-width:560px"><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px">Đổi sao lấy quà</div><div style="font-size:15.5px;line-height:1.5;color:#E9EBFF">Học sinh gửi yêu cầu, hệ thống giữ trước sao và quà. Cô duyệt hoặc từ chối, sao chỉ bị trừ chính thức khi cô duyệt. Sao đổi quà không ảnh hưởng thứ hạng thi đua.</div></div>
+<button type="button" style="min-height:48px;padding:0 24px;border-radius:16px;border:0;background:#FFC857;color:#3B2A00;font-weight:800;font-size:16px;cursor:pointer">+ Thêm phần thưởng</button>
+</div>
+
+<sc-if value="{{hasEd}}" hint-placeholder-val="{{false}}">
+<div role="region" aria-label="Sửa phần thưởng" style="background:#EEF0FF;border:2px solid #4F5BD5;border-radius:28px;padding:22px 24px;display:flex;flex-wrap:wrap;gap:20px">
+<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:10px;align-items:center">
+<div style="width:200px;height:160px;border-radius:22px;background:{{ed.grad}};display:flex;align-items:center;justify-content:center">
+<svg viewBox="0 0 24 24" width="84" height="84" fill="rgba(255,255,255,.28)" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ed.d}}"/></svg>
+</div>
+<button type="button" onClick="{{upload}}" style="width:200px;min-height:48px;border-radius:14px;border:2px dashed #4F5BD5;background:#fff;color:#3441B5;font-weight:800;font-size:14px;cursor:pointer">Tải ảnh quà lên</button>
+</div>
+<div style="flex:1 1 320px;display:flex;flex-direction:column;gap:12px;min-width:0">
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px">Sửa phần thưởng</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<label style="flex:2 1 200px;display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">Tên quà
+<input type="text" value="{{ed.name}}" onInput="{{onName}}" style="min-height:48px;box-sizing:border-box;border-radius:12px;border:2px solid #B9B5E8;padding:0 12px;font-size:16px;font-weight:700;color:#231F4D">
+</label>
+<label style="flex:1 1 110px;display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px;color:#4A476E">Giá (sao)
+<input type="number" min="1" value="{{ed.cost}}" onInput="{{onCost}}" style="min-height:48px;box-sizing:border-box;border-radius:12px;border:2px solid #B9B5E8;padding:0 12px;font-size:16px;font-weight:700;color:#231F4D">
+</label>
+</div>
+<div style="font-weight:800;font-size:14px;color:#4A476E">Hoặc chọn hình có sẵn</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{presets}}" as="p" hint-placeholder-count="8">
+<button type="button" aria-label="{{p.label}}" aria-pressed="{{p.on}}" onClick="{{p.pick}}" style="width:64px;height:64px;border-radius:16px;cursor:pointer;background:{{p.grad}};border:3px solid {{p.border}};display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="30" height="30" fill="rgba(255,255,255,.28)" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.d}}"/></svg></button>
+</sc-for>
+</div>
+<sc-if value="{{upMsg}}" hint-placeholder-val="{{false}}"><div role="status" style="background:#fff;border-radius:12px;padding:10px 14px;font-size:14px;font-weight:700;color:#3A3769">{{upMsg}}</div></sc-if>
+<div><button type="button" onClick="{{closeEd}}" style="min-height:48px;padding:0 26px;border-radius:14px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:15px;cursor:pointer">Xong</button></div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px">
+<sc-for list="{{rewards}}" as="w" hint-placeholder-count="5">
+<div style="background:#fff;border-radius:24px;padding:14px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:10px">
+<div style="height:120px;border-radius:18px;background:{{w.grad}};display:flex;align-items:center;justify-content:center">
+<svg viewBox="0 0 24 24" width="64" height="64" fill="rgba(255,255,255,.28)" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{w.d}}"/></svg>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;line-height:1.2">{{w.name}}</div>
+<div style="flex:0 0 auto;display:flex;align-items:center;gap:4px;font-weight:800;font-size:15px;background:#FFF1CC;color:#7A4E00;border-radius:999px;padding:4px 10px"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857" stroke="#E0A020" stroke-width="1.4" stroke-linejoin="round"/></svg>{{w.cost}}</div>
+</div>
+<div style="font-size:13.5px;color:#5B5890;line-height:1.4">{{w.desc}}</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+<span style="font-size:12.5px;font-weight:800;border-radius:999px;padding:4px 10px;background:{{w.tint}};color:{{w.ink}}">{{w.state}}</span>
+<span style="font-size:13px;color:#4A476E;font-weight:700">{{w.stockText}}</span>
+</div>
+<div style="display:flex;gap:8px">
+<button type="button" onClick="{{w.edit}}" style="flex:1;min-height:44px;border-radius:12px;border:2px solid {{w.edBorder}};background:#fff;color:#3441B5;font-weight:800;font-size:14px;cursor:pointer">Sửa</button>
+<button type="button" style="flex:1;min-height:44px;border-radius:12px;border:1.5px solid #D9D5F2;background:#fff;color:#4A476E;font-weight:800;font-size:14px;cursor:pointer">Ẩn</button>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="background:#fff;border-radius:28px;padding:24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center"><h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:24px;font-weight:800">Yêu cầu và lịch sử đổi quà</h2><span style="font-size:14px;font-weight:800;color:#3441B5;background:#EEF0FF;border-radius:999px;padding:6px 14px">{{pendingCount}} yêu cầu chờ duyệt</span></div>
+<sc-if value="{{msg}}" hint-placeholder-val="{{false}}"><div role="status" style="background:#DDF6F1;color:#0B5A4D;border-radius:14px;padding:12px 16px;font-weight:700;font-size:15px">{{msg}}</div></sc-if>
+<div style="overflow-x:auto">
+<div style="min-width:640px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{requests}}" as="q" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:1.5fr 1.4fr .7fr 1fr 1.6fr;gap:10px;align-items:center;background:#F6F4FF;border-radius:16px;padding:10px 14px">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<dc-import name="Avatar" hair="{{q.hair}}" hair-color="{{q.hairColor}}" skin="{{q.skin}}" bg="{{q.avBg}}" size="40" hint-size="40px,40px"></dc-import>
+<span style="font-weight:800;font-size:15px">{{q.name}}</span>
+</div>
+<div style="font-weight:700;font-size:14.5px">{{q.reward}}</div>
+<div style="font-weight:800;font-size:14.5px;color:#7A4E00">{{q.cost}} sao</div>
+<div><span style="font-size:12.5px;font-weight:800;border-radius:999px;padding:4px 10px;background:{{q.tint}};color:{{q.ink}}">{{q.status}}</span></div>
+<div style="display:flex;gap:8px;justify-content:flex-end">
+<sc-if value="{{q.isPending}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{q.approve}}" style="min-height:44px;padding:0 14px;border-radius:12px;border:0;background:#12794F;color:#fff;font-weight:800;font-size:14px;cursor:pointer">Duyệt</button>
+<button type="button" onClick="{{q.reject}}" style="min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid #C0314E;background:#fff;color:#A22441;font-weight:800;font-size:14px;cursor:pointer">Từ chối</button>
+</sc-if>
+<sc-if value="{{q.isApproved}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{q.deliver}}" style="min-height:44px;padding:0 14px;border-radius:12px;border:0;background:#4F5BD5;color:#fff;font-weight:800;font-size:14px;cursor:pointer">Đã trao quà</button>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1240}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+stock: [30, 20, 8, 12, 5],
+reqs: [
+{ stu: 6, rw: 2, status: 'pending' },
+{ stu: 4, rw: 1, status: 'approved' },
+{ stu: 0, rw: 0, status: 'delivered' },
+{ stu: 2, rw: 3, status: 'delivered' }
+],
+msg: '', ov: {}, ed: null, upMsg: ''
+};
+}
+renderVals() {
+const S = [
+['Nguyễn Minh Anh','b','#6B3F2A','#FFD9B8','#FFD6E8'],
+['Trần Gia Bảo','a','#2B2B3B','#F5C49C','#CFF3EC'],
+['Lê Khánh Chi','c','#3A2A4D','#FFD9B8','#D9D3FF'],
+['Phạm Đức Dũng','a','#6B3F2A','#E8B088','#FFE9B8'],
+['Võ Hà My','b','#2B2B3B','#FFD9B8','#D9D3FF'],
+['Đặng Quốc Huy','a','#3A2A4D','#F5C49C','#CFF3EC'],
+['Bùi Thảo Nhi','c','#8A4B2D','#FFD9B8','#FFD6E8']
+];
+const R0 = [
+['Sticker vũ trụ', 10, 'Bộ sticker phi hành gia và hành tinh.', 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', 'linear-gradient(135deg,#6675E8,#B9A7F8)'],
+['Bookmark tên lửa', 15, 'Kẹp sách hình tên lửa nhỏ xinh.', 'M6 3h12v18l-6-4-6 4z', 'linear-gradient(135deg,#F46FA5,#FFB4D3)'],
+['Bút dễ thương', 25, 'Bút gel hình ngôi sao, mực xanh tím.', 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z', 'linear-gradient(135deg,#2BB5A4,#80DDD0)'],
+['Huy hiệu phi hành gia', 30, 'Huy hiệu kim loại cài áo đồng phục.', 'M12 14a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM8.5 13.5L7 22l5-3 5 3-1.5-8.5', 'linear-gradient(135deg,#F5A81C,#FFD76F)'],
+['Quà bí mật', 50, 'Một bất ngờ do cô Khanh chuẩn bị.', 'M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z', 'linear-gradient(135deg,#4F5BD5,#F46FA5)']
+];
+const st = this.state;
+const R = R0.map((r, i) => { const o = st.ov[i]; return o ? [o.name !== undefined ? o.name : r[0], o.cost !== undefined ? o.cost : r[1], r[2], o.d || r[3], o.grad || r[4]] : r; });
+const PRESETS = [
+['Ngôi sao', 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z', 'linear-gradient(135deg,#6675E8,#B9A7F8)'],
+['Sách', 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M9 7h6', 'linear-gradient(135deg,#F46FA5,#FFB4D3)'],
+['Bút', 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z', 'linear-gradient(135deg,#2BB5A4,#80DDD0)'],
+['Huy hiệu', 'M12 14a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM8.5 13.5L7 22l5-3 5 3-1.5-8.5', 'linear-gradient(135deg,#F5A81C,#FFD76F)'],
+['Hộp quà', 'M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z', 'linear-gradient(135deg,#4F5BD5,#F46FA5)'],
+['Tên lửa', 'M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1zM12 15l-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22 22 0 0 1-4 2zM9 12H4s.6-3 2-4c1.6-1.1 5 0 5 0M12 15v5s3-.6 4-2c1.1-1.6 0-5 0-5', 'linear-gradient(135deg,#3B3FA8,#7A58E0)'],
+['Mặt trăng', 'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z', 'linear-gradient(135deg,#8E86D8,#D9D3FF)'],
+['Trái tim', 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z', 'linear-gradient(135deg,#E5334F,#FF9DB5)']
+];
+const setOv = patch => this.setState({ ov: { ...st.ov, [st.ed]: { ...(st.ov[st.ed] || {}), ...patch } } });
+const held = i => st.reqs.filter(q => q.rw === i && q.status === 'pending').length;
+const setStatus = (idx, status, msg, dStock) => {
+const reqs = st.reqs.map((q, j) => j === idx ? { ...q, status } : q);
+const stock = st.stock.slice();
+if (dStock) stock[st.reqs[idx].rw] += dStock;
+this.setState({ reqs, stock, msg });
+};
+const STAT = {
+pending: ['Chờ duyệt', '#FFF1CC', '#7A4E00'],
+approved: ['Đã duyệt, chờ trao', '#E3EEFF', '#1F4C9E'],
+delivered: ['Đã nhận quà', '#DDF6F1', '#0B5A4D'],
+rejected: ['Từ chối', '#FFE3EA', '#8E1B3B']
+};
+return {
+rewards: R.map(([name, cost, desc, d, grad], i) => {
+const left = st.stock[i] - held(i);
+const out = left <= 0;
+return { name, cost, desc, d, grad, edit: () => this.setState({ ed: i, upMsg: '' }), edBorder: st.ed === i ? '#4F5BD5' : '#D9D5F2', state: out ? 'Hết quà' : 'Còn quà', tint: out ? '#FFE3EA' : '#DDF6F1', ink: out ? '#8E1B3B' : '#0B5A4D', stockText: 'Còn ' + Math.max(left, 0) + (held(i) ? ' (đang giữ ' + held(i) + ')' : '') };
+}),
+hasEd: st.ed !== null,
+ed: st.ed !== null ? { name: R[st.ed][0], cost: R[st.ed][1], d: R[st.ed][3], grad: R[st.ed][4] } : { name: '', cost: '', d: '', grad: '' },
+onName: e => setOv({ name: e.target.value }),
+onCost: e => { const v = parseInt(e.target.value, 10); setOv({ cost: v > 0 ? v : '' }); },
+presets: PRESETS.map(([label, d, grad]) => ({ label, d, grad, on: st.ed !== null && R[st.ed][3] === d && R[st.ed][4] === grad, border: (st.ed !== null && R[st.ed][3] === d && R[st.ed][4] === grad) ? '#231F4D' : 'transparent', pick: () => setOv({ d, grad, upMsg: '' }) })),
+upload: () => this.setState({ upMsg: 'Khi hệ thống chạy thật, cô chọn ảnh từ máy và ảnh này thay cho hình quà. Hiện bản thiết kế chỉ có hình có sẵn.' }),
+upMsg: st.upMsg,
+closeEd: () => this.setState({ ed: null, upMsg: '' }),
+pendingCount: st.reqs.filter(q => q.status === 'pending').length,
+msg: st.msg,
+requests: st.reqs.map((q, idx) => {
+const s = S[q.stu]; const r = R[q.rw]; const t = STAT[q.status];
+return {
+name: s[0], hair: s[1], hairColor: s[2], skin: s[3], avBg: s[4], reward: r[0], cost: r[1],
+status: t[0], tint: t[1], ink: t[2],
+isPending: q.status === 'pending', isApproved: q.status === 'approved',
+approve: () => { if (st.reqs[idx].status !== 'pending') return; setStatus(idx, 'approved', 'Đã duyệt: trừ ' + r[1] + ' sao của ' + s[0] + ' và cập nhật tồn kho. Yêu cầu này không thể xử lý lần hai.', -1); },
+reject: () => { if (st.reqs[idx].status !== 'pending') return; setStatus(idx, 'rejected', 'Đã từ chối. Số sao và quà đã giữ được trả lại cho ' + s[0] + '.', 0); },
+deliver: () => { if (st.reqs[idx].status !== 'approved') return; setStatus(idx, 'delivered', 'Đã ghi nhận trao quà cho ' + s[0] + '.', 0); }
+};
+})
+};
+}
+}
+</script>
+</body>
+</html>

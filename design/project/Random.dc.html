@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Gọi tên ngẫu nhiên – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#F6F4FF;color:#231F4D}
+a{text-decoration:none;color:inherit}
+button{font-family:'Nunito',system-ui,sans-serif}
+@keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.tw{animation:tw 3s ease-in-out infinite}
+.pop{animation:pop .5s ease-out 1}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;gap:20px;padding:16px;box-sizing:border-box;background:#F6F4FF;font-family:'Nunito',system-ui,sans-serif;color:#231F4D">
+<div style="flex:1 1 248px;max-width:272px">
+<dc-import name="Sidebar" active="random" hint-size="248px,720px"></dc-import>
+</div>
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<dc-import name="Header" title="Gọi tên ngẫu nhiên" subtitle="Quay số chọn phi hành gia may mắn" hint-size="100%,84px"></dc-import>
+
+<div style="background:#fff;border-radius:26px;padding:20px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-weight:800;font-size:14.5px;color:#4A476E">Gọi trong phạm vi</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{scopes}}" as="s" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{s.on}}" onClick="{{s.pick}}" style="min-height:44px;padding:0 18px;border-radius:999px;font-weight:800;font-size:14.5px;cursor:pointer;background:{{s.bg}};color:{{s.color}};border:2px solid {{s.border}}">{{s.label}}</button>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<sc-for list="{{toggles}}" as="t" hint-placeholder-count="2">
+<button type="button" role="switch" aria-checked="{{t.on}}" onClick="{{t.flip}}" style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 16px 0 10px;border-radius:14px;border:2px solid #D9D5F2;background:#fff;font-weight:700;font-size:14.5px;color:#231F4D;cursor:pointer">
+<span style="width:44px;height:26px;border-radius:13px;background:{{t.track}};position:relative;flex:0 0 auto"><span style="position:absolute;top:3px;left:{{t.knob}}px;width:20px;height:20px;border-radius:50%;background:#fff"></span></span>{{t.label}}
+</button>
+</sc-for>
+</div>
+</div>
+
+<div style="position:relative;overflow:hidden;border-radius:32px;background:linear-gradient(160deg,#2B2E7E 0%,#4C47C4 65%,#7B63E0 100%);padding:34px 24px 30px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;color:#fff">
+<svg viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:100%"><g class="tw"><circle cx="90" cy="50" r="3" fill="#FFE08A"/><circle cx="300" cy="320" r="2" fill="#fff"/><circle cx="700" cy="60" r="3" fill="#FFE08A"/><circle cx="900" cy="300" r="2.5" fill="#fff"/><circle cx="560" cy="360" r="2" fill="#FFE08A"/></g></svg>
+<div style="position:relative;font-size:14px;font-weight:800;letter-spacing:.16em;color:#FFE08A">{{stageLabel}}</div>
+<div class="{{popClass}}" style="position:relative;width:230px;height:230px;border-radius:50%;background:rgba(255,255,255,.14);border:4px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center">
+<sc-if value="{{hasCur}}" hint-placeholder-val="{{true}}">
+<dc-import name="Avatar" hair="{{cur.hair}}" hair-color="{{cur.hairColor}}" skin="{{cur.skin}}" bg="{{cur.avBg}}" crown="{{cur.crown}}" size="196" hint-size="196px,196px"></dc-import>
+</sc-if>
+<sc-if value="{{noCur}}" hint-placeholder-val="{{false}}">
+<svg viewBox="0 0 24 24" width="96" height="96" aria-hidden="true"><polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857" stroke="#E0A020" stroke-width="1" stroke-linejoin="round"/></svg>
+</sc-if>
+</div>
+<div style="position:relative;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;line-height:1.1;min-height:44px">{{curName}}</div>
+<div style="position:relative;font-size:16px;color:#E4E7FF;font-weight:700;min-height:22px">{{curMeta}}</div>
+<div style="position:relative;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:6px">
+<button type="button" onClick="{{spin}}" style="min-height:60px;padding:0 40px;border-radius:20px;border:0;background:#FFC857;color:#3B2A00;font-weight:800;font-size:20px;cursor:pointer">{{spinLabel}}</button>
+<sc-if value="{{canReward}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{reward}}" style="min-height:60px;padding:0 26px;border-radius:20px;border:2px solid rgba(255,255,255,.7);background:transparent;color:#fff;font-weight:800;font-size:17px;cursor:pointer">+1 sao cho bạn này</button>
+</sc-if>
+</div>
+<sc-if value="{{msg}}" hint-placeholder-val="{{false}}"><div role="status" style="position:relative;background:rgba(255,255,255,.18);border-radius:14px;padding:10px 16px;font-weight:700;font-size:15px">{{msg}}</div></sc-if>
+</div>
+
+<div style="background:#fff;border-radius:26px;padding:22px 24px;box-shadow:0 6px 20px rgba(102,117,232,.10);display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+<h2 style="margin:0;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">Đã được gọi ({{calledCount}}/{{poolSize}})</h2>
+<button type="button" onClick="{{resetRound}}" style="min-height:44px;padding:0 18px;border-radius:14px;border:1.5px solid #D9D5F2;background:#fff;color:#3441B5;font-weight:800;font-size:14.5px;cursor:pointer">Bắt đầu vòng mới</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{calledList}}" as="c" hint-placeholder-count="3">
+<span style="display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:4px 14px 4px 4px;background:#F6F4FF;font-weight:700;font-size:14px"><dc-import name="Avatar" hair="{{c.hair}}" hair-color="{{c.hairColor}}" skin="{{c.skin}}" bg="{{c.avBg}}" size="32" hint-size="32px,32px"></dc-import>{{c.name}}</span>
+</sc-for>
+<sc-if value="{{noneCalled}}" hint-placeholder-val="{{false}}"><span style="color:#5B5890;font-size:14.5px">Chưa gọi bạn nào trong vòng này.</span></sc-if>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1100}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { scope: 'all', noRepeat: true, onlyPresent: true, called: [], cur: null, spinning: false, result: false, msg: '', pop: 0 };
+this.timer = null;
+}
+componentWillUnmount() { if (this.timer) clearTimeout(this.timer); }
+renderVals() {
+const S = [
+['Nguyễn Minh Anh','b','#6B3F2A','#FFD9B8','#FFD6E8'],
+['Trần Gia Bảo','a','#2B2B3B','#F5C49C','#CFF3EC'],
+['Lê Khánh Chi','c','#3A2A4D','#FFD9B8','#D9D3FF'],
+['Phạm Đức Dũng','a','#6B3F2A','#E8B088','#FFE9B8'],
+['Võ Hà My','b','#2B2B3B','#FFD9B8','#D9D3FF'],
+['Đặng Quốc Huy','a','#3A2A4D','#F5C49C','#CFF3EC'],
+['Bùi Thảo Nhi','c','#8A4B2D','#FFD9B8','#FFD6E8'],
+['Hoàng Tuấn Kiệt','a','#2B2B3B','#E8B088','#D9D3FF'],
+['Ngô Bảo Ngọc','b','#6B3F2A','#F5C49C','#FFE9B8'],
+['Đỗ Anh Thư','c','#2B2B3B','#FFD9B8','#CFF3EC']
+].map((x, i) => ({ i, name: x[0], hair: x[1], hairColor: x[2], skin: x[3], avBg: x[4] }));
+const G = [[0,1,2],[3,4,5],[6,7],[8,9]];
+const groupOf = i => G.findIndex(g => g.indexOf(i) >= 0) + 1;
+const ABSENT = [6];
+const st = this.state;
+const basePool = () => S.map(s => s.i).filter(i => (st.scope === 'all' || G[st.scope].indexOf(i) >= 0) && !(st.onlyPresent && ABSENT.indexOf(i) >= 0));
+const pool = basePool();
+const avail = () => pool.filter(i => !(st.noRepeat && st.called.indexOf(i) >= 0));
+const spin = () => {
+if (st.spinning) return;
+const a = avail();
+if (!a.length) { this.setState({ msg: 'Cả nhóm đã được gọi hết. Cô bấm "Bắt đầu vòng mới" nhé.', result: false }); return; }
+const target = a[Math.floor(Math.random() * a.length)];
+const steps = 20; let k = 0;
+this.setState({ spinning: true, result: false, msg: '' });
+const tick = () => {
+k++;
+if (k >= steps) {
+this.setState(s => ({ spinning: false, result: true, cur: target, called: s.called.indexOf(target) >= 0 ? s.called : [...s.called, target], pop: s.pop + 1 }));
+return;
+}
+const show = pool[Math.floor(Math.random() * pool.length)];
+this.setState({ cur: show });
+this.timer = setTimeout(tick, 60 + k * 9);
+};
+tick();
+};
+const cur = st.cur !== null ? S[st.cur] : null;
+const setScope = v => () => this.setState({ scope: v, cur: null, result: false, msg: '' });
+return {
+scopes: [['all','Cả lớp'], ...G.map((_, k) => [k, 'Tổ ' + (k + 1)])].map(([v, label]) => { const on = st.scope === v; return { label, on, pick: setScope(v), bg: on ? '#4F5BD5' : '#fff', color: on ? '#fff' : '#3A3769', border: on ? '#4F5BD5' : '#D9D5F2' }; }),
+toggles: [
+{ label: 'Không gọi lại bạn đã được gọi', on: st.noRepeat, flip: () => this.setState({ noRepeat: !st.noRepeat }) },
+{ label: 'Chỉ gọi bạn có mặt hôm nay', on: st.onlyPresent, flip: () => this.setState({ onlyPresent: !st.onlyPresent, cur: null, result: false }) }
+].map(t => ({ ...t, track: t.on ? '#4F5BD5' : '#B9B5E8', knob: t.on ? 21 : 3 })),
+stageLabel: st.spinning ? 'ĐANG QUAY...' : (st.result ? 'PHI HÀNH GIA MAY MẮN' : 'SẴN SÀNG QUAY'),
+popClass: st.result ? 'pop' : '',
+hasCur: !!cur, noCur: !cur,
+cur: cur ? { ...cur, crown: st.result ? '1' : '0' } : { hair: 'a', hairColor: '#000', skin: '#FFD9B8', avBg: '#D9D3FF', crown: '0' },
+curName: cur ? cur.name : 'Bấm quay để chọn',
+curMeta: cur ? 'Tổ ' + groupOf(cur.i) + ' · Mã HS' + String(cur.i + 1).padStart(2, '0') : '',
+spin,
+spinLabel: st.spinning ? 'Đang quay...' : (st.result ? 'Gọi bạn tiếp theo' : 'Quay số'),
+canReward: st.result && !st.spinning,
+reward: () => this.setState({ msg: 'Đã cộng 1 sao cho ' + cur.name + ' (bản thiết kế, chưa lưu thật).' }),
+msg: st.msg,
+calledCount: st.called.filter(i => pool.indexOf(i) >= 0).length,
+poolSize: pool.length,
+calledList: st.called.map(i => S[i]),
+noneCalled: st.called.length === 0,
+resetRound: () => this.setState({ called: [], cur: null, result: false, msg: '' })
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Chế độ trình chiếu – Trạm không gian Năm 8</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:#1E2160;color:#fff}
+a{text-decoration:none;color:inherit}
+@keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+.tw{animation:tw 3s ease-in-out infinite}
+</style>
+</helmet>
+<div style="position:relative;min-height:900px;box-sizing:border-box;padding:28px 36px;background:radial-gradient(circle at 20% 15%,#4B4FB5 0%,#2B2E7E 45%,#1E2160 100%);display:flex;flex-direction:column;gap:22px;font-family:'Nunito',system-ui,sans-serif;color:#fff;overflow:hidden">
+<svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:100%"><g class="tw"><circle cx="80" cy="70" r="3" fill="#FFE08A"/><circle cx="520" cy="40" r="2" fill="#fff"/><circle cx="930" cy="90" r="3" fill="#FFE08A"/><circle cx="40" cy="330" r="2" fill="#fff"/><circle cx="970" cy="420" r="2.5" fill="#fff"/><circle cx="600" cy="580" r="2" fill="#FFE08A"/></g></svg>
+
+<div style="position:relative;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+<div style="display:flex;align-items:center;gap:16px">
+<div style="position:relative;width:72px;height:72px;flex:0 0 auto;border-radius:50%;overflow:hidden;background:#fff"><img src="/_blob/c29022907dd1206cfc9cde75f5d232a6" alt="Logo trường Tiểu học Chính Nghĩa" style="position:absolute;left:-2px;top:-2px;width:76px;height:76px;object-fit:cover"></div>
+<div><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;line-height:1.05">TRẠM KHÔNG GIAN <span style="color:#FFD36B">NĂM 8</span></div><div style="font-size:18px;color:#E4E7FF;font-weight:700">Lớp 5/8 · Cùng học – Cùng chơi – Cùng tỏa sáng</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:14px">
+<div style="text-align:right"><div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:34px;line-height:1.1">Thứ Bảy, 31/10/2026</div><div style="font-size:16px;color:#E4E7FF">Năm học 2026 – 2027</div></div>
+<a href="Main.dc.html" style="min-height:48px;box-sizing:border-box;padding:0 20px;border-radius:14px;border:2px solid rgba(255,255,255,.6);font-weight:800;font-size:16px;display:inline-flex;align-items:center">Thoát trình chiếu</a>
+</div>
+</div>
+
+<div style="position:relative;display:flex;flex-wrap:wrap;gap:22px;align-items:stretch;flex:1">
+<!-- Top 5 -->
+<div style="flex:3 1 560px;min-width:0;background:rgba(255,255,255,.10);border-radius:30px;padding:26px 30px;display:flex;flex-direction:column;gap:12px">
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:34px">Top 5 ngôi sao sáng nhất</div>
+<sc-for list="{{top5}}" as="r" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:18px;border-radius:22px;padding:10px 20px;background:{{r.bg}};color:{{r.ink}}">
+<div style="flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:{{r.badge}};color:#3A2A00;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px">{{r.rank}}</div>
+<dc-import name="Avatar" hair="{{r.hair}}" hair-color="{{r.hairColor}}" skin="{{r.skin}}" bg="{{r.avBg}}" crown="{{r.crown}}" size="72" hint-size="72px,72px"></dc-import>
+<div style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px">{{r.name}}</div>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:32px;color:#7A4E00">{{r.stars}} sao</div>
+</div>
+</sc-for>
+</div>
+
+<div style="flex:2 1 380px;min-width:0;display:flex;flex-direction:column;gap:22px">
+<div style="background:rgba(255,255,255,.10);border-radius:30px;padding:22px 28px;display:flex;flex-direction:column;gap:10px">
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px">Sao sáng trong tuần</div>
+<sc-for list="{{week}}" as="w" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:12px;font-weight:800;font-size:22px"><span style="min-width:62px;text-align:center;border-radius:12px;padding:4px 10px;background:#FFC857;color:#3B2A00">+{{w.n}}</span>{{w.name}}</div>
+</sc-for>
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin-top:6px;color:#FFE08A">Thành tích nổi bật</div>
+<div style="font-size:20px;line-height:1.5;font-weight:700">Cả lớp đạt 86 sao thi đua trong tuần. Tổ 1 dẫn đầu.</div>
+</div>
+<div style="background:rgba(255,255,255,.10);border-radius:30px;padding:22px 28px;display:flex;flex-direction:column;gap:8px">
+<div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px">Hôm nay học gì?</div>
+<sc-for list="{{today}}" as="t" hint-placeholder-count="5"><div style="display:flex;align-items:center;gap:12px;font-size:22px;font-weight:800"><span style="min-width:74px;font-size:16px;color:#E4E7FF">{{t.label}}</span><span style="flex:1;border-radius:12px;padding:6px 14px;background:{{t.bg}};color:{{t.ink}}">{{t.subject}}</span></div></sc-for>
+</div>
+</div>
+</div>
+
+<div style="position:relative;background:#FFC857;color:#3B2A00;border-radius:24px;padding:16px 28px;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center">
+<span style="font-weight:800;font-size:18px;letter-spacing:.1em">THÔNG BÁO CHUNG</span>
+<span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px">Ôn tập Toán: hoàn thành trang 45 trước thứ Hai</span>
+</div>
+<div style="position:relative;font-size:13px;color:#C9CEFF">Chế độ trình chiếu không hiện tài khoản, dữ liệu điểm danh, lý do trừ sao hay nút quản trị.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+const PAL = { 'Toán':['#E8EBFF','#2C37A8'], 'Tiếng Việt':['#FFE3EE','#8E1B3B'], 'Tiếng Anh':['#DDF6F1','#0B5A4D'], 'Thể dục':['#FFE6D6','#7A3510'], 'Sinh hoạt lớp':['#EDEDF7','#3A3769'] };
+const RK = [['Nguyễn Minh Anh','b','#6B3F2A','#FFD9B8','#FFD6E8',128],['Trần Gia Bảo','a','#2B2B3B','#F5C49C','#CFF3EC',119],['Lê Khánh Chi','c','#3A2A4D','#FFD9B8','#D9D3FF',112],['Phạm Đức Dũng','a','#6B3F2A','#E8B088','#FFE9B8',96],['Võ Hà My','b','#2B2B3B','#FFD9B8','#D9D3FF',91]];
+const BADGE = ['#FFC857','#DDE2F0','#F3BC97','#E4E0F7','#E4E0F7'];
+const T = [['Tiết 1','Tiếng Việt'],['Tiết 2','Toán'],['Tiết 3','Thể dục'],['Tiết 4','Tiếng Anh'],['Tiết 5','Toán']];
+return {
+top5: RK.map((r, i) => ({ rank: i + 1, name: r[0], hair: r[1], hairColor: r[2], skin: r[3], avBg: r[4], stars: r[5], badge: BADGE[i], crown: i === 0 ? '1' : '0', bg: i === 0 ? '#FFF4D1' : '#fff', ink: '#231F4D' })),
+week: [{ n: 18, name: 'Nguyễn Minh Anh' }, { n: 15, name: 'Trần Gia Bảo' }, { n: 12, name: 'Lê Khánh Chi' }],
+today: T.map(([label, subject]) => { const c = PAL[subject]; return { label, subject, bg: c[0], ink: c[1] }; })
+};
+}
+}
+</script>
+</body>
+</html>
