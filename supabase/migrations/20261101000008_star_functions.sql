@@ -1,3 +1,10 @@
+-- Thứ tự khóa toàn cục (mọi hàm hiện tại và sau này phải theo):
+--   students (theo id, FOR NO KEY UPDATE) -> rewards -> reward_requests;
+--   groups (theo id) -> group_members.
+-- Không khóa students sau khi đã khóa groups.
+-- Dùng FOR NO KEY UPDATE (không phải FOR UPDATE) để không chặn/deadlock với FOR KEY SHARE
+-- mà các INSERT có khóa ngoại (vd. attendance) lấy trên hàng students.
+
 -- Hàm cộng, trừ, hoàn tác sao. Sổ sao chỉ ghi thêm; mọi thay đổi sao đi qua các hàm này.
 
 -- Sổ append-only: chặn cả UPDATE/DELETE của vai có BYPASSRLS.
@@ -49,7 +56,7 @@ begin
   select coalesce(array_agg(id order by id), '{}') into v_locked from (
     select s.id from public.students s
      where s.id = any(v_ids) and s.class_id = v_class and s.archived_at is null
-     order by s.id for update) l;
+     order by s.id for no key update) l;
   if cardinality(v_locked) <> cardinality(v_ids) then raise exception 'student_not_found'; end if;
 
   if p_kind = 'penalty' then
@@ -119,7 +126,7 @@ begin
   -- Khóa học sinh (kể cả đã lưu trữ) trước khi đọc số dư và kiểm tra đã hoàn tác.
   perform 1 from (select s.id from public.students s
                    where s.id = any(v_student_ids) and s.class_id = v_class
-                   order by s.id for update) l;
+                   order by s.id for no key update) l;
 
   if exists (select 1 from public.star_transactions t
               where t.class_id = v_class and t.batch_id = p_batch_id and t.kind = 'reversal')

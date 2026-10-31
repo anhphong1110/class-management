@@ -58,7 +58,7 @@ begin
     raise exception 'not_allowed';
   end if;
   perform 1 from public.students s
-   where s.id = p_student_id and s.class_id = v_class and s.archived_at is null for update;
+   where s.id = p_student_id and s.class_id = v_class and s.archived_at is null for no key update;
   if not found then raise exception 'student_not_found'; end if;
 
   select gm.group_id into v_from from public.group_members gm

@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { joinNames } from '@/lib/domain/names'
 import { formatRelative } from '@/lib/domain/relative-time'
-import type { StarBatch } from '@/lib/stars/history'
+import type { StarBatchView } from '@/lib/stars/history'
 import type { StarCriterion, StarGroup, StudentWithStars } from '@/lib/stars/queries'
 import { archiveCriterion, awardStars, penalizeStars, saveCriterion, undoBatch } from './actions'
 
@@ -19,7 +19,7 @@ type Props = {
   groups: StarGroup[]
   criteria: StarCriterion[]
   steps: number[]
-  batches: StarBatch[]
+  batches: StarBatchView[]
   nowIso: string
   /** Giá trị khởi tạo, để các trang khác mở sẵn một lựa chọn. */
   initialSelectedIds?: string[]
@@ -57,6 +57,7 @@ export function StarsClient({
   const [critId, setCritId] = useState<string | null>(null)
   const [note, setNote] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [undoing, setUndoing] = useState<StarBatchView | null>(null)
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
   const [flash, setFlash] = useState(0)
@@ -177,6 +178,7 @@ export function StarsClient({
   function undo(batchId: string) {
     startTransition(async () => {
       const res = await undoBatch(batchId)
+      setUndoing(null)
       if (res.error) {
         setErr(res.error)
         setMsg('')
@@ -453,7 +455,7 @@ export function StarsClient({
                   {signed(b.delta)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[14.5px] font-extrabold">{nameList(b.studentIds)}</div>
+                  <div className="text-[14.5px] font-extrabold">{joinNames(b.studentNames)}</div>
                   <div className="text-[13px] text-muted">
                     {b.reason} · {formatRelative(new Date(b.at), now)} · {b.actorName}
                   </div>
@@ -461,7 +463,7 @@ export function StarsClient({
                 <button
                   type="button"
                   disabled={done || pending}
-                  onClick={() => undo(b.batchId)}
+                  onClick={() => setUndoing(b)}
                   className="min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3 text-[13px] font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isReversal ? 'Đã ghi' : b.reversed ? 'Đã hoàn tác' : 'Hoàn tác'}
@@ -530,6 +532,20 @@ export function StarsClient({
           </Button>
           <Button variant="danger" disabled={pending} onClick={run}>
             Đồng ý trừ sao
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal open={undoing !== null} onClose={() => setUndoing(null)} title="Xác nhận hoàn tác">
+        <p className="m-0 mb-4 text-[15.5px] font-bold">
+          Cô muốn hoàn tác lượt {undoing ? signed(undoing.delta) : ''} của {undoing ? joinNames(undoing.studentNames) : ''}?
+        </p>
+        <div className="flex justify-end gap-2.5">
+          <Button variant="secondary" onClick={() => setUndoing(null)}>
+            Hủy
+          </Button>
+          <Button variant="danger" disabled={pending} onClick={() => undoing && undo(undoing.batchId)}>
+            Đồng ý hoàn tác
           </Button>
         </div>
       </Modal>

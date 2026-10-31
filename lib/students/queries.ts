@@ -14,12 +14,15 @@ export type StudentCard = StudentWithStars & {
 
 export async function getStudentCards(classId: string): Promise<StudentCard[]> {
   const supabase = await createServerSupabase()
-  const [students, groups, { data: att }, { data: members }] = await Promise.all([
+  const [students, groups, attRes, membersRes] = await Promise.all([
     getStudentsWithStars(classId),
     getGroups(classId),
     supabase.from('attendance').select('student_id, status').eq('class_id', classId).eq('date', todayInVietnam()),
     supabase.from('group_members').select('student_id, role').eq('class_id', classId),
   ])
+  for (const r of [attRes, membersRes]) if (r.error) throw new Error(r.error.message)
+  const { data: att } = attRes
+  const { data: members } = membersRes
   const today = new Map((att ?? []).map((a) => [a.student_id as string, a.status as TodayStatus]))
   const roles = new Map((members ?? []).map((m) => [m.student_id as string, m.role as GroupRole]))
   const groupOf = new Map<string, string>()

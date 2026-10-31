@@ -19,11 +19,11 @@ insert into public.rewards (id, class_id, name, cost, stock) values
   ('00000000-0000-0000-0000-0000000000aa', '00000000-0000-0000-0000-0000000000c1', 'Quà', 3, 5);
 insert into public.reward_requests (id, class_id, student_id, reward_id, cost) values
   ('00000000-0000-0000-0000-0000000000bb', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000aa', 3);
-insert into public.star_transactions (id, class_id, student_id, delta, kind, criterion_id, note, reward_request_id) values
-  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', 5, 'award', '00000000-0000-0000-0000-0000000000f1', null, null),
-  ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -2, 'penalty', '00000000-0000-0000-0000-0000000000f2', 'Nói chuyện riêng', null),
-  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -3, 'reserve', null, null, '00000000-0000-0000-0000-0000000000bb'),
-  ('00000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', 4, 'award', null, null, null);
+insert into public.star_transactions (id, class_id, student_id, delta, kind, criterion_id, note, reward_request_id, batch_id) values
+  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', 5, 'award', '00000000-0000-0000-0000-0000000000f1', null, null, gen_random_uuid()),
+  ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -2, 'penalty', '00000000-0000-0000-0000-0000000000f2', 'Nói chuyện riêng', null, gen_random_uuid()),
+  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -3, 'reserve', null, null, '00000000-0000-0000-0000-0000000000bb', gen_random_uuid()),
+  ('00000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', 4, 'award', null, null, null, gen_random_uuid());
 
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d2', 'role', 'authenticated')::text, true);
@@ -31,8 +31,8 @@ select is((select competition_stars from public.v_student_stars where student_id
 select is((select available_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a1'), 0, 'A: sao khả dụng = 0');
 
 reset role;
-insert into public.star_transactions (class_id, student_id, delta, kind, reverses_id) values
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', 2, 'reversal', '00000000-0000-0000-0000-000000000102');
+insert into public.star_transactions (class_id, student_id, delta, kind, reverses_id, batch_id) values
+  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', 2, 'reversal', '00000000-0000-0000-0000-000000000102', gen_random_uuid());
 
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d2', 'role', 'authenticated')::text, true);

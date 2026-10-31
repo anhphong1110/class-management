@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { login } from './helpers'
-import { resetStars, seedStars } from './helpers/ledger'
+import { CLASS_ID, resetStars, seedStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -87,6 +87,13 @@ test('hoàn tác một dòng cộng sao chỉ một lần', async ({ page }) => 
   await expect(card(page, 'Nguyễn Minh Anh')).toContainText('2 sao khả dụng')
 
   await history(page).getByRole('button', { name: 'Hoàn tác' }).click()
+  const undoDialog = page.getByRole('dialog')
+  await expect(undoDialog).toContainText('Cô muốn hoàn tác lượt +2 của Nguyễn Minh Anh?')
+  await undoDialog.getByRole('button', { name: 'Hủy' }).click()
+  await expect(undoDialog).toHaveCount(0)
+  await expect(card(page, 'Nguyễn Minh Anh')).toContainText('2 sao khả dụng')
+  await history(page).getByRole('button', { name: 'Hoàn tác' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Đồng ý hoàn tác' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Đã hoàn tác. Hệ thống ghi thêm một bản ghi mới, bản ghi cũ vẫn được giữ.' })).toBeVisible()
   await expect(card(page, 'Nguyễn Minh Anh')).toContainText('0 sao khả dụng')
   const rows = history(page).getByTestId('history-row')
@@ -120,4 +127,21 @@ test('thêm tiêu chí Đọc sách 2 sao', async ({ page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Đồng ý lưu trữ' }).click()
   await expect(manage).not.toContainText('Đọc sách nhiều')
   await expect(page.getByTestId('criteria-picker')).not.toContainText('Đọc sách nhiều')
+})
+
+test('lịch sử vẫn hiện tên học sinh đã lưu trữ', async ({ page }) => {
+  await open(page)
+  await card(page, 'Nguyễn Minh Anh').click()
+  await card(page, 'Trần Gia Bảo').click()
+  await page.getByTestId('criteria-picker').getByRole('button', { name: /Hoàn thành tốt nhiệm vụ/ }).click()
+  await page.getByRole('button', { name: 'Xác nhận cộng sao' }).click()
+  await expect(history(page).getByTestId('history-row')).toHaveCount(1)
+  sql(`update public.students set archived_at = now() where id = '${sid(2)}' and class_id = '${CLASS_ID}'`)
+  try {
+    await page.reload()
+    const row = history(page).getByTestId('history-row').first()
+    await expect(row).toContainText('Nguyễn Minh Anh, Trần Gia Bảo')
+  } finally {
+    sql(`update public.students set archived_at = null where id = '${sid(2)}'`)
+  }
 })

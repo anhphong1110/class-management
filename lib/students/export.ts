@@ -30,9 +30,21 @@ export function exportFileName(classShort: string): string {
 }
 
 export function buildTemplateWorkbook(): ArrayBuffer {
-  const ws = XLSX.utils.aoa_to_sheet([TEMPLATE_HEADER, [11, 'Nguyễn Văn A', ''], [12, 'Trần Thị B', '']])
+  // Trang dữ liệu chỉ có dòng tiêu đề để file mẫu không nhập nhầm dòng ví dụ.
+  const ws = XLSX.utils.aoa_to_sheet([TEMPLATE_HEADER])
   ws['!cols'] = [{ wch: 12 }, { wch: 30 }, { wch: 14 }]
+  const guide = XLSX.utils.aoa_to_sheet([
+    ['Hướng dẫn nhập danh sách học sinh'],
+    ['Nhập học sinh ở trang "Danh sách", mỗi học sinh một dòng, bắt đầu từ dòng 2. Chỉ trang đầu tiên được đọc.'],
+    ['Họ và tên là bắt buộc. Số thứ tự và Mã học sinh có thể để trống, hệ thống sẽ tự điền.'],
+    [],
+    TEMPLATE_HEADER,
+    [11, 'Nguyễn Văn A', ''],
+    [12, 'Trần Thị B', ''],
+  ])
+  guide['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 16 }]
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Mẫu')
+  XLSX.utils.book_append_sheet(wb, ws, 'Danh sách')
+  XLSX.utils.book_append_sheet(wb, guide, 'Hướng dẫn')
   return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
 }

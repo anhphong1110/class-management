@@ -1,7 +1,7 @@
 import 'server-only'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { resolveAvatars, type AvatarValue } from '@/lib/avatars/resolve'
-import { groupBatches, type StarBatch, type TxRow } from './history'
+import { groupBatches, orderedStudentNames, type StarBatchView, type StudentNameInfo, type TxRow } from './history'
 
 export type StudentWithStars = {
   id: string
@@ -60,10 +60,13 @@ export async function getStudentsWithStars(classId: string): Promise<StudentWith
 
 export async function getGroups(classId: string): Promise<StarGroup[]> {
   const supabase = await createServerSupabase()
-  const [{ data: groups }, { data: members }] = await Promise.all([
+  const [groupsRes, membersRes] = await Promise.all([
     supabase.from('groups').select('id, name').eq('class_id', classId).order('sort_order').order('name'),
     supabase.from('group_members').select('group_id, student_id').eq('class_id', classId),
   ])
+  for (const r of [groupsRes, membersRes]) if (r.error) throw new Error(r.error.message)
+  const { data: groups } = groupsRes
+  const { data: members } = membersRes
   return (groups ?? []).map((g) => ({
     id: g.id,
     name: g.name,
@@ -73,13 +76,14 @@ export async function getGroups(classId: string): Promise<StarGroup[]> {
 
 export async function getCriteria(classId: string): Promise<StarCriterion[]> {
   const supabase = await createServerSupabase()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('star_criteria')
     .select('id, label, kind, default_points')
     .eq('class_id', classId)
     .is('archived_at', null)
     .order('sort_order')
     .order('created_at')
+  if (error) throw new Error(error.message)
   return (data ?? []).map((c) => ({
     id: c.id,
     label: c.label,
@@ -90,12 +94,13 @@ export async function getCriteria(classId: string): Promise<StarCriterion[]> {
 
 export async function getStarSteps(classId: string): Promise<number[]> {
   const supabase = await createServerSupabase()
-  const { data } = await supabase.from('class_settings').select('star_steps').eq('class_id', classId).maybeSingle()
+  const { data, error } = await supabase.from('class_settings').select('star_steps').eq('class_id', classId).maybeSingle()
+  if (error) throw new Error(error.message)
   const steps = (data?.star_steps as number[] | null) ?? [1, 2, 3, 5, 10]
   return [...new Set(steps)].filter((n) => Number.isInteger(n) && n > 0).sort((a, b) => a - b)
 }
 
-export async function getRecentBatches(classId: string, limit: number): Promise<StarBatch[]> {
+export async function getRecentBatches(classId: string, limit: number): Promise<StarBatchView[]> {
   const supabase = await createServerSupabase()
   const { data, error } = await supabase
     .from('star_transactions')
@@ -142,7 +147,21 @@ export async function getRecentBatches(classId: string, limit: number): Promise<
   const labels = new Map((crit ?? []).map((c) => [c.id, c.label]))
   const names = new Map((actors ?? []).map((a) => [a.id, a.display_name]))
   // Batch gốc kéo thêm chỉ để lấy lý do, không hiện thành dòng lịch sử riêng.
-  return groupBatches(rows, labels, names)
+  const batches = groupBatches(rows, labels, names)
     .filter((b) => wanted.has(b.batchId))
     .slice(0, limit)
+
+  // Tên học sinh kể cả bạn đã lưu trữ, để lịch sử không hiện ô trống.
+  const studentIds = [...new Set(batches.flatMap((b) => b.studentIds))]
+  const info = new Map<string, StudentNameInfo>()
+  if (studentIds.length) {
+    const { data: studs, error: studErr } = await supabase
+      .from('students')
+      .select('id, full_name, roll_no, archived_at')
+      .eq('class_id', classId)
+      .in('id', studentIds)
+    if (studErr) throw new Error(studErr.message)
+    for (const s of studs ?? []) info.set(s.id, { fullName: s.full_name, rollNo: s.roll_no, archived: s.archived_at !== null })
+  }
+  return batches.map((b) => ({ ...b, studentNames: orderedStudentNames(b.studentIds, info) }))
 }

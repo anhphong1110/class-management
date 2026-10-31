@@ -57,13 +57,13 @@ insert into public.rewards (id, class_id, name, cost, stock) values
 insert into public.reward_requests (id, class_id, student_id, reward_id, cost) values
   ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000c1',
    '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000d1', 5);
-insert into public.star_transactions (id, class_id, student_id, delta, kind) values
+insert into public.star_transactions (id, class_id, student_id, delta, kind, batch_id) values
   ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000c1',
-   '00000000-0000-0000-0000-0000000000a1', 2, 'award');
+   '00000000-0000-0000-0000-0000000000a1', 2, 'award', gen_random_uuid());
 
 select throws_ok($$
-  insert into public.star_transactions (class_id, student_id, delta, kind)
-  values ('00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000a1', 1, 'award')
+  insert into public.star_transactions (class_id, student_id, delta, kind, batch_id)
+  values ('00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000a1', 1, 'award', gen_random_uuid())
 $$, '23503', null, 'giao dịch sao khác lớp với học sinh bị chặn');
 
 select throws_ok($$
@@ -93,9 +93,9 @@ select throws_ok($$
 $$, '23514', null, 'reserve thiếu reward_request_id bị chặn');
 
 select lives_ok($$
-  insert into public.star_transactions (class_id, student_id, delta, kind) values
-    ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', 3, 'award'),
-    ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -1, 'penalty')
+  insert into public.star_transactions (class_id, student_id, delta, kind, batch_id) values
+    ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', 3, 'award', gen_random_uuid()),
+    ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -1, 'penalty', gen_random_uuid())
 $$, 'award dương và penalty âm hợp lệ');
 select lives_ok($$
   insert into public.star_transactions (class_id, student_id, delta, kind, reward_request_id) values
@@ -104,8 +104,8 @@ select lives_ok($$
     ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -5, 'redeem', '00000000-0000-0000-0000-0000000000e1')
 $$, 'reserve, release, redeem hợp lệ');
 select lives_ok($$
-  insert into public.star_transactions (class_id, student_id, delta, kind, reverses_id)
-  values ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -2, 'reversal', '00000000-0000-0000-0000-0000000000f1')
+  insert into public.star_transactions (class_id, student_id, delta, kind, reverses_id, batch_id)
+  values ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -2, 'reversal', '00000000-0000-0000-0000-0000000000f1', gen_random_uuid())
 $$, 'reversal có reverses_id hợp lệ');
 
 select lives_ok($$

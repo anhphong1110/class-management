@@ -51,7 +51,7 @@ begin
   -- Khóa học sinh (kể cả đã lưu trữ) trước khi đọc số dư và kiểm tra đã hoàn tác.
   perform 1 from (select s.id from public.students s
                    where s.id = any(v_student_ids) and s.class_id = v_class
-                   order by s.id for update) l;
+                   order by s.id for no key update) l;
 
   if exists (select 1 from public.star_transactions t
               where t.class_id = v_class and t.batch_id = p_batch_id and t.kind = 'reversal')

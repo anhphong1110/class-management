@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "db:test": "supabase test db",
+    "build:template": "tsx scripts/build-template.ts",
     "seed:dev": "tsx --env-file=.env.local scripts/seed-dev-users.ts",
     "create-teacher": "tsx --env-file=.env.local scripts/create-teacher.ts",
     "create-teacher:prod": "tsx --env-file=.env.production.local scripts/create-teacher.ts"

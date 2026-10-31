@@ -86,3 +86,15 @@ export function groupBatches(
   }
   return out.sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
 }
+
+export type StudentNameInfo = { fullName: string; rollNo: number; archived: boolean }
+export type StarBatchView = StarBatch & { studentNames: string[] }
+
+/** Tên học sinh của một batch: bạn đang học theo số thứ tự trước, bạn đã lưu trữ sau; id không tìm thấy bị bỏ. */
+export function orderedStudentNames(ids: string[], info: Map<string, StudentNameInfo>): string[] {
+  return ids
+    .map((id) => info.get(id))
+    .filter((s): s is StudentNameInfo => !!s)
+    .sort((a, b) => Number(a.archived) - Number(b.archived) || a.rollNo - b.rollNo)
+    .map((s) => s.fullName)
+}

@@ -6,7 +6,7 @@ import { todayInVietnam } from '@/lib/domain/date'
 import { joinNames } from '@/lib/domain/names'
 import { formatRelative } from '@/lib/domain/relative-time'
 import { getRecentBatches, getStudentsWithStars } from '@/lib/stars/queries'
-import { buildOverviewStats, sumWeekStars, type AttendanceCounts, type OverviewStat, type WeekRow } from './stats'
+import { buildOverviewStats, type AttendanceCounts, type OverviewStat } from './stats'
 
 export { buildOverviewStats } from './stats'
 
@@ -34,26 +34,34 @@ type LbRow = { student_id: string; full_name: string; avatar_id: string | null; 
 
 const NO_TERMS = { term1Start: '', term1End: '', term2Start: '', term2End: '' }
 
+async function countRequests(supabase: Awaited<ReturnType<typeof createServerSupabase>>, classId: string, statuses: string[]): Promise<number> {
+  const { count, error } = await supabase
+    .from('reward_requests')
+    .select('id', { count: 'exact', head: true })
+    .eq('class_id', classId)
+    .in('status', statuses)
+  if (error) throw new Error(error.message)
+  return count ?? 0
+}
+
 export async function getOverview(classId: string, now: Date = new Date()): Promise<OverviewData> {
   const supabase = await createServerSupabase()
   const { from, to } = periodRange('week', now, NO_TERMS)
 
-  const [students, cls, att, week, reqs, lb, news, batches] = await Promise.all([
+  const [students, cls, att, week, reqs, redeemedCount, pendingCount, lb, news, batches] = await Promise.all([
     getStudentsWithStars(classId),
     supabase.from('classes').select('teacher_name, cover_path').eq('id', classId).single(),
     supabase.from('attendance').select('status').eq('class_id', classId).eq('date', todayInVietnam(now)),
-    supabase
-      .from('star_transactions')
-      .select('kind, delta, reverses_id')
-      .eq('class_id', classId)
-      .in('kind', ['award', 'penalty', 'reversal'])
-      .gte('created_at', from!)
-      .lt('created_at', to!),
+    supabase.rpc('class_star_totals_between', { p_from: from!, p_to: to! }),
     supabase
       .from('reward_requests')
       .select('id, student_id, reward_id, status, created_at')
       .eq('class_id', classId)
-      .order('created_at', { ascending: false }),
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(5),
+    countRequests(supabase, classId, ['approved', 'delivered']),
+    countRequests(supabase, classId, ['pending']),
     supabase.rpc('leaderboard_between', { p_from: null, p_to: null }),
     supabase
       .from('announcements')
@@ -72,28 +80,10 @@ export async function getOverview(classId: string, now: Date = new Date()): Prom
   const attendanceToday: AttendanceCounts = { present: 0, late: 0, absent_excused: 0, absent_unexcused: 0 }
   for (const r of att.data ?? []) attendanceToday[r.status as keyof AttendanceCounts]++
 
-  const weekRows = week.data ?? []
-  const originalKinds = new Map<string, string>()
-  const missingIds = [...new Set(weekRows.filter((t) => t.kind === 'reversal' && t.reverses_id).map((t) => t.reverses_id as string))]
-  if (missingIds.length) {
-    const { data: originals, error } = await supabase
-      .from('star_transactions')
-      .select('id, kind')
-      .eq('class_id', classId)
-      .in('id', missingIds)
-    if (error) throw new Error(error.message)
-    for (const o of originals ?? []) originalKinds.set(o.id, o.kind)
-  }
-  const sumRows: WeekRow[] = weekRows.map((t) => ({
-    kind: t.kind,
-    delta: t.delta,
-    originalKind: t.reverses_id ? originalKinds.get(t.reverses_id) : null,
-  }))
-  const { awarded: weekAwarded, penalized: weekPenalized } = sumWeekStars(sumRows)
-
-  const requests = reqs.data ?? []
-  const redeemedCount = requests.filter((r) => r.status === 'approved' || r.status === 'delivered').length
-  const pending = requests.filter((r) => r.status === 'pending')
+  const totals = (week.data ?? [])[0]
+  const weekAwarded = Number(totals?.awarded ?? 0)
+  const weekPenalized = Number(totals?.penalized ?? 0)
+  const recentPending = reqs.data ?? []
 
   const stats = buildOverviewStats({
     studentCount: students.length,
@@ -101,12 +91,11 @@ export async function getOverview(classId: string, now: Date = new Date()): Prom
     weekAwarded,
     weekPenalized,
     redeemedCount,
-    pendingRewards: pending.length,
+    pendingRewards: pendingCount,
     starsOver100: students.filter((s) => s.competition >= 100).length,
   })
 
   // Tên học sinh (kể cả bạn đã lưu trữ) và tên quà cho dòng hoạt động.
-  const recentPending = pending.slice(0, 5)
   const studentIds = [...new Set([...batches.flatMap((b) => b.studentIds), ...recentPending.map((r) => r.student_id)])]
   const rewardIds = [...new Set(recentPending.map((r) => r.reward_id))]
   const [{ data: nameRows, error: nameErr }, { data: rewardRows, error: rewardErr }] = await Promise.all([

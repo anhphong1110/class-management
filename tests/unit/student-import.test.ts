@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import * as XLSX from 'xlsx'
 import { parseStudentSheet } from '@/lib/students/import'
 import { classShortName } from '@/lib/classes/short-name'
-import { buildStudentWorkbook, exportFileName } from '@/lib/students/export'
+import { buildStudentWorkbook, buildTemplateWorkbook, exportFileName } from '@/lib/students/export'
 
 const enc = (s: string, bom = false) => {
   const body = new TextEncoder().encode(s)
@@ -100,5 +100,18 @@ describe('buildStudentWorkbook', () => {
       ['Mã học sinh', 'Số thứ tự', 'Họ và tên', 'Tổ', 'Sao thi đua', 'Sao khả dụng'],
       ['HS01', 1, 'Nguyễn Minh Anh', 'Tổ 1', 12, 7],
     ])
+  })
+})
+
+describe('buildTemplateWorkbook', () => {
+  it('trang dữ liệu chỉ có dòng tiêu đề, ví dụ nằm ở trang Hướng dẫn', () => {
+    const data = buildTemplateWorkbook()
+    const wb = XLSX.read(data, { type: 'array' })
+    expect(wb.SheetNames).toEqual(['Danh sách', 'Hướng dẫn'])
+    const grid = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets['Danh sách'], { header: 1, defval: null })
+    expect(grid).toHaveLength(1)
+    expect(parseStudentSheet(data, new Set()).rows).toEqual([])
+    const guide = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets['Hướng dẫn'], { header: 1, defval: null }).flat().join(' ')
+    expect(guide).toContain('Nguyễn Văn A')
   })
 })

@@ -46,3 +46,7 @@ create unique index group_members_one_leader_idx on public.group_members (group_
 create unique index group_members_one_deputy_idx on public.group_members (group_id) where role = 'deputy';
 
 alter default privileges for role postgres in schema public revoke truncate on tables from anon, authenticated;
+
+-- Mọi dòng thi đua (cộng, trừ, hoàn tác) phải thuộc một lượt (batch).
+alter table public.star_transactions add constraint star_transactions_competition_batch_check
+  check (kind not in ('award', 'penalty', 'reversal') or batch_id is not null);

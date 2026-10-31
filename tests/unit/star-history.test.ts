@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupBatches, type TxRow } from '@/lib/stars/history'
+import { groupBatches, orderedStudentNames, type TxRow } from '@/lib/stars/history'
 
 const labels = new Map([['c1', 'Giúp đỡ bạn bè']])
 const actors = new Map([['u1', 'Cô Khanh']])
@@ -74,5 +74,16 @@ describe('groupBatches', () => {
   it('tên người thực hiện mặc định khi không rõ', () => {
     const out = groupBatches([row({ id: 't1', student_id: 's1', batch_id: 'b1', actor_id: null })], labels, actors)
     expect(out[0].actorName).toBe('Cô giáo')
+  })
+})
+
+describe('orderedStudentNames', () => {
+  it('bạn đang học theo số thứ tự trước, bạn đã lưu trữ sau', () => {
+    const info = new Map([
+      ['a', { fullName: 'An', rollNo: 3, archived: false }],
+      ['b', { fullName: 'Bình', rollNo: 1, archived: true }],
+      ['c', { fullName: 'Chi', rollNo: 2, archived: false }],
+    ])
+    expect(orderedStudentNames(['a', 'b', 'c', 'zz'], info)).toEqual(['Chi', 'An', 'Bình'])
   })
 })
