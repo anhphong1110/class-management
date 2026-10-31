@@ -22,7 +22,8 @@ insert into public.profiles (id, class_id, role, username, display_name, student
 insert into public.rewards (id, class_id, name, cost) values
   ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000c1', 'Quà', 2);
 insert into public.reward_requests (id, class_id, student_id, reward_id, cost) values
-  ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a9', '00000000-0000-0000-0000-0000000000f1', 2);
+  ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a9', '00000000-0000-0000-0000-0000000000f1', 2),
+  ('00000000-0000-0000-0000-0000000000f3', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a6', '00000000-0000-0000-0000-0000000000f1', 2);
 
 -- Giao dịch có created_at tường minh. Kỳ: [2026-10-25 17:00Z, 2026-11-01 17:00Z)
 insert into public.star_transactions (class_id, student_id, delta, kind, note, created_at, batch_id) values
@@ -35,7 +36,7 @@ insert into public.star_transactions (class_id, student_id, delta, kind, note, c
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a6', 4, 'award', 'x', '2026-10-28 03:00:00+00', gen_random_uuid()),
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a6', 3, 'award', 'x', '2026-10-20 03:00:00+00', gen_random_uuid());
 insert into public.star_transactions (class_id, student_id, delta, kind, reward_request_id, created_at, batch_id) values
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a6', -2, 'reserve', '00000000-0000-0000-0000-0000000000f2', '2026-10-29 03:00:00+00', gen_random_uuid());
+  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a6', -2, 'reserve', '00000000-0000-0000-0000-0000000000f3', '2026-10-29 03:00:00+00', gen_random_uuid());
 -- a6: reserve không tính vào xếp hạng. Một batch chỉ có dòng reserve, cho test batch_not_found.
 insert into public.star_transactions (class_id, student_id, delta, kind, reward_request_id, created_at, batch_id) values
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a9', -2, 'reserve', '00000000-0000-0000-0000-0000000000f2', '2026-10-29 03:00:00+00', '00000000-0000-0000-0000-0000000000ba');

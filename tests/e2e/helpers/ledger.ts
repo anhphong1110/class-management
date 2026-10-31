@@ -50,6 +50,7 @@ export function deleteTestStudents() {
     alter table public.star_transactions disable trigger star_transactions_immutable;
     delete from public.star_transactions where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
     alter table public.star_transactions enable trigger star_transactions_immutable;
+    delete from public.reward_requests where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
     delete from public.attendance where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
     delete from public.group_members where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
     delete from public.students where class_id = '${CLASS_ID}' and is_demo = false;
