@@ -9,6 +9,7 @@ import { formatDayLabel } from '@/lib/domain/relative-time'
 import { classShortName } from '@/lib/classes/short-name'
 import { buildStudentWorkbook, exportFileName } from '@/lib/students/export'
 import { getStudentCards } from '@/lib/students/queries'
+import type { RewardRequestStatus } from '@/lib/rewards/queries'
 import { groupBatches, type TxRow } from '@/lib/stars/history'
 
 type Result = { error?: string }
@@ -31,6 +32,8 @@ function refresh() {
   revalidatePath('/hoc-sinh')
   revalidatePath('/thi-dua')
   revalidatePath('/xep-hang')
+  revalidatePath('/doi-qua')
+  revalidatePath('/tong-quan')
 }
 
 export async function createStudent(input: { fullName: string; rollNo: number | null }): Promise<Result> {
@@ -128,23 +131,11 @@ export async function updateStudent(input: { id: string; fullName: string; rollN
 }
 
 export async function archiveStudent(id: string): Promise<Result> {
-  const user = await requireTeacher()
+  await requireTeacher()
   if (!uuid.safeParse(id).success) return { error: toVietnameseMessage('student_not_found') }
   const supabase = await createServerSupabase()
-  const { data, error } = await supabase
-    .from('students')
-    .update({ archived_at: new Date().toISOString() })
-    .eq('id', id)
-    .eq('class_id', user.classId)
-    .is('archived_at', null)
-    .select('id')
-  if (error || !data?.length) return { error: toVietnameseMessage('student_not_found') }
-  // Học sinh đã lưu trữ không còn xuất hiện trong thẻ tổ.
-  const { error: memberError } = await supabase.from('group_members').delete().eq('class_id', user.classId).eq('student_id', id)
-  if (memberError) {
-    refresh()
-    return { error: toVietnameseMessage('unknown') }
-  }
+  const { error } = await supabase.rpc('archive_student', { p_student_id: id })
+  if (error) return { error: toVietnameseMessage(error.message) }
   refresh()
   return {}
 }
@@ -191,14 +182,7 @@ export type ProfileDetail = {
   attendanceRate: string
   history: { key: string; delta: number; text: string; date: string }[]
   badges: { id: string; name: string; icon: string }[]
-  gifts: { id: string; name: string; date: string; status: string }[]
-}
-
-const GIFT_STATUS: Record<string, string> = {
-  pending: 'Chờ duyệt',
-  approved: 'Đã duyệt',
-  rejected: 'Từ chối',
-  delivered: 'Đã nhận',
+  gifts: { id: string; name: string; date: string; status: RewardRequestStatus }[]
 }
 
 const TX_COLUMNS = 'id, batch_id, student_id, delta, kind, criterion_id, note, reverses_id, actor_id, created_at'
@@ -286,7 +270,7 @@ export async function loadProfile(id: string): Promise<{ error?: string; detail?
         id: g.id,
         name: one(g.rewards)?.name ?? 'Quà tặng',
         date: formatDayLabel(new Date(g.created_at), now),
-        status: GIFT_STATUS[g.status] ?? g.status,
+        status: g.status as RewardRequestStatus,
       })),
     },
   }

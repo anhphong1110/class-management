@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
-import { login } from './helpers'
+import { createClient } from '@supabase/supabase-js'
+import { login, pw } from './helpers'
 import { CLASS_ID, resetStars, seedStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
@@ -14,8 +15,12 @@ async function open(page: Page) {
 const card = (page: Page, name: string) => page.getByTestId('students').getByRole('button', { name: new RegExp(name) })
 const history = (page: Page) => page.getByTestId('history')
 
-test.beforeEach(resetStars)
-test.afterAll(resetStars)
+function resetAll() {
+  resetStars()
+  sql(`delete from public.reward_requests where class_id = '${CLASS_ID}'`)
+}
+test.beforeEach(resetAll)
+test.afterAll(resetAll)
 
 test('chọn Tổ 1, cộng 2 sao theo tiêu chí Giúp đỡ bạn bè', async ({ page }, info) => {
   await open(page)
@@ -144,4 +149,20 @@ test('lịch sử vẫn hiện tên học sinh đã lưu trữ', async ({ page }
   } finally {
     sql(`update public.students set archived_at = null where id = '${sid(2)}'`)
   }
+})
+
+test('không hoàn tác được lượt cộng khi sao đang được giữ cho yêu cầu quà', async ({ page }) => {
+  seedStars(5, 10)
+  const c = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  const { error: e1 } = await c.auth.signInWithPassword({ email: `hs.hamy@${process.env.AUTH_EMAIL_DOMAIN ?? 'tram58.local'}`, password: pw('hs.hamy') })
+  if (e1) throw e1
+  const { error: e2 } = await c.rpc('request_reward', { p_reward_id: '00000000-0000-0000-0000-0000000e0001' })
+  if (e2) throw e2
+
+  await open(page)
+  await history(page).getByRole('button', { name: 'Hoàn tác' }).first().click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Đồng ý hoàn tác' }).click()
+  await expect(page.getByText('Không thể hoàn tác vì Võ Hà My không đủ sao khả dụng.')).toBeVisible()
 })

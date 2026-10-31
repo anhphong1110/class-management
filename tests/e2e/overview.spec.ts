@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { expect, test, type Page } from '@playwright/test'
 import { login, pw } from './helpers'
-import { CLASS_ID, resetAttendance, resetStars, seedAttendance, sid, sql } from './helpers/ledger'
+import { CLASS_ID, resetAttendance, resetStars, seedAttendance, seedStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -121,6 +121,29 @@ test('yêu cầu đổi quà chờ duyệt hiện trong hoạt động', async (
     resetRequests()
     sql(`delete from public.rewards where id = '00000000-0000-0000-0000-0000000d9901'`)
   }
+})
+
+test('yêu cầu của Hà My: lượt đổi quà và hoạt động gần đây', async ({ page }) => {
+  seedStars(5, 100)
+  const hs = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  const { error: e1 } = await hs.auth.signInWithPassword({ email: `hs.hamy@${process.env.AUTH_EMAIL_DOMAIN ?? 'tram58.local'}`, password: pw('hs.hamy') })
+  if (e1) throw e1
+  for (const n of [1, 2]) {
+    const { error } = await hs.rpc('request_reward', { p_reward_id: `00000000-0000-0000-0000-0000000e000${n}` })
+    if (error) throw error
+  }
+  const { data: ids } = await hs.from('reward_requests').select('id, reward_id').eq('student_id', sid(5))
+  const approve = ids!.find((r) => r.reward_id.endsWith('e0001'))!.id
+  const teacher = await teacherSession()
+  const { error: e3 } = await teacher.rpc('approve_reward_request', { p_request_id: approve })
+  if (e3) throw e3
+  await open(page)
+  const stat = page.getByTestId('stat').filter({ hasText: 'Lượt đổi quà' })
+  await expect(stat).toContainText('1')
+  await expect(stat).toContainText('1 yêu cầu chờ duyệt')
+  await expect(page.getByTestId('activity-row').filter({ hasText: 'Võ Hà My gửi yêu cầu đổi Bookmark tên lửa' })).toHaveCount(1)
 })
 
 test('cộng rồi hoàn tác: thẻ sao tuần này về +0', async ({ page }) => {

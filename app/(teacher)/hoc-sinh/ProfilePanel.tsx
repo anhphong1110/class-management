@@ -1,5 +1,6 @@
 'use client'
 
+import { STAT } from '@/lib/rewards/status'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
 import type { StudentCard } from '@/lib/students/queries'
 import type { ProfileDetail } from './actions'
@@ -104,14 +105,19 @@ export function ProfilePanel({
         <div className={box}>
           <h3 className={h3}>Lịch sử đổi quà</h3>
           {detail && detail.gifts.length === 0 && <div className="text-sm font-semibold text-[#5B5890]">Chưa có lượt đổi quà</div>}
-          {detail?.gifts.map((g) => (
-            <div key={g.id} className="flex justify-between gap-2.5 text-[14.5px] font-semibold">
-              <span>
-                {g.name} <span className="text-[#5B5890]">· {g.date}</span>
-              </span>
-              <span className="font-extrabold text-[#0B5A4D]">{g.status}</span>
-            </div>
-          ))}
+          {detail?.gifts.map((g) => {
+            const [label, tint, ink] = STAT[g.status]
+            return (
+              <div key={g.id} className="flex items-center justify-between gap-2.5 text-[14.5px] font-semibold">
+                <span>
+                  {g.name} <span className="text-[#5B5890]">· {g.date}</span>
+                </span>
+                <span className="rounded-full px-2.5 py-0.5 text-[13px] font-extrabold" style={{ background: tint, color: ink }}>
+                  {label}
+                </span>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>

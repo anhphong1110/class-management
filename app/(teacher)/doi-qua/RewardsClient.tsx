@@ -4,16 +4,10 @@ import { useCallback, useRef, useState, useTransition } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
 import { RewardVisual } from '@/components/rewards/RewardVisual'
 import { formatRelative } from '@/lib/domain/relative-time'
-import type { RewardRequestStatus, RewardRequestView, RewardView } from '@/lib/rewards/queries'
+import type { RewardRequestView, RewardView } from '@/lib/rewards/queries'
+import { STAT } from '@/lib/rewards/status'
 import { approveRequest, deliverRequest, rejectRequest, setRewardHidden } from './actions'
 import { RewardEditor } from './RewardEditor'
-
-const STAT: Record<RewardRequestStatus, [string, string, string]> = {
-  pending: ['Chờ duyệt', '#FFF1CC', '#7A4E00'],
-  approved: ['Đã duyệt, chờ trao', '#E3EEFF', '#1F4C9E'],
-  delivered: ['Đã nhận quà', '#DDF6F1', '#0B5A4D'],
-  rejected: ['Từ chối', '#FFE3EA', '#8E1B3B'],
-}
 
 type Editing = { kind: 'new' } | { kind: 'edit'; id: string } | null
 type Msg = { tone: 'success' | 'error'; text: string } | null

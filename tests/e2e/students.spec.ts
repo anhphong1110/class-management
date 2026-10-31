@@ -1,12 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
 import { admin, login } from './helpers'
-import { CLASS_ID, deleteTestStudents, resetAttendance, resetGroups, resetStars, seedAttendance, seedStars } from './helpers/ledger'
+import { CLASS_ID, deleteTestStudents, resetAttendance, resetGroups, resetStars, seedAttendance, seedStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
 function reset() {
   deleteTestStudents()
   resetStars()
+  sql(`delete from public.reward_requests where class_id = '${CLASS_ID}'`)
   resetAttendance()
 }
 test.beforeEach(reset)
@@ -236,4 +237,48 @@ test.describe('Chia tổ', () => {
     await expect(gcard(page, 'Tổ 1').getByText('Lý Thu Hà')).toBeVisible()
     await expect(gcard(page, 'Chưa có tổ')).toHaveCount(0)
   })
+})
+
+const REWARD_1 = '00000000-0000-0000-0000-0000000e0001'
+
+test('lưu trữ học sinh có yêu cầu chờ: yêu cầu bị từ chối, sao được trả lại', async ({ page }) => {
+  const stu = '00000000-0000-0000-0000-0000000b0099'
+  sql(`insert into public.students (id, class_id, code, roll_no, full_name) values ('${stu}', '${CLASS_ID}', 'HS99', 99, 'Trần Sao Giữ')`)
+  sql(`insert into public.star_transactions (class_id, student_id, delta, kind, note, batch_id) values ('${CLASS_ID}', '${stu}', 10, 'award', 'seed', gen_random_uuid())`)
+  sql(`insert into public.reward_requests (id, class_id, student_id, reward_id, cost, status) values ('00000000-0000-0000-0000-0000000f0099', '${CLASS_ID}', '${stu}', '${REWARD_1}', 10, 'pending')`)
+  sql(`insert into public.star_transactions (class_id, student_id, delta, kind, reward_request_id) values ('${CLASS_ID}', '${stu}', -10, 'reserve', '00000000-0000-0000-0000-0000000f0099')`)
+  await open(page)
+  await cards(page).filter({ hasText: 'Trần Sao Giữ' }).click()
+  await profile(page).getByRole('button', { name: 'Lưu trữ' }).click()
+  const confirm = page.getByRole('dialog', { name: 'Lưu trữ học sinh?' })
+  await confirm.getByRole('button', { name: 'Lưu trữ' }).click()
+  await expect(confirm).toHaveCount(0)
+
+  const { data: req } = await admin().from('reward_requests').select('status').eq('id', '00000000-0000-0000-0000-0000000f0099').single()
+  expect(req!.status).toBe('rejected')
+  const { data: tx } = await admin().from('star_transactions').select('delta, kind').eq('student_id', stu).order('created_at')
+  expect(tx!.reduce((n, t) => n + t.delta, 0)).toBe(10)
+  expect(tx!.map((t) => t.kind)).toContain('release')
+
+  await page.goto('/doi-qua')
+  await expect(page.getByText('Trần Sao Giữ').first()).toBeVisible()
+  await expect(page.getByText('Từ chối', { exact: true }).first()).toBeVisible()
+})
+
+test('hồ sơ: lịch sử đổi quà dùng đúng nhãn trạng thái', async ({ page }) => {
+  const rows: [string, string][] = [
+    ['pending', '1'], ['approved', '2'], ['delivered', '3'], ['rejected', '4'],
+  ]
+  rows.forEach(([status, n], i) => {
+    sql(`insert into public.reward_requests (class_id, student_id, reward_id, cost, status, created_at) values ('${CLASS_ID}', '${sid(5)}', '00000000-0000-0000-0000-0000000e000${n}', 10, '${status}', now() - interval '${i} minutes')`)
+  })
+  await open(page)
+  await cards(page).filter({ hasText: 'Võ Hà My' }).click()
+  const box = profile(page).locator('div').filter({ has: page.getByRole('heading', { name: 'Lịch sử đổi quà' }) }).last()
+  await expect(box).toContainText('Sticker vũ trụ')
+  await expect(box).toContainText('Hôm nay')
+  for (const label of ['Chờ duyệt', 'Đã duyệt, chờ trao', 'Đã nhận quà', 'Từ chối']) {
+    await expect(box.getByText(label, { exact: true })).toBeVisible()
+  }
+  await expect(box.getByText('Từ chối', { exact: true })).toHaveCSS('color', 'rgb(142, 27, 59)')
 })
