@@ -126,7 +126,7 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
           <div
             role="group"
             aria-label="Chưa có tổ"
-            data-testid="group-card"
+            data-testid="ungrouped-card"
             className="flex flex-col gap-3 rounded-[26px] bg-white p-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]"
           >
             <div>

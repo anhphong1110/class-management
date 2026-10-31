@@ -73,7 +73,7 @@ select is((select sort_order from public.groups where id = (select id from newg)
 select is((select count(*)::int from public.audit_logs where action = 'groups.create'), 1, 'audit groups.create');
 select lives_ok($$select public.delete_group((select id from newg))$$, 'xóa tổ trống thành công');
 select is((select count(*)::int from public.groups where name = 'Tổ 3'), 0, 'tổ trống đã bị xóa');
-select ok((select count(*) from public.audit_logs where action = 'groups.set_role' and class_id = '00000000-0000-0000-0000-0000000000c1') > 0, 'audit groups.set_role');
+select is((select count(*)::int from public.audit_logs where action = 'groups.set_role' and entity_id = '00000000-0000-0000-0000-0000000000a2' and payload->>'role' = 'leader'), 1, 'audit groups.set_role: đúng 1 dòng cho HS02 -> leader');
 
 select * from finish();
 rollback;

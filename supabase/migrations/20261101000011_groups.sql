@@ -8,6 +8,7 @@ as $$
 declare
   v_class uuid;
   v_group uuid;
+  v_locked_group uuid;
   v_old public.group_role;
 begin
   if not private.is_teacher() then raise exception 'not_allowed'; end if;
@@ -16,15 +17,15 @@ begin
   if not exists (select 1 from public.students st where st.id = p_student_id and st.class_id = v_class) then
     raise exception 'not_allowed';
   end if;
-  -- Khóa dòng thành viên, rồi khóa tổ: mọi thay đổi vai/thành viên tuần tự theo hàng của tổ.
-  select gm.group_id, gm.role into v_group, v_old from public.group_members gm
-   where gm.class_id = v_class and gm.student_id = p_student_id for update;
-  if v_group is null then raise exception 'not_in_group'; end if;
-  perform 1 from public.groups g where g.id = v_group and g.class_id = v_class for update;
-  -- Sau khi giữ khóa tổ, đọc lại (có thể vừa bị chuyển tổ).
-  select gm.group_id, gm.role into v_group, v_old from public.group_members gm
+  -- Thứ tự khóa chung: tổ trước, dòng thành viên sau (tránh deadlock với move_student_to_group).
+  select gm.group_id into v_group from public.group_members gm
    where gm.class_id = v_class and gm.student_id = p_student_id;
   if v_group is null then raise exception 'not_in_group'; end if;
+  perform 1 from public.groups g where g.id = v_group and g.class_id = v_class for update;
+  select gm.group_id, gm.role into v_locked_group, v_old from public.group_members gm
+   where gm.class_id = v_class and gm.student_id = p_student_id for update;
+  -- Đã bị chuyển tổ trong lúc chờ khóa.
+  if v_locked_group is distinct from v_group then raise exception 'not_in_group'; end if;
   if v_old = p_role then return; end if;
 
   -- Chỉ mục duy nhất không hoãn được: hạ người đang giữ vai trước khi nâng người mới.
