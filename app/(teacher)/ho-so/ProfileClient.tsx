@@ -47,7 +47,7 @@ export function ProfileClient({
       if (res.error) setMsg({ tone: 'error', text: res.error })
       else {
         setPending(null)
-        setMsg({ tone: 'success', text: `Đã lưu avatar cho ${person.name}.` })
+        setMsg({ tone: 'success', text: `Đã đổi avatar của ${person.name}.` })
       }
     })
   }

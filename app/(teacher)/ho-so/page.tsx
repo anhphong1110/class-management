@@ -16,7 +16,7 @@ export default async function Page() {
       .eq('class_id', user.classId)
       .eq('hidden', false)
       .order('created_at')
-      .order('label'),
+      .order('id'),
     supabase
       .from('students')
       .select('id, full_name, avatar_id')
