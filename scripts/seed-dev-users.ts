@@ -49,6 +49,13 @@ async function main() {
     })
     if (createErr) throw createErr
 
+    let avatarId: string | null = null
+    if (u.role === 'teacher') {
+      const { data: av } = await supabase
+        .from('avatar_library').select('id').eq('class_id', CLASS_ID).eq('label', 'Cô giáo').maybeSingle()
+      avatarId = av?.id ?? null
+    }
+
     const { error: profErr } = await supabase.from('profiles').insert({
       id: created.user.id,
       class_id: CLASS_ID,
@@ -56,6 +63,7 @@ async function main() {
       username: n.username,
       display_name: u.displayName,
       student_id: studentId,
+      avatar_id: avatarId,
     })
     if (profErr) {
       await supabase.auth.admin.deleteUser(created.user.id)
