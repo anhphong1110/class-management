@@ -1,5 +1,5 @@
 begin;
-select plan(48);
+select plan(53);
 
 insert into public.classes (id, class_name, term1_start, term1_end, term2_start, term2_end) values
   ('00000000-0000-0000-0000-0000000000c1', '5A', '2026-09-05', '2027-01-15', '2027-01-18', '2027-05-31'),
@@ -99,6 +99,14 @@ select throws_ok($$select public.award_badge('00000000-0000-0000-0000-0000000000
 select throws_ok($$select public.award_badge('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000b1')$$,
                  'P0001', 'student_not_found', 'trao cho học sinh lớp khác');
 
+-- Ghi trực tiếp bị chặn
+select throws_ok($$insert into public.mission_completions (class_id, mission_id, student_id, period_key)
+  values ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000a1', 'x')$$,
+  '42501', null, 'giáo viên không insert trực tiếp mission_completions');
+select throws_ok($$insert into public.student_badges (class_id, badge_id, student_id)
+  values ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a1')$$,
+  '42501', null, 'giáo viên không insert trực tiếp student_badges');
+
 -- Nhật ký
 select is((select count(*)::int from public.audit_logs where action = 'missions.complete'), 3, 'audit missions.complete ghi 3 lần');
 select is((select count(*)::int from public.audit_logs where action = 'badges.award'), 1, 'audit badges.award ghi 1 lần');
@@ -115,11 +123,14 @@ select is((select count(*)::int from public.student_badges), 0, 'A1 không đọ
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d4', 'role', 'authenticated')::text, true);
 select is((select count(*)::int from public.student_badges), 1, 'A2 đọc huy hiệu của mình');
 select is((select count(*)::int from public.mission_completions), 1, 'A2 chỉ đọc một dòng hoàn thành của mình');
+select is((select count(*)::int from public.missions), 2, 'học sinh chỉ thấy nhiệm vụ đang chạy của lớp mình');
 reset role;
 update public.class_settings set feature_missions = false where class_id = '00000000-0000-0000-0000-0000000000c1';
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d4', 'role', 'authenticated')::text, true);
 select is((select count(*)::int from public.mission_completions), 0, 'feature_missions tắt: học sinh không đọc hoàn thành nhiệm vụ');
+select is((select count(*)::int from public.student_badges), 0, 'feature_missions tắt: học sinh không đọc student_badges');
+select is((select count(*)::int from public.badges), 0, 'feature_missions tắt: học sinh không đọc badges');
 
 -- ===== quyền hàm =====
 reset role;

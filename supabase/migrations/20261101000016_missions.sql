@@ -47,12 +47,26 @@ end;
 $$;
 revoke execute on function private.mission_period_key(public.mission_period, timestamptz, uuid) from public, anon, authenticated;
 
--- Học sinh chỉ đọc hoàn thành nhiệm vụ của mình (và nhiệm vụ của lớp) khi tính năng đang bật.
+-- Học sinh chỉ đọc nhiệm vụ đang chạy, hoàn thành nhiệm vụ và huy hiệu của mình khi tính năng đang bật.
 create policy student_select on public.missions for select to authenticated
-  using (class_id = (select private.my_class_id()) and (select private.setting_on('feature_missions')));
+  using (class_id = (select private.my_class_id()) and active and (select private.setting_on('feature_missions')));
 
 create policy student_select on public.mission_completions for select to authenticated
   using (student_id = (select private.my_student_id()) and (select private.setting_on('feature_missions')));
+
+drop policy student_select on public.badges;
+create policy student_select on public.badges for select to authenticated
+  using (class_id = (select private.my_class_id()) and (select private.setting_on('feature_missions')));
+
+drop policy student_select on public.student_badges;
+create policy student_select on public.student_badges for select to authenticated
+  using (student_id = (select private.my_student_id()) and (select private.setting_on('feature_missions')));
+
+-- Hoàn thành nhiệm vụ và huy hiệu đã trao chỉ ghi qua complete_mission / award_badge.
+drop policy teacher_insert on public.mission_completions;
+drop policy teacher_update on public.mission_completions;
+drop policy teacher_insert on public.student_badges;
+drop policy teacher_update on public.student_badges;
 
 create function public.complete_mission(p_mission_id uuid, p_student_id uuid) returns void
 language plpgsql

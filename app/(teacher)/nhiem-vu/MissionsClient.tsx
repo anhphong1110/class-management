@@ -258,7 +258,7 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
               <button
                 type="button"
                 onClick={() => done(m)}
-                disabled={busy || noPerson}
+                disabled={busy || noPerson || !m.active}
                 className="min-h-[46px] flex-1 cursor-pointer rounded-xl border-0 bg-[#12794F] text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Ghi nhận thêm 1 bạn

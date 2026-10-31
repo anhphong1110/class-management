@@ -30,6 +30,8 @@ describe('toVietnameseMessage', () => {
     ['already_completed', 'Bạn này đã hoàn thành nhiệm vụ trong kỳ này.'],
     ['already_awarded', 'Bạn này đã có huy hiệu này.'],
     ['mission_required', 'Cô hãy nhập tên và điều kiện hoàn thành.'],
+    ['mission_not_found', 'Nhiệm vụ này không còn nữa.'],
+    ['badge_not_found', 'Huy hiệu này không còn nữa.'],
     ['future_date', 'Chưa thể điểm danh cho ngày trong tương lai.'],
     ['subject_in_use', 'Môn này đang có trong thời khóa biểu. Cô hãy đổi các tiết đó sang môn khác trước khi xóa.'],
     ['subject_exists', 'Môn này đã có trong danh sách.'],
