@@ -53,3 +53,23 @@ export function periodRange(
       return { from: null, to: null }
   }
 }
+
+export type NullableTermDates = {
+  term1Start: string | null
+  term1End: string | null
+  term2Start: string | null
+  term2End: string | null
+}
+
+/** Quyết định kỳ thật sự dùng: "Học kỳ" chỉ có nghĩa khi biết ngày của học kỳ hiện tại, nếu không quay về "Cả năm". */
+export function resolvePeriod(
+  requested: Period,
+  now: Date,
+  terms: NullableTermDates,
+): { period: Period; term: 1 | 2 | null } {
+  const hasTerm2 = !!(terms.term2Start && terms.term2End)
+  const hasTerm1 = !!(terms.term1Start && terms.term1End)
+  const term: 1 | 2 | null =
+    hasTerm2 && now.getTime() >= parseIsoDate(terms.term2Start!) ? 2 : hasTerm1 ? 1 : null
+  return { period: requested === 'term' && term === null ? 'year' : requested, term }
+}

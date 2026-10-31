@@ -6,7 +6,7 @@ describe('classShortName', () => {
   it('không ngoặc thì giữ nguyên', () => expect(classShortName('Lớp 5A')).toBe('Lớp 5A'))
 })
 describe('termRoman', () => {
-  it('trước học kỳ 2 là I', () => expect(termRoman('2027-01-18', new Date('2026-11-01T00:00:00Z'))).toBe('I'))
-  it('từ ngày học kỳ 2 là II', () => expect(termRoman('2027-01-18', new Date('2027-02-01T00:00:00Z'))).toBe('II'))
-  it('thiếu ngày thì I', () => expect(termRoman(null, new Date())).toBe('I'))
+  it('1 -> I', () => expect(termRoman(1)).toBe('I'))
+  it('2 -> II', () => expect(termRoman(2)).toBe('II'))
+  it('null -> null', () => expect(termRoman(null)).toBeNull())
 })

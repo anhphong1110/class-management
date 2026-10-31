@@ -3,8 +3,7 @@ export function classShortName(className: string): string {
   return /\(([^)]+)\)/.exec(className)?.[1].trim() || className
 }
 
-/** "Học kỳ II" khi đã tới ngày bắt đầu học kỳ 2, ngược lại "Học kỳ I". */
-export function termRoman(term2Start: string | null, now: Date): 'I' | 'II' {
-  if (!term2Start) return 'I'
-  return now.getTime() >= new Date(`${term2Start}T00:00:00+07:00`).getTime() ? 'II' : 'I'
+/** Suy ra từ resolvePeriod để không lệch với bảng xếp hạng; null = không rõ học kỳ. */
+export function termRoman(term: 1 | 2 | null): 'I' | 'II' | null {
+  return term === 1 ? 'I' : term === 2 ? 'II' : null
 }

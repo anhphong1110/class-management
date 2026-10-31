@@ -8,7 +8,7 @@ export default async function Page() {
   const info = await getClassHeaderInfo(user.classId)
   return (
     <>
-      <Header title="Lịch bay của phi hành gia" subtitle={`Thời khóa biểu lớp ${info.short} · Học kỳ ${info.term}`} />
+      <Header title="Lịch bay của phi hành gia" subtitle={`Thời khóa biểu lớp ${info.short}${info.term ? ` · Học kỳ ${info.term}` : ''}`} />
       <ComingSoon title="Thời khóa biểu" />
     </>
   )
