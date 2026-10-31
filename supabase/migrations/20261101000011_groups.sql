@@ -13,15 +13,18 @@ begin
   if not private.is_teacher() then raise exception 'not_allowed'; end if;
   v_class := private.my_class_id();
 
-  -- Khóa tổ trước để hai thao tác cùng tổ chạy tuần tự.
-  select gm.group_id into v_group from public.group_members gm
-   where gm.class_id = v_class and gm.student_id = p_student_id;
+  if not exists (select 1 from public.students st where st.id = p_student_id and st.class_id = v_class) then
+    raise exception 'not_allowed';
+  end if;
+  -- Khóa dòng thành viên, rồi khóa tổ: mọi thay đổi vai/thành viên tuần tự theo hàng của tổ.
+  select gm.group_id, gm.role into v_group, v_old from public.group_members gm
+   where gm.class_id = v_class and gm.student_id = p_student_id for update;
   if v_group is null then raise exception 'not_in_group'; end if;
   perform 1 from public.groups g where g.id = v_group and g.class_id = v_class for update;
-
-  select gm.role into v_old from public.group_members gm
+  -- Sau khi giữ khóa tổ, đọc lại (có thể vừa bị chuyển tổ).
+  select gm.group_id, gm.role into v_group, v_old from public.group_members gm
    where gm.class_id = v_class and gm.student_id = p_student_id;
-  if v_old is null then raise exception 'not_in_group'; end if;
+  if v_group is null then raise exception 'not_in_group'; end if;
   if v_old = p_role then return; end if;
 
   -- Chỉ mục duy nhất không hoãn được: hạ người đang giữ vai trước khi nâng người mới.
@@ -31,7 +34,7 @@ begin
      where group_id = v_group and class_id = v_class and role = p_role and student_id <> p_student_id;
   end if;
   update public.group_members set role = p_role
-   where class_id = v_class and student_id = p_student_id;
+   where class_id = v_class and student_id = p_student_id and group_id = v_group;
 
   insert into public.audit_logs (class_id, actor_id, action, entity, entity_id, payload)
   values (v_class, (select auth.uid()), 'groups.set_role', 'student', p_student_id,
@@ -59,6 +62,12 @@ begin
 
   select gm.group_id into v_from from public.group_members gm
    where gm.class_id = v_class and gm.student_id = p_student_id;
+  -- Khóa tổ nguồn và tổ đích theo thứ tự id, rồi đọc lại tổ nguồn.
+  perform 1 from public.groups g
+   where g.class_id = v_class and g.id in (p_group_id, coalesce(v_from, p_group_id))
+   order by g.id for update;
+  select gm.group_id into v_from from public.group_members gm
+   where gm.class_id = v_class and gm.student_id = p_student_id;
   if v_from is not distinct from p_group_id then return; end if;
 
   insert into public.group_members (class_id, group_id, student_id, role)
@@ -83,7 +92,7 @@ declare
 begin
   if not private.is_teacher() then raise exception 'not_allowed'; end if;
   v_class := private.my_class_id();
-  if v_name = '' or char_length(v_name) > 200 then raise exception 'name_required'; end if;
+  if v_name = '' or char_length(v_name) > 200 then raise exception 'group_name_required'; end if;
   perform pg_advisory_xact_lock(hashtextextended('groups:' || v_class::text, 0));
   insert into public.groups (class_id, name, sort_order)
   values (v_class, v_name, coalesce((select max(g.sort_order) from public.groups g where g.class_id = v_class), 0) + 1)

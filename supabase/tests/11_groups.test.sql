@@ -1,5 +1,5 @@
 begin;
-select plan(18);
+select plan(25);
 
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A'), ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id) values ('00000000-0000-0000-0000-0000000000c1'), ('00000000-0000-0000-0000-0000000000c2');
@@ -62,6 +62,18 @@ select throws_ok($$select public.move_student_to_group('00000000-0000-0000-0000-
 -- xóa tổ
 select throws_ok($$select public.delete_group('00000000-0000-0000-0000-0000000000f2')$$, 'P0001', 'group_not_empty', 'tổ còn người: group_not_empty');
 select throws_ok($$select public.delete_group('00000000-0000-0000-0000-0000000000f9')$$, 'P0001', 'not_allowed', 'xóa tổ lớp khác: not_allowed');
+
+-- bổ sung
+select throws_ok($$select public.create_group('   ')$$, 'P0001', 'group_name_required', 'tên tổ rỗng: group_name_required');
+select throws_ok($$select public.set_group_role('00000000-0000-0000-0000-0000000000b1', 'leader')$$, 'P0001', 'not_allowed', 'học sinh lớp khác: not_allowed');
+create temp table newg (id uuid);
+grant all on newg to authenticated;
+insert into newg select public.create_group('Tổ 3');
+select is((select sort_order from public.groups where id = (select id from newg)), 3, 'create_group: sort_order = max + 1');
+select is((select count(*)::int from public.audit_logs where action = 'groups.create'), 1, 'audit groups.create');
+select lives_ok($$select public.delete_group((select id from newg))$$, 'xóa tổ trống thành công');
+select is((select count(*)::int from public.groups where name = 'Tổ 3'), 0, 'tổ trống đã bị xóa');
+select ok((select count(*) from public.audit_logs where action = 'groups.set_role' and class_id = '00000000-0000-0000-0000-0000000000c1') > 0, 'audit groups.set_role');
 
 select * from finish();
 rollback;

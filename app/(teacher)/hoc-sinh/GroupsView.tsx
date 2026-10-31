@@ -32,6 +32,9 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
     })
   }
 
+  const grouped = new Set(groups.flatMap((g) => g.memberIds))
+  const unassigned = students.filter((s) => !grouped.has(s.id)).sort((a, b) => a.rollNo - b.rollNo)
+
   return (
     <div className="flex flex-col gap-4">
       {error && <Notice tone="error">{error}</Notice>}
@@ -119,6 +122,46 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
             </div>
           )
         })}
+        {unassigned.length > 0 && (
+          <div
+            role="group"
+            aria-label="Chưa có tổ"
+            data-testid="group-card"
+            className="flex flex-col gap-3 rounded-[26px] bg-white p-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]"
+          >
+            <div>
+              <div className="font-display text-[22px] font-extrabold leading-[1.1]">Chưa có tổ</div>
+              <div data-testid="group-summary" className="text-[13.5px] font-bold text-[#5B5890]">
+                {unassigned.length} bạn
+              </div>
+            </div>
+            {unassigned.map((m) => (
+              <div key={m.id} data-testid="group-member" className="flex flex-col gap-2 rounded-[18px] bg-[#F6F4FF] px-3 py-2.5">
+                <div className="flex items-center gap-2.5">
+                  <AvatarImage avatar={m.avatar} size={44} />
+                  <div className="min-w-0 flex-1 text-[15px] font-extrabold">{m.fullName}</div>
+                </div>
+                <label className="flex items-center gap-1.5 text-[13px] font-bold text-[#4A476E]">
+                  Chuyển sang
+                  <select
+                    aria-label="Chuyển tổ"
+                    disabled={pending}
+                    value=""
+                    onChange={(e) => e.target.value && run(() => moveStudent(m.id, e.target.value))}
+                    className="min-h-11 rounded-xl border-2 border-[#D9D5F2] bg-white px-2 text-sm font-bold text-ink"
+                  >
+                    <option value="">Chọn tổ</option>
+                    {groups.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {adding ? (

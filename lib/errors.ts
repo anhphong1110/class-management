@@ -17,6 +17,7 @@ const MESSAGES: Record<string, string> = {
   already_reversed: 'Bản ghi này đã được hoàn tác.',
   name_required: 'Cô hãy nhập họ và tên.',
   invalid_roll_no: 'Số thứ tự phải là số nguyên dương.',
+  group_name_required: 'Cô hãy nhập tên tổ.',
   not_in_group: 'Học sinh này chưa ở tổ nào.',
   group_not_empty: 'Tổ còn thành viên, cô chuyển các bạn sang tổ khác trước nhé.',
   insufficient_stars: 'Không đủ sao khả dụng.',

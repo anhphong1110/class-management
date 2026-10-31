@@ -19,6 +19,9 @@ describe('toVietnameseMessage', () => {
     ['batch_not_found', 'Không tìm thấy bản ghi.'],
     ['already_reversed', 'Bản ghi này đã được hoàn tác.'],
     ['insufficient_stars', 'Không đủ sao khả dụng.'],
+    ['group_name_required', 'Cô hãy nhập tên tổ.'],
+    ['not_in_group', 'Học sinh này chưa ở tổ nào.'],
+    ['group_not_empty', 'Tổ còn thành viên, cô chuyển các bạn sang tổ khác trước nhé.'],
     ['khong_biet', 'Có lỗi xảy ra, vui lòng thử lại.'],
   ]
   it.each(cases)('%s', (key, msg) => {

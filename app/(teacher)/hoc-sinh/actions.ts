@@ -129,7 +129,7 @@ export async function moveStudent(studentId: string, groupId: string): Promise<R
 export async function createGroup(name: string): Promise<Result> {
   await requireTeacher()
   const parsed = groupName.safeParse(name)
-  if (!parsed.success) return { error: toVietnameseMessage('name_required') }
+  if (!parsed.success) return { error: toVietnameseMessage('group_name_required') }
   return groupRpc('create_group', { p_name: parsed.data })
 }
 
