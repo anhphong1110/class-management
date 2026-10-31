@@ -35,6 +35,12 @@ begin
   if v_n > 100 then raise exception 'invalid_rows'; end if;
   if v_n = 0 then return 0; end if;
 
+  -- Mỗi dòng phải là object có đủ khóa student_id và status (status có thể null); thiếu khóa không được ngầm xóa.
+  if exists (
+    select 1 from jsonb_array_elements(p_rows) e
+     where jsonb_typeof(e) <> 'object' or not (e ? 'student_id') or not (e ? 'status')
+  ) then raise exception 'invalid_rows'; end if;
+
   create temp table pg_temp.att_in (student_id uuid not null, status public.attendance_status) on commit drop;
 
   begin

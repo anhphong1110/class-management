@@ -1,5 +1,5 @@
 begin;
-select plan(25);
+select plan(29);
 
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A'), ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id) values ('00000000-0000-0000-0000-0000000000c1'), ('00000000-0000-0000-0000-0000000000c2');
@@ -19,6 +19,8 @@ insert into public.subjects (id, class_id, name) values
   ('00000000-0000-0000-0000-0000000000f2', '00000000-0000-0000-0000-0000000000c1', 'Thể dục');
 insert into public.timetable_slots (class_id, weekday, session, period, subject_id) values
   ('00000000-0000-0000-0000-0000000000c1', 1, 'morning', 1, '00000000-0000-0000-0000-0000000000f1');
+
+select lives_ok($$insert into public.subjects (class_id, name) values ('00000000-0000-0000-0000-0000000000c2', 'Toán')$$, 'cùng tên môn được phép ở lớp khác');
 
 create temp table today (d date);
 grant all on today to authenticated;
@@ -60,10 +62,13 @@ select throws_ok($$select public.save_attendance((select d from today), '[{"stud
 select throws_ok($$select public.save_attendance((select d from today), (select jsonb_agg(jsonb_build_object('student_id', gen_random_uuid(), 'status', 'present')) from generate_series(1, 101)))$$, 'P0001', 'invalid_rows', '101 phần tử');
 select throws_ok($$select public.save_attendance((select d from today), '{"a":1}'::jsonb)$$, 'P0001', 'invalid_rows', 'không phải mảng');
 select throws_ok($$select public.save_attendance((select d from today), '[{"student_id":"00000000-0000-0000-0000-0000000000a1","status":"bogus"}]'::jsonb)$$, 'P0001', 'invalid_rows', 'trạng thái sai');
+select throws_ok($$select public.save_attendance((select d from today), '[{"student_id":"00000000-0000-0000-0000-0000000000a1"}]'::jsonb)$$, 'P0001', 'invalid_rows', 'dòng thiếu khóa status bị từ chối');
+select is((select count(*)::int from public.attendance where student_id = '00000000-0000-0000-0000-0000000000a1' and date = (select d from today)), 1, 'dòng thiếu status không xóa gì');
 
 -- môn học
 select throws_ok($$delete from public.subjects where id = '00000000-0000-0000-0000-0000000000f1'$$, '23503', null, 'xóa môn đang dùng bị chặn');
 select lives_ok($$delete from public.subjects where id = '00000000-0000-0000-0000-0000000000f2'$$, 'xóa môn không dùng');
+select is((select count(*)::int from public.subjects where id = '00000000-0000-0000-0000-0000000000f2'), 0, 'môn không dùng đã mất khỏi bảng');
 select throws_ok($$insert into public.subjects (class_id, name) values ('00000000-0000-0000-0000-0000000000c1', 'TOÁN')$$, '23505', null, 'trùng tên khác hoa thường');
 select is((select subject_id::text from public.timetable_slots where weekday = 1), '00000000-0000-0000-0000-0000000000f1', 'ô vẫn trỏ môn');
 
