@@ -15,32 +15,35 @@ export function Toggle({
 }) {
   const id = useId();
   return (
-    <div className="flex min-h-11 items-center justify-between gap-4">
-      <div>
-        <div id={`${id}-l`} className="font-extrabold text-ink">
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-labelledby={`${id}-l`}
+      aria-describedby={hint ? `${id}-h` : undefined}
+      onClick={() => onChange(!checked)}
+      className="flex min-h-[50px] w-full items-center justify-between gap-4 rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+    >
+      <span className="block">
+        <span id={`${id}-l`} className="block font-extrabold text-ink">
           {label}
-        </div>
+        </span>
         {hint ? (
-          <div id={`${id}-h`} className="text-sm font-semibold text-muted">
+          <span id={`${id}-h`} className="block text-sm font-semibold text-muted">
             {hint}
-          </div>
+          </span>
         ) : null}
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-labelledby={`${id}-l`}
-        aria-describedby={hint ? `${id}-h` : undefined}
-        onClick={() => onChange(!checked)}
-        className="relative h-[28px] w-[48px] shrink-0 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+      </span>
+      <span
+        aria-hidden="true"
+        className="relative h-[28px] w-[48px] shrink-0 rounded-full transition-colors"
         style={{ background: checked ? "#4F5BD5" : "#B9B5E8" }}
       >
         <span
           className="absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow transition-[left]"
           style={{ left: checked ? 22 : 3 }}
         />
-      </button>
-    </div>
+      </span>
+    </button>
   );
 }

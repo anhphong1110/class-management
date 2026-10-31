@@ -25,6 +25,18 @@ describe("Toggle", () => {
   });
 });
 
+describe("Toggle row", () => {
+  it("clicking the label toggles, checked sets aria-checked, row is >= 44px", () => {
+    const onChange = vi.fn();
+    render(<Toggle checked onChange={onChange} label="Cho phép" hint="Gợi ý" />);
+    const sw = screen.getByRole("switch");
+    expect(sw.getAttribute("aria-checked")).toBe("true");
+    expect(sw.className).toContain("min-h-[50px]");
+    fireEvent.click(screen.getByText("Cho phép"));
+    expect(onChange).toHaveBeenCalledWith(false);
+  });
+});
+
 describe("Modal", () => {
   it("renders nothing when closed", () => {
     render(<Modal open={false} onClose={() => {}} title="T">x</Modal>);
@@ -67,5 +79,9 @@ describe("Notice", () => {
   it("renders by tone", () => {
     render(<Notice tone="error">Lỗi</Notice>);
     expect(screen.getByRole("alert").textContent).toBe("Lỗi");
+  });
+  it("success uses status role", () => {
+    render(<Notice tone="success">Xong</Notice>);
+    expect(screen.getByRole("status").textContent).toBe("Xong");
   });
 });

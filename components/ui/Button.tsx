@@ -6,7 +6,7 @@ const styles: Record<Variant, string> = {
   primary: "bg-primary-strong text-white hover:opacity-90",
   secondary: "bg-white text-primary-strong border-2 border-primary-strong hover:bg-bg",
   ghost: "bg-transparent text-primary-strong hover:bg-bg",
-  danger: "bg-[#E5334F] text-white hover:opacity-90",
+  danger: "bg-[#C0314E] text-white hover:opacity-90",
 };
 
 export function Button({
