@@ -12,9 +12,16 @@ type Result = { error?: string; message?: string }
 const uuid = z.guid()
 
 export async function rewardRandom(studentId: string): Promise<Result> {
-  await requireTeacher()
+  const user = await requireTeacher()
   if (!uuid.safeParse(studentId).success) return { error: toVietnameseMessage('invalid_input') }
   const supabase = await createServerSupabase()
+  const { data: settings, error: flagError } = await supabase
+    .from('class_settings')
+    .select('feature_random')
+    .eq('class_id', user.classId)
+    .maybeSingle()
+  if (flagError) throw new Error(flagError.message)
+  if (!(settings?.feature_random ?? true)) return { error: 'Tính năng này đang tắt. Cô bật lại trong Cài đặt.' }
   const { data: student, error: readError } = await supabase.from('students').select('full_name').eq('id', studentId).maybeSingle()
   if (readError) throw new Error(readError.message)
   if (!student) return { error: toVietnameseMessage('student_not_found') }

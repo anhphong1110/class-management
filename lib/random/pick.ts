@@ -1,3 +1,5 @@
+import { attended } from '@/lib/attendance/rules'
+
 export type PickStudent = { id: string; groupId: string | null; presentToday: boolean }
 export type PoolOptions = { scope: 'all' | string; onlyPresent: boolean }
 
@@ -14,4 +16,9 @@ export function pickNext(pool: string[], called: string[], noRepeat: boolean, ra
   const left = pool.filter((id) => !skip.has(id))
   if (!left.length) return null
   return left[Math.min(left.length - 1, Math.floor(rand() * left.length))]
+}
+
+/** Chưa có dòng điểm danh hôm nay (null) thì tính là có mặt; còn lại theo quy tắc `attended`. */
+export function isPresentToday(status: string | null): boolean {
+  return status === null || attended(status)
 }

@@ -62,6 +62,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
   const [result, setResult] = useState(false)
   const [msg, setMsg] = useState<Msg>(null)
   const [pop, setPop] = useState(0)
+  const [rewarded, setRewarded] = useState(false)
   const [pending, startTransition] = useTransition()
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -90,6 +91,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
   )
 
   function clearStage() {
+    setRewarded(false)
     setCurId(null)
     setResult(false)
     setMsg(null)
@@ -112,6 +114,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
     }
     setMsg(null)
     setResult(false)
+    setRewarded(false)
     // Giảm chuyển động: dừng ngay, không quay.
     if (reducedMotion()) {
       finish()
@@ -135,6 +138,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
     if (!cur || pending) return
     startTransition(async () => {
       const r = await rewardRandom(cur.id)
+      if (!r.error) setRewarded(true)
       setMsg(r.error ? { text: r.error, error: true } : { text: r.message ?? '', error: false })
     })
   }
@@ -194,7 +198,8 @@ export function RandomClient({ today, students, groups }: { today: string; stude
               role="switch"
               aria-checked={t.on}
               onClick={t.flip}
-              className="flex min-h-[48px] cursor-pointer items-center gap-2.5 rounded-[14px] border-2 border-[#D9D5F2] bg-white py-0 pl-2.5 pr-4 text-[14.5px] font-bold text-ink"
+              disabled={spinning}
+              className="flex min-h-[48px] cursor-pointer items-center gap-2.5 disabled:cursor-not-allowed disabled:opacity-60 rounded-[14px] border-2 border-[#D9D5F2] bg-white py-0 pl-2.5 pr-4 text-[14.5px] font-bold text-ink"
             >
               <span
                 aria-hidden="true"
@@ -253,7 +258,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
             <button
               type="button"
               onClick={reward}
-              disabled={pending}
+              disabled={pending || rewarded}
               className="min-h-[60px] cursor-pointer rounded-[20px] border-2 border-white/70 bg-transparent px-[26px] text-[17px] font-extrabold text-white disabled:opacity-60"
             >
               +1 sao cho bạn này

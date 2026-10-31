@@ -23,6 +23,19 @@ async function open(page: Page) {
 const scope = (page: Page, name: string) => page.getByRole('button', { name, exact: true })
 const heading = (page: Page, text: string) => page.getByRole('heading', { level: 2, name: text })
 
+test('cờ tắt khi trang đang mở thì không cộng sao', async ({ page }) => {
+  await open(page)
+  await scope(page, 'Tổ 4').click()
+  await page.getByRole('button', { name: 'Quay số', exact: true }).click()
+  await expect(page.getByText('PHI HÀNH GIA MAY MẮN', { exact: true })).toBeVisible({ timeout: 10_000 })
+  sql(`update public.class_settings set feature_random = false where class_id = '${CLASS_ID}'`)
+  await page.getByRole('button', { name: '+1 sao cho bạn này' }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'Tính năng này đang tắt. Cô bật lại trong Cài đặt.' })).toBeVisible()
+  const { data, error } = await admin().from('star_transactions').select('id').eq('class_id', CLASS_ID)
+  expect(error).toBeNull()
+  expect(data).toEqual([])
+})
+
 test.describe('giảm chuyển động (dừng ngay)', () => {
   test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
@@ -60,6 +73,8 @@ test.describe('giảm chuyển động (dừng ngay)', () => {
     const { data, error } = await admin().from('star_transactions').select('delta, kind, note').eq('student_id', sid(8))
     expect(error).toBeNull()
     expect(data).toEqual([{ delta: 1, kind: 'award', note: 'Gọi tên ngẫu nhiên' }])
+    // Đã cộng cho lượt này thì nút bị khóa, quay tiếp thì mở lại.
+    await expect(page.getByRole('button', { name: '+1 sao cho bạn này' })).toBeDisabled()
 
     // Hết người trong tổ
     await page.getByRole('button', { name: 'Gọi bạn tiếp theo' }).click()

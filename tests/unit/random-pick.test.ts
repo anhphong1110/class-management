@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildPool, pickNext } from '@/lib/random/pick'
+import { buildPool, isPresentToday, pickNext } from '@/lib/random/pick'
 
 const students = [
   { id: 'a', groupId: 'g1', presentToday: true },
@@ -49,5 +49,16 @@ describe('pickNext', () => {
   })
   it('bỏ qua id đã gọi không còn trong phạm vi', () => {
     expect(pickNext(['a'], ['zzz'], true, () => 0)).toBe('a')
+  })
+})
+
+describe('isPresentToday', () => {
+  it('chưa có dòng điểm danh hôm nay thì vào pool khi onlyPresent', () => {
+    const list = [
+      { id: 'x', groupId: 'g1', presentToday: isPresentToday(null) },
+      { id: 'y', groupId: 'g1', presentToday: isPresentToday('absent_unexcused') },
+      { id: 'z', groupId: 'g1', presentToday: isPresentToday('late') },
+    ]
+    expect(buildPool(list, { scope: 'all', onlyPresent: true })).toEqual(['x', 'z'])
   })
 })
