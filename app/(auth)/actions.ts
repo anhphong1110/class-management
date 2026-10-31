@@ -9,9 +9,17 @@ import { toVietnameseMessage } from '@/lib/errors'
 export type SignInState = { error?: string }
 
 function safeNext(raw: FormDataEntryValue | null): string | null {
-  if (typeof raw !== 'string') return null
-  if (!raw.startsWith('/') || raw.startsWith('//') || raw.startsWith('/\\')) return null
-  return raw
+  if (typeof raw !== 'string' || !raw.startsWith('/')) return null
+  // Ký tự điều khiển (tab/CR/LF bị trình duyệt bỏ qua) và dấu gạch ngược có thể biến `/\t/x` thành `//x`.
+  if (/[\x00-\x1F\x7F\\]/.test(raw)) return null
+  try {
+    const base = 'http://local.invalid'
+    const u = new URL(raw, base)
+    if (u.origin !== base) return null
+    return u.pathname + u.search + u.hash
+  } catch {
+    return null
+  }
 }
 
 export async function signIn(_prev: SignInState, form: FormData): Promise<SignInState> {

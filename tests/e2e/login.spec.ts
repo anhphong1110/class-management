@@ -59,13 +59,19 @@ test('đường dẫn cần đăng nhập rồi quay lại', async ({ page }) =>
   await expect(page).toHaveURL(/\/thoi-khoa-bieu$/)
 })
 
-for (const bad of ['//evil.com', 'https://evil.com', '/\\evil.com']) {
+for (const bad of ['//evil.com', 'https://evil.com', '/\\evil.com', '/\t/evil.com', '/\n/evil.com']) {
   test(`next không an toàn bị bỏ qua: ${bad}`, async ({ page }) => {
     await page.goto(`/dang-nhap?next=${encodeURIComponent(bad)}`)
     await fill(page, 'Giáo viên', 'co.khanh', pw('co.khanh'))
     await expect(page).toHaveURL(/localhost:3000\/tong-quan$/)
   })
 }
+
+test('next hợp lệ có query được giữ nguyên', async ({ page }) => {
+  await page.goto(`/dang-nhap?next=${encodeURIComponent('/thoi-khoa-bieu?x=1')}`)
+  await fill(page, 'Giáo viên', 'co.khanh', pw('co.khanh'))
+  await expect(page).toHaveURL(/\/thoi-khoa-bieu\?x=1$/)
+})
 
 test('tài khoản Auth không có profiles', async ({ page }) => {
   const a = admin()
