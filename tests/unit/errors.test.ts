@@ -31,6 +31,8 @@ describe('toVietnameseMessage', () => {
     ['subject_in_use', 'Môn này đang có trong thời khóa biểu. Cô hãy đổi các tiết đó sang môn khác trước khi xóa.'],
     ['subject_exists', 'Môn này đã có trong danh sách.'],
     ['subject_name_required', 'Cô hãy nhập tên môn học.'],
+    ['subject_not_found', 'Môn này không còn trong danh sách.'],
+    ['saturday_off', 'Lớp chưa bật học thứ Bảy.'],
     ['announcement_required', 'Cô hãy nhập tiêu đề và nội dung.'],
     ['khong_biet', 'Có lỗi xảy ra, vui lòng thử lại.'],
   ]

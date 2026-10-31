@@ -32,6 +32,7 @@ export function TimetableClient({
   const [edit, setEdit] = useState<Edit | null>(null)
   const [newName, setNewName] = useState('')
   const [msg, setMsg] = useState('')
+  const [slotMsg, setSlotMsg] = useState('')
   const [showExport, setShowExport] = useState(false)
   const [pending, startTransition] = useTransition()
 
@@ -41,13 +42,17 @@ export function TimetableClient({
   const label = (e: Edit) =>
     `${WEEKDAY_LABELS[e.weekday]}, ${e.session === 'morning' ? 'sáng' : 'chiều'} tiết ${e.period}`
 
-  function run(action: () => Promise<{ error?: string }>, onOk?: () => void) {
+  function run(action: () => Promise<{ error?: string }>, opts: { onOk?: () => void; onErr?: () => void; panel?: boolean } = {}) {
     startTransition(async () => {
       const res = await action()
-      if (res.error) setMsg(res.error)
-      else {
+      if (res.error) {
+        if (opts.panel) setSlotMsg(res.error)
+        else setMsg(res.error)
+        opts.onErr?.()
+      } else {
         setMsg('')
-        onOk?.()
+        setSlotMsg('')
+        opts.onOk?.()
       }
     })
   }
@@ -75,9 +80,9 @@ export function TimetableClient({
 
   return (
     <div className="flex flex-col gap-5">
-      <style>{`@media print{body *{visibility:hidden}#timetable-print,#timetable-print *{visibility:visible}#timetable-print{position:absolute;left:0;top:0;width:100%;box-shadow:none}}`}</style>
+      <style>{`@page{size:landscape;margin:10mm}@media print{[data-testid=teacher-shell]>div:first-child,main>header{display:none!important}[data-testid=teacher-shell]{display:block;padding:0}#timetable-print{box-shadow:none;padding:0}#timetable-print [data-testid=timetable-scroll]{overflow:visible}#timetable-print [data-testid=timetable-inner]{min-width:0!important}}`}</style>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[26px] bg-white px-6 py-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[26px] bg-white px-6 print:hidden py-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
         <div className="flex flex-wrap gap-2">
           {([['week', 'Cả tuần'], ['day', 'Theo ngày']] as const).map(([k, text]) => {
             const on = view === k
@@ -101,7 +106,7 @@ export function TimetableClient({
       </div>
 
       {showExport && (
-        <div className="flex flex-wrap gap-2.5 rounded-[20px] bg-white px-5 py-4 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
+        <div className="flex flex-wrap gap-2.5 rounded-[20px] bg-white px-5 py-4 print:hidden shadow-[0_6px_20px_rgba(102,117,232,.10)]">
           <button type="button" onClick={() => window.print()} className={GHOST_BTN}>
             In thời khóa biểu
           </button>
@@ -112,7 +117,7 @@ export function TimetableClient({
       )}
 
       {view === 'day' && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 print:hidden">
           {allDays.map((d) => {
             const on = day === d
             return (
@@ -135,9 +140,14 @@ export function TimetableClient({
         <div
           role="region"
           aria-label="Sửa tiết học"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border-2 border-[#4F5BD5] bg-[#EEF0FF] px-[18px] py-3.5"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border-2 print:hidden border-[#4F5BD5] bg-[#EEF0FF] px-[18px] py-3.5"
         >
           <div className="text-[15.5px] font-extrabold">Đang sửa: {label(edit)}</div>
+          {slotMsg && (
+            <div role="alert" className="basis-full rounded-xl bg-[#FFF1CC] px-3.5 py-2.5 text-[14.5px] font-bold text-[#5E3E00]">
+              {slotMsg}
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-2.5">
             <label className="flex items-center gap-2 text-sm font-bold">
               Môn học
@@ -146,7 +156,7 @@ export function TimetableClient({
                 value={current}
                 disabled={pending}
                 onChange={(e) =>
-                  run(() => setSlot(edit.weekday, edit.session, edit.period, e.target.value || null))
+                  run(() => setSlot(edit.weekday, edit.session, edit.period, e.target.value || null), { panel: true })
                 }
                 className="min-h-11 rounded-xl border-2 border-[#B9B5E8] bg-white px-3 text-[15px] font-bold text-[#231F4D]"
               >
@@ -160,7 +170,10 @@ export function TimetableClient({
             </label>
             <button
               type="button"
-              onClick={() => setEdit(null)}
+              onClick={() => {
+                setEdit(null)
+                setSlotMsg('')
+              }}
               className="min-h-11 cursor-pointer rounded-xl border-0 bg-[#4F5BD5] px-[18px] font-extrabold text-white"
             >
               Xong
@@ -170,8 +183,8 @@ export function TimetableClient({
       )}
 
       <div id="timetable-print" data-testid="timetable-grid" className={CARD}>
-        <div className="overflow-x-auto">
-          <div className="flex flex-col gap-2" style={{ minWidth: view === 'week' ? (saturday ? 880 : 760) : 320 }}>
+        <div data-testid="timetable-scroll" className="overflow-x-auto">
+          <div data-testid="timetable-inner" className="flex flex-col gap-2" style={{ minWidth: view === 'week' ? (saturday ? 880 : 760) : 320 }}>
             <div className="grid gap-2" style={{ gridTemplateColumns: cols }}>
               <div className="rounded-[14px] px-1.5 py-2.5 text-center font-display text-base font-extrabold text-[#5B5890]">Tiết</div>
               {days.map((d) => {
@@ -214,7 +227,10 @@ export function TimetableClient({
                         key={d}
                         type="button"
                         data-testid={`cell-${d}-${session}-${period}`}
-                        onClick={() => setEdit({ weekday: d, session, period })}
+                        onClick={() => {
+                          setEdit({ weekday: d, session, period })
+                          setSlotMsg('')
+                        }}
                         className="min-h-[60px] cursor-pointer rounded-[14px] border-2 px-1.5 py-2 text-[14.5px] font-extrabold leading-tight"
                         style={style}
                       >
@@ -229,7 +245,7 @@ export function TimetableClient({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3.5 rounded-[28px] bg-white p-6 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
+      <div className="flex flex-col gap-3.5 rounded-[28px] bg-white p-6 print:hidden shadow-[0_6px_20px_rgba(102,117,232,.10)]">
         <div>
           <h2 className="m-0 font-display text-[22px] font-extrabold">Danh sách môn học của lớp</h2>
           <div className="text-sm text-[#5B5890]">
@@ -254,6 +270,7 @@ export function TimetableClient({
                 <button
                   type="button"
                   aria-label={`Đổi màu môn ${s.name}`}
+                  disabled={pending}
                   onClick={() => run(() => cycleSubjectColor(s.id))}
                   className="flex size-11 flex-none cursor-pointer items-center justify-center rounded-xl border-2"
                   style={{ borderColor: pal.ink, background: pal.bg }}
@@ -266,16 +283,15 @@ export function TimetableClient({
                   defaultValue={s.name}
                   aria-label="Tên môn học"
                   maxLength={40}
+                  readOnly={pending}
                   onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                   onBlur={(e) => {
                     const input = e.currentTarget
                     const v = input.value.trim()
                     if (v === s.name) return
-                    run(
-                      () => renameSubject(s.id, v),
-                    )
-                    // Trả ô về tên cũ; khi lưu được, `key` đổi theo tên mới và ô dựng lại.
-                    input.value = s.name
+                    // Giữ chữ cô vừa gõ trong lúc lưu; chỉ trả về tên cũ khi lỗi.
+                    // Khi lưu được, `key` đổi theo tên mới và ô dựng lại.
+                    run(() => renameSubject(s.id, v), { onErr: () => { input.value = s.name } })
                   }}
                   className="box-border min-h-11 min-w-0 flex-1 rounded-xl border-2 border-transparent bg-white/70 px-2.5 text-[15px] font-extrabold"
                   style={{ color: pal.ink }}
@@ -283,6 +299,7 @@ export function TimetableClient({
                 <button
                   type="button"
                   aria-label={`Xóa môn ${s.name}`}
+                  disabled={pending}
                   onClick={() => run(() => deleteSubject(s.id))}
                   className="flex size-11 flex-none cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-[#9E2257]"
                 >
@@ -309,14 +326,14 @@ export function TimetableClient({
             id="add-subject"
             type="button"
             disabled={pending}
-            onClick={() => run(() => addSubject(newName), () => setNewName(''))}
+            onClick={() => run(() => addSubject(newName), { onOk: () => setNewName('') })}
             className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-[#4F5BD5] px-[22px] text-[15px] font-extrabold text-white"
           >
             + Thêm môn
           </button>
         </div>
       </div>
-      <div className="text-[13.5px] text-[#5B5890]">Học sinh chỉ được xem.</div>
+      <div className="text-[13.5px] text-[#5B5890] print:hidden">Học sinh chỉ được xem.</div>
     </div>
   )
 }

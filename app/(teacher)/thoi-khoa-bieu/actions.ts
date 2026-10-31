@@ -38,6 +38,15 @@ export async function setSlot(
   const parsed = slotInput.safeParse({ weekday, session, period, subjectId })
   if (!parsed.success) return invalid()
   const supabase = await createServerSupabase()
+  if (weekday === 6) {
+    const { data: settings, error: settingsError } = await supabase
+      .from('class_settings')
+      .select('timetable_saturday')
+      .eq('class_id', user.classId)
+      .maybeSingle()
+    if (settingsError) throw new Error(settingsError.message)
+    if (!settings?.timetable_saturday) return { error: toVietnameseMessage('saturday_off') }
+  }
   const key = { class_id: user.classId, weekday, session, period }
   const { error } = parsed.data.subjectId
     ? await supabase

@@ -30,3 +30,8 @@ export function isValidIsoDate(v: string | undefined | null): v is string {
   const d = new Date(`${v}T00:00:00Z`)
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v
 }
+
+/** Thứ trong tuần theo giờ Việt Nam: 0 = Chủ Nhật ... 6 = Thứ Bảy. */
+export function weekdayInVietnam(now: Date = new Date()): number {
+  return new Date(`${todayInVietnam(now)}T00:00:00Z`).getUTCDay()
+}

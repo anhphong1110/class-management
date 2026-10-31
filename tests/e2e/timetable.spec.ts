@@ -140,3 +140,68 @@ test('In / Xuất: tải file .xlsx có môn ở đúng ô', async ({ page }) =>
   expect(aoa[2][1]).toBe('Toán học')
   expect(aoa[10][2]).toBe('Tin học')
 })
+
+test('đổi tên trùng hoặc để trống: báo lỗi và ô trả về tên cũ', async ({ page }) => {
+  await open(page)
+  const toan = nameInput(page, 'Toán')
+  await toan.fill('Tiếng Việt')
+  await toan.press('Enter')
+  await expect(page.getByRole('status')).toHaveText('Môn "Tiếng Việt" đã có trong danh sách.')
+  await expect(toan).toHaveValue('Toán')
+  await toan.fill('   ')
+  await toan.press('Enter')
+  await expect(page.getByRole('status')).toHaveText('Cô hãy nhập tên môn học.')
+  await expect(toan).toHaveValue('Toán')
+})
+
+test('thứ Bảy: bật trong cài đặt thì có cột thứ 6, sửa được và xuất ra file', async ({ page }) => {
+  await open(page)
+  await expect(page.getByTestId('day-head')).toHaveCount(5)
+  sql(`update public.class_settings set timetable_saturday = true where class_id = '${CLASS_ID}'`)
+  await page.reload()
+  await expect(page.getByTestId('day-head')).toHaveCount(6)
+  await expect(page.getByTestId('day-head').last()).toHaveText('Thứ Bảy')
+  await cell(page, 6, 'morning', 1).click()
+  await page.getByLabel('Chọn môn học').selectOption({ label: 'Thể dục' })
+  await expect(cell(page, 6, 'morning', 1)).toHaveText('Thể dục')
+  await page.getByRole('button', { name: 'In / Xuất' }).click()
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: /Tải Excel/ }).click(),
+  ])
+  const wb = XLSX.readFile((await download.path())!)
+  const aoa = XLSX.utils.sheet_to_json<string[]>(wb.Sheets['Thời khóa biểu'], { header: 1, defval: '' })
+  expect(aoa[0]).toHaveLength(7)
+  expect(aoa[2][6]).toBe('Thể dục')
+})
+
+test('thứ Bảy tắt: không lưu được tiết thứ Bảy (server từ chối)', async ({ page }) => {
+  await open(page)
+  sql(`update public.class_settings set timetable_saturday = true where class_id = '${CLASS_ID}'`)
+  await page.reload()
+  await cell(page, 6, 'morning', 1).click()
+  sql(`update public.class_settings set timetable_saturday = false where class_id = '${CLASS_ID}'`)
+  await page.getByLabel('Chọn môn học').selectOption({ label: 'Toán' })
+  await expect(page.getByRole('region', { name: 'Sửa tiết học' }).getByRole('alert')).toHaveText('Lớp chưa bật học thứ Bảy.')
+})
+
+test('in: lưới đủ rộng, không còn thanh bên', async ({ page }, info) => {
+  test.skip(info.project.name === 'mobile', 'bản in dùng khổ ngang, kiểm tra ở màn hình rộng')
+  seedSlot(5, 'morning', 1, 'Toán')
+  await open(page)
+  await page.emulateMedia({ media: 'print' })
+  await expect(page.locator('aside')).toBeHidden()
+  await expect(page.getByRole('button', { name: 'In / Xuất' })).toBeHidden()
+  const box = (await page.locator('[data-testid=day-head]', { hasText: 'Thứ Sáu' }).boundingBox())!
+  const vw = page.viewportSize()!.width
+  expect(box.x + box.width).toBeLessThanOrEqual(vw)
+  const scroll = page.getByTestId('timetable-scroll')
+  expect(await scroll.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+})
+
+test('điện thoại: trang không cuộn ngang, lưới tự cuộn', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'chỉ kiểm tra ở màn hình điện thoại')
+  await open(page)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  expect(await page.getByTestId('timetable-scroll').evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true)
+})
