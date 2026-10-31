@@ -1,5 +1,5 @@
 begin;
-select plan(28);
+select plan(29);
 
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A'), ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id) values ('00000000-0000-0000-0000-0000000000c1'), ('00000000-0000-0000-0000-0000000000c2');
@@ -74,13 +74,14 @@ select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-
 reset role;
 update public.class_settings set student_can_view_rank = false, student_can_view_history = false where class_id = '00000000-0000-0000-0000-0000000000c1';
 set local role authenticated;
-select is((select count(*)::int from public.leaderboard_between(null, null)), 0, 'học sinh, cờ xếp hạng tắt: 0 dòng');
+select throws_ok($$select * from public.leaderboard_between(null, null)$$, 'P0001', 'not_allowed', 'học sinh gọi leaderboard_between: not_allowed');
+select is((select count(*)::int from public.leaderboard_for_period('year')), 0, 'học sinh, cờ xếp hạng tắt: 0 dòng');
 select is((select count(*)::int from public.v_leaderboard_public), 0, 'v_leaderboard_public: cờ tắt 0 dòng');
 select is((select count(*)::int from public.v_my_star_history), 0, 'v_my_star_history: cờ tắt 0 dòng');
 reset role;
 update public.class_settings set student_can_view_rank = true where class_id = '00000000-0000-0000-0000-0000000000c1';
 set local role authenticated;
-select is((select count(*)::int from public.leaderboard_between(null, null)), 8, 'học sinh, cờ bật: đủ 8 dòng lớp A đang học');
+select is((select count(*)::int from public.leaderboard_for_period('year')), 8, 'học sinh, cờ bật: đủ 8 dòng lớp A đang học');
 select is(pg_get_function_result('public.leaderboard_between(timestamptz,timestamptz)'::regprocedure),
   'TABLE(student_id uuid, full_name text, avatar_id uuid, roll_no integer, stars integer, rank integer)', 'không có cột ghi chú');
 select is((select count(*)::int from public.v_leaderboard_public), 8, 'v_leaderboard_public: cờ bật đủ dòng');
