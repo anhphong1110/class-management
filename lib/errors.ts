@@ -37,6 +37,7 @@ const MESSAGES: Record<string, string> = {
   subject_not_found: 'Môn này không còn trong danh sách.',
   saturday_off: 'Lớp chưa bật học thứ Bảy.',
   announcement_required: 'Cô hãy nhập tiêu đề và nội dung.',
+  announcement_not_found: 'Thông báo này không còn nữa.',
   invalid_input: 'Thông tin chưa hợp lệ, cô kiểm tra lại nhé.',
 }
 

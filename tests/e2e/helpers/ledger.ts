@@ -144,3 +144,11 @@ export function seedSlot(weekday: number, session: 'morning' | 'afternoon', peri
        select '${CLASS_ID}', ${weekday}, '${session}', ${period}, id from public.subjects
        where class_id = '${CLASS_ID}' and name = '${subjectName}'`)
 }
+
+/** Xóa mọi thông báo của lớp và ảnh đính kèm đã tải lên. */
+export async function resetAnnouncements() {
+  const store = admin().storage.from('class-media')
+  const { data } = await store.list(`${CLASS_ID}/announcements`)
+  if (data?.length) await store.remove(data.map((f) => `${CLASS_ID}/announcements/${f.name}`))
+  sql(`delete from public.announcements where class_id = '${CLASS_ID}'`)
+}
