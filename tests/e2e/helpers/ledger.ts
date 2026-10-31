@@ -10,7 +10,7 @@ const DB_CONTAINER = process.env.SUPABASE_DB_CONTAINER ?? 'supabase_db_MaiKhanh-
  */
 
 /** Sổ sao là append-only (trigger chặn DELETE), nên test tắt trigger trong một giao dịch để dọn. */
-function sql(statement: string) {
+export function sql(statement: string) {
   execFileSync('docker', ['exec', '-i', DB_CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', statement], {
     stdio: 'pipe',
   })
@@ -41,4 +41,27 @@ export function seedDelta(studentNo: number, delta: number, daysAgo = 0) {
   const kind = delta < 0 ? 'penalty' : 'award'
   sql(`insert into public.star_transactions (class_id, student_id, delta, kind, note, batch_id, created_at)
        values ('${CLASS_ID}', '${sid(studentNo)}', ${delta}, '${kind}', 'seed', gen_random_uuid(), ${at})`)
+}
+
+/** Xóa học sinh test (mã khác HS01–HS10 của seed) cùng sổ sao và điểm danh của họ. */
+export function deleteTestStudents() {
+  sql(`
+    begin;
+    alter table public.star_transactions disable trigger star_transactions_immutable;
+    delete from public.star_transactions where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
+    alter table public.star_transactions enable trigger star_transactions_immutable;
+    delete from public.attendance where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
+    delete from public.group_members where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
+    delete from public.students where class_id = '${CLASS_ID}' and is_demo = false;
+    commit;
+  `)
+}
+
+export function resetAttendance() {
+  sql(`delete from public.attendance where class_id = '${CLASS_ID}'`)
+}
+
+export function seedAttendance(studentNo: number, status: 'present' | 'late' | 'absent_excused' | 'absent_unexcused', daysAgo = 0) {
+  const d = `(now() at time zone 'Asia/Ho_Chi_Minh')::date - ${Math.floor(daysAgo)}`
+  sql(`insert into public.attendance (class_id, student_id, date, status) values ('${CLASS_ID}', '${sid(studentNo)}', ${d}, '${status}')`)
 }

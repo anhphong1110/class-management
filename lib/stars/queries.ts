@@ -6,6 +6,7 @@ import { groupBatches, type StarBatch, type TxRow } from './history'
 export type StudentWithStars = {
   id: string
   fullName: string
+  code: string
   rollNo: number
   avatar: AvatarValue
   competition: number
@@ -30,7 +31,7 @@ export async function getStudentsWithStars(classId: string): Promise<StudentWith
   const [{ data: students }, { data: stars }, { data: members }] = await Promise.all([
     supabase
       .from('students')
-      .select('id, full_name, roll_no, avatar_id')
+      .select('id, code, full_name, roll_no, avatar_id')
       .eq('class_id', classId)
       .is('archived_at', null)
       .order('roll_no'),
@@ -44,6 +45,7 @@ export async function getStudentsWithStars(classId: string): Promise<StudentWith
   return rows.map((s) => ({
     id: s.id,
     fullName: s.full_name,
+    code: s.code,
     rollNo: s.roll_no,
     avatar: (s.avatar_id && avatars.get(s.avatar_id)) || null,
     competition: starsBy.get(s.id)?.competition_stars ?? 0,

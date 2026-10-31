@@ -15,6 +15,8 @@ const MESSAGES: Record<string, string> = {
   student_not_found: 'Không tìm thấy học sinh trong lớp.',
   batch_not_found: 'Không tìm thấy bản ghi.',
   already_reversed: 'Bản ghi này đã được hoàn tác.',
+  name_required: 'Cô hãy nhập họ và tên.',
+  invalid_roll_no: 'Số thứ tự phải là số nguyên dương.',
   insufficient_stars: 'Không đủ sao khả dụng.',
 }
 
