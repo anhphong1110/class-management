@@ -106,7 +106,7 @@ export function ProfilePanel({
           <h3 className={h3}>Lịch sử đổi quà</h3>
           {detail && detail.gifts.length === 0 && <div className="text-sm font-semibold text-[#5B5890]">Chưa có lượt đổi quà</div>}
           {detail?.gifts.map((g) => {
-            const [label, tint, ink] = STAT[g.status]
+            const [label, tint, ink] = STAT[g.status] ?? STAT.pending
             return (
               <div key={g.id} className="flex items-center justify-between gap-2.5 text-[14.5px] font-semibold">
                 <span>

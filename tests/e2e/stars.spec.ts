@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
-import { login, pw } from './helpers'
-import { CLASS_ID, resetStars, seedStars, sid, sql } from './helpers/ledger'
+import { admin, login, pw } from './helpers'
+import { CLASS_ID, resetRewards, resetStars, seedStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -15,9 +15,9 @@ async function open(page: Page) {
 const card = (page: Page, name: string) => page.getByTestId('students').getByRole('button', { name: new RegExp(name) })
 const history = (page: Page) => page.getByTestId('history')
 
-function resetAll() {
+async function resetAll() {
   resetStars()
-  sql(`delete from public.reward_requests where class_id = '${CLASS_ID}'`)
+  await resetRewards()
 }
 test.beforeEach(resetAll)
 test.afterAll(resetAll)
@@ -165,4 +165,8 @@ test('không hoàn tác được lượt cộng khi sao đang được giữ cho
   await history(page).getByRole('button', { name: 'Hoàn tác' }).first().click()
   await page.getByRole('dialog').getByRole('button', { name: 'Đồng ý hoàn tác' }).click()
   await expect(page.getByText('Không thể hoàn tác vì Võ Hà My không đủ sao khả dụng.')).toBeVisible()
+  const { data: tx } = await admin().from('star_transactions').select('kind, delta').eq('student_id', sid(5))
+  expect(tx!.filter((t) => t.kind === 'reversal')).toHaveLength(0)
+  const competition = tx!.filter((t) => ['award', 'penalty', 'reversal'].includes(t.kind)).reduce((n, t) => n + t.delta, 0)
+  expect(competition).toBe(10)
 })

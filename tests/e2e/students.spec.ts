@@ -1,13 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
 import { admin, login } from './helpers'
-import { CLASS_ID, deleteTestStudents, resetAttendance, resetGroups, resetStars, seedAttendance, seedStars, sid, sql } from './helpers/ledger'
+import { CLASS_ID, deleteTestStudents, resetAttendance, resetGroups, resetStars, seedAttendance, resetRewards, seedStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
-function reset() {
+async function reset() {
   deleteTestStudents()
   resetStars()
-  sql(`delete from public.reward_requests where class_id = '${CLASS_ID}'`)
+  await resetRewards()
   resetAttendance()
 }
 test.beforeEach(reset)
@@ -261,8 +261,8 @@ test('lưu trữ học sinh có yêu cầu chờ: yêu cầu bị từ chối, s
   expect(tx!.map((t) => t.kind)).toContain('release')
 
   await page.goto('/doi-qua')
-  await expect(page.getByText('Trần Sao Giữ').first()).toBeVisible()
-  await expect(page.getByText('Từ chối', { exact: true }).first()).toBeVisible()
+  const row = page.locator('div').filter({ hasText: 'Trần Sao Giữ' }).filter({ has: page.getByText('Từ chối', { exact: true }) }).last()
+  await expect(row).toBeVisible()
 })
 
 test('hồ sơ: lịch sử đổi quà dùng đúng nhãn trạng thái', async ({ page }) => {

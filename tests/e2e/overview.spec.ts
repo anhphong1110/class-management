@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { expect, test, type Page } from '@playwright/test'
 import { login, pw } from './helpers'
-import { CLASS_ID, resetAttendance, resetStars, seedAttendance, seedStars, sid, sql } from './helpers/ledger'
+import { CLASS_ID, resetRewards, resetAttendance, resetStars, seedAttendance, seedStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -31,16 +31,16 @@ function resetRequests() {
   sql(`delete from public.reward_requests where class_id = '${CLASS_ID}'`)
 }
 
-test.beforeEach(() => {
+test.beforeEach(async () => {
   resetStars()
   resetAttendance()
-  resetRequests()
+  await resetRewards()
   sql(`update public.classes set cover_path = null where id = '${CLASS_ID}'`)
 })
-test.afterAll(() => {
+test.afterAll(async () => {
   resetStars()
   resetAttendance()
-  resetRequests()
+  await resetRewards()
 })
 
 test('khối chào, nút hành động và hình vẽ sẵn', async ({ page }, info) => {
@@ -141,7 +141,7 @@ test('yêu cầu của Hà My: lượt đổi quà và hoạt động gần đâ
   if (e3) throw e3
   await open(page)
   const stat = page.getByTestId('stat').filter({ hasText: 'Lượt đổi quà' })
-  await expect(stat).toContainText('1')
+  await expect(stat.locator('div.font-display')).toHaveText('1')
   await expect(stat).toContainText('1 yêu cầu chờ duyệt')
   await expect(page.getByTestId('activity-row').filter({ hasText: 'Võ Hà My gửi yêu cầu đổi Bookmark tên lửa' })).toHaveCount(1)
 })

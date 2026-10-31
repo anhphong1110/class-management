@@ -1,12 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { expect, test, type Page } from '@playwright/test'
 import { admin, login, pw } from './helpers'
-import { CLASS_ID, resetStars, seedStars, sql } from './helpers/ledger'
+import { resetRewards, resetStars, seedStars, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
 const REWARD = (n: number) => `00000000-0000-0000-0000-0000000e000${n}`
-const SEED_STOCK = [30, 20, 8, 12, 5]
 
 async function studentRequest(username: string, rewardId: string) {
   const c = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
@@ -18,22 +17,9 @@ async function studentRequest(username: string, rewardId: string) {
   return c.rpc('request_reward', { p_reward_id: rewardId })
 }
 
-async function removeUploads() {
-  const store = admin().storage.from('class-media')
-  const { data } = await store.list(`${CLASS_ID}/rewards`)
-  if (data?.length) await store.remove(data.map((f) => `${CLASS_ID}/rewards/${f.name}`))
-}
-
 async function cleanup() {
-  await removeUploads()
   resetStars()
-  sql(`delete from public.reward_requests where class_id = '${CLASS_ID}'`)
-  sql(`delete from public.rewards where class_id = '${CLASS_ID}' and is_demo = false`)
-  SEED_STOCK.forEach((stock, i) => {
-    const names = ['Sticker vũ trụ', 'Bookmark tên lửa', 'Bút dễ thương', 'Huy hiệu phi hành gia', 'Quà bí mật']
-    const costs = [10, 15, 25, 30, 50]
-    sql(`update public.rewards set stock = ${stock}, hidden = false, image_path = null, name = '${names[i]}', cost = ${costs[i]} where id = '${REWARD(i + 1)}'`)
-  })
+  await resetRewards()
 }
 
 test.beforeEach(cleanup)

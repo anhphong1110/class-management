@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { admin } from '../helpers'
 
 export const CLASS_ID = '00000000-0000-0000-0000-000000000058'
 export const sid = (n: number) => `00000000-0000-0000-0000-0000000b${String(n).padStart(4, '0')}`
@@ -85,4 +86,31 @@ export function resetGroups() {
     ${members.map(([gn, sn, role]) => `('${CLASS_ID}', '${g(gn)}', '${sid(sn)}', '${role}', true)`).join(',\n')};
     commit;
   `)
+}
+
+const SEED_REWARDS: [string, string, number, string, string, number][] = [
+  ['Sticker vũ trụ', 'Bộ sticker phi hành gia và hành tinh.', 10, 'star', 'e0001', 30],
+  ['Bookmark tên lửa', 'Kẹp sách hình tên lửa nhỏ xinh.', 15, 'book', 'e0002', 20],
+  ['Bút dễ thương', 'Bút gel hình ngôi sao, mực xanh tím.', 25, 'pen', 'e0003', 8],
+  ['Huy hiệu phi hành gia', 'Huy hiệu kim loại cài áo đồng phục.', 30, 'badge', 'e0004', 12],
+  ['Quà bí mật', 'Một bất ngờ do cô Khanh chuẩn bị.', 50, 'gift', 'e0005', 5],
+]
+
+/** Đưa trạng thái đổi quà của lớp về seed: yêu cầu, dòng sổ đổi quà, 5 quà mẫu, quà thêm và ảnh tải lên. */
+export async function resetRewards() {
+  const store = admin().storage.from('class-media')
+  const { data } = await store.list(`${CLASS_ID}/rewards`)
+  if (data?.length) await store.remove(data.map((f) => `${CLASS_ID}/rewards/${f.name}`))
+  sql(`
+    begin;
+    alter table public.star_transactions disable trigger star_transactions_immutable;
+    delete from public.star_transactions where class_id = '${CLASS_ID}' and reward_request_id is not null;
+    alter table public.star_transactions enable trigger star_transactions_immutable;
+    delete from public.reward_requests where class_id = '${CLASS_ID}';
+    delete from public.rewards where class_id = '${CLASS_ID}' and is_demo = false;
+    commit;
+  `)
+  for (const [name, description, cost, icon, id, stock] of SEED_REWARDS) {
+    sql(`update public.rewards set stock = ${stock}, hidden = false, image_path = null, name = '${name}', description = '${description}', cost = ${cost}, icon = '${icon}' where id = '00000000-0000-0000-0000-0000000${id}'`)
+  }
 }
