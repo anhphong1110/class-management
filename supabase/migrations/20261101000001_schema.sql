@@ -38,7 +38,8 @@ create table public.avatar_library (
   label text not null default '',
   hidden boolean not null default false,
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id)
 );
 
 create table public.students (
@@ -47,10 +48,12 @@ create table public.students (
   code text not null,
   roll_no int not null,
   full_name text not null,
-  avatar_id uuid references public.avatar_library on delete set null,
+  avatar_id uuid,
   archived_at timestamptz,
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id),
+  foreign key (class_id, avatar_id) references public.avatar_library (class_id, id) on delete set null (avatar_id)
 );
 
 create table public.profiles (
@@ -59,9 +62,11 @@ create table public.profiles (
   role public.user_role not null,
   username text not null unique,
   display_name text not null,
-  avatar_id uuid references public.avatar_library on delete set null,
-  student_id uuid unique references public.students on delete restrict,
-  created_at timestamptz not null default now()
+  avatar_id uuid,
+  student_id uuid unique,
+  created_at timestamptz not null default now(),
+  foreign key (class_id, avatar_id) references public.avatar_library (class_id, id) on delete set null (avatar_id),
+  foreign key (class_id, student_id) references public.students (class_id, id) on delete restrict
 );
 
 create table public.groups (
@@ -70,18 +75,21 @@ create table public.groups (
   name text not null,
   sort_order int not null default 0,
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id)
 );
 
 create table public.group_members (
   id uuid primary key default gen_random_uuid(),
   class_id uuid not null references public.classes on delete restrict,
-  group_id uuid not null references public.groups on delete restrict,
-  student_id uuid not null references public.students on delete restrict,
+  group_id uuid not null,
+  student_id uuid not null,
   role public.group_role not null default 'member',
   created_at timestamptz not null default now(),
   is_demo boolean not null default false,
-  unique (class_id, student_id)
+  unique (class_id, student_id),
+  foreign key (class_id, group_id) references public.groups (class_id, id) on delete restrict,
+  foreign key (class_id, student_id) references public.students (class_id, id) on delete restrict
 );
 
 create table public.star_criteria (
@@ -93,7 +101,8 @@ create table public.star_criteria (
   sort_order int not null default 0,
   archived_at timestamptz,
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id)
 );
 
 create table public.rewards (
@@ -107,48 +116,63 @@ create table public.rewards (
   stock int not null default 0 check (stock >= 0),
   hidden boolean not null default false,
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id)
 );
 
 create table public.reward_requests (
   id uuid primary key default gen_random_uuid(),
   class_id uuid not null references public.classes on delete restrict,
-  student_id uuid not null references public.students on delete restrict,
-  reward_id uuid not null references public.rewards on delete restrict,
+  student_id uuid not null,
+  reward_id uuid not null,
   cost int not null check (cost > 0),
   status public.reward_request_status not null default 'pending',
   decided_by uuid references auth.users on delete set null,
   decided_at timestamptz,
   delivered_at timestamptz,
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id),
+  foreign key (class_id, student_id) references public.students (class_id, id) on delete restrict,
+  foreign key (class_id, reward_id) references public.rewards (class_id, id) on delete restrict
 );
 
 create table public.star_transactions (
   id uuid primary key default gen_random_uuid(),
   class_id uuid not null references public.classes on delete restrict,
-  student_id uuid not null references public.students on delete restrict,
+  student_id uuid not null,
   delta int not null check (delta <> 0),
   kind public.star_kind not null,
-  criterion_id uuid references public.star_criteria on delete restrict,
+  criterion_id uuid,
   note text,
-  reward_request_id uuid references public.reward_requests on delete restrict,
-  reverses_id uuid unique references public.star_transactions on delete restrict,
+  reward_request_id uuid,
+  reverses_id uuid unique,
   actor_id uuid references auth.users on delete set null,
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id),
+  foreign key (class_id, student_id) references public.students (class_id, id) on delete restrict,
+  foreign key (class_id, criterion_id) references public.star_criteria (class_id, id) on delete restrict,
+  foreign key (class_id, reward_request_id) references public.reward_requests (class_id, id) on delete restrict,
+  foreign key (class_id, reverses_id) references public.star_transactions (class_id, id) on delete restrict,
+  check ((kind in ('award', 'release') and delta > 0)
+         or (kind in ('penalty', 'reserve', 'redeem') and delta < 0)
+         or kind = 'reversal'),
+  check ((kind = 'reversal') = (reverses_id is not null)),
+  check ((kind in ('reserve', 'release', 'redeem')) = (reward_request_id is not null))
 );
 
 create table public.attendance (
   id uuid primary key default gen_random_uuid(),
   class_id uuid not null references public.classes on delete restrict,
-  student_id uuid not null references public.students on delete restrict,
+  student_id uuid not null,
   date date not null,
   status public.attendance_status not null,
   note text,
   created_at timestamptz not null default now(),
   is_demo boolean not null default false,
-  unique (student_id, date)
+  unique (student_id, date),
+  foreign key (class_id, student_id) references public.students (class_id, id) on delete restrict
 );
 
 create table public.subjects (
@@ -158,7 +182,8 @@ create table public.subjects (
   color text not null default '#6675E8',
   sort_order int not null default 0,
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id)
 );
 
 create table public.timetable_slots (
@@ -167,10 +192,11 @@ create table public.timetable_slots (
   weekday int not null check (weekday between 1 and 6),
   session public.day_session not null,
   period int not null,
-  subject_id uuid references public.subjects on delete set null,
+  subject_id uuid,
   created_at timestamptz not null default now(),
   is_demo boolean not null default false,
   unique (class_id, weekday, session, period),
+  foreign key (class_id, subject_id) references public.subjects (class_id, id) on delete set null (subject_id),
   check (
     (session = 'morning' and period between 1 and 5)
     or (session = 'afternoon' and period between 1 and 3)
@@ -200,19 +226,23 @@ create table public.missions (
   reward_stars int not null default 0 check (reward_stars >= 0),
   active boolean not null default true,
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id)
 );
 
 create table public.mission_completions (
   id uuid primary key default gen_random_uuid(),
   class_id uuid not null references public.classes on delete restrict,
-  mission_id uuid not null references public.missions on delete restrict,
-  student_id uuid not null references public.students on delete restrict,
+  mission_id uuid not null,
+  student_id uuid not null,
   period_key text not null,
-  star_transaction_id uuid references public.star_transactions on delete set null,
+  star_transaction_id uuid,
   created_at timestamptz not null default now(),
   is_demo boolean not null default false,
-  unique (mission_id, student_id, period_key)
+  unique (mission_id, student_id, period_key),
+  foreign key (class_id, mission_id) references public.missions (class_id, id) on delete restrict,
+  foreign key (class_id, student_id) references public.students (class_id, id) on delete restrict,
+  foreign key (class_id, star_transaction_id) references public.star_transactions (class_id, id) on delete set null (star_transaction_id)
 );
 
 create table public.badges (
@@ -222,18 +252,21 @@ create table public.badges (
   icon text not null default '',
   gradient text not null default '',
   created_at timestamptz not null default now(),
-  is_demo boolean not null default false
+  is_demo boolean not null default false,
+  unique (class_id, id)
 );
 
 create table public.student_badges (
   id uuid primary key default gen_random_uuid(),
   class_id uuid not null references public.classes on delete restrict,
-  badge_id uuid not null references public.badges on delete restrict,
-  student_id uuid not null references public.students on delete restrict,
+  badge_id uuid not null,
+  student_id uuid not null,
   awarded_by uuid references auth.users on delete set null,
   created_at timestamptz not null default now(),
   is_demo boolean not null default false,
-  unique (badge_id, student_id)
+  unique (badge_id, student_id),
+  foreign key (class_id, badge_id) references public.badges (class_id, id) on delete restrict,
+  foreign key (class_id, student_id) references public.students (class_id, id) on delete restrict
 );
 
 create table public.class_settings (
@@ -261,6 +294,7 @@ create table public.class_settings (
 
 create table public.audit_logs (
   id uuid primary key default gen_random_uuid(),
+  class_id uuid references public.classes on delete restrict,
   actor_id uuid references auth.users on delete set null,
   action text not null,
   entity text not null,
@@ -290,7 +324,6 @@ create index on public.star_transactions (criterion_id);
 create index on public.star_transactions (reward_request_id);
 create index on public.star_transactions (actor_id);
 create index on public.attendance (class_id);
-create index on public.attendance (student_id, date);
 create index on public.subjects (class_id);
 create index on public.timetable_slots (subject_id);
 create index on public.announcements (class_id);
@@ -302,5 +335,6 @@ create index on public.badges (class_id);
 create index on public.student_badges (class_id);
 create index on public.student_badges (student_id);
 create index on public.student_badges (awarded_by);
+create index on public.audit_logs (class_id);
 create index on public.audit_logs (actor_id);
 create index on public.audit_logs (entity, entity_id);
