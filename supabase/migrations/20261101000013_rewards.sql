@@ -68,7 +68,7 @@ $$;
 revoke execute on function private.reject_request_locked(uuid) from public, anon, authenticated;
 
 -- Duyệt một yêu cầu pending. Người gọi đã giữ khóa students -> rewards -> reward_requests.
-create function private.approve_request_locked(p_request_id uuid) returns void
+create function private.approve_request_locked(p_request_id uuid, p_decider uuid) returns void
 language plpgsql
 security definer
 set search_path = ''
@@ -84,21 +84,22 @@ begin
   if exists (select 1 from public.star_transactions t
               where t.class_id = r.class_id and t.reward_request_id = r.id and t.kind = 'reserve') then
     insert into public.star_transactions (class_id, student_id, delta, kind, reward_request_id, actor_id)
-    values (r.class_id, r.student_id, r.cost, 'release', r.id, (select auth.uid()));
+    values (r.class_id, r.student_id, r.cost, 'release', r.id, p_decider);
   elsif coalesce((select sum(t.delta) from public.star_transactions t
                    where t.class_id = r.class_id and t.student_id = r.student_id), 0) < r.cost then
     raise exception 'insufficient_stars';
   end if;
   insert into public.star_transactions (class_id, student_id, delta, kind, reward_request_id, actor_id)
-  values (r.class_id, r.student_id, -r.cost, 'redeem', r.id, (select auth.uid()));
+  values (r.class_id, r.student_id, -r.cost, 'redeem', r.id, p_decider);
 
-  update public.rewards set stock = stock - 1 where class_id = r.class_id and id = r.reward_id;
+  -- Đổi trạng thái trước khi giảm kho để trigger stock >= pending không chặn nhầm.
   update public.reward_requests
-     set status = 'approved', decided_by = (select auth.uid()), decided_at = now()
+     set status = 'approved', decided_by = p_decider, decided_at = now()
    where id = r.id;
+  update public.rewards set stock = stock - 1 where class_id = r.class_id and id = r.reward_id;
 end;
 $$;
-revoke execute on function private.approve_request_locked(uuid) from public, anon, authenticated;
+revoke execute on function private.approve_request_locked(uuid, uuid) from public, anon, authenticated;
 
 create function public.request_reward(p_reward_id uuid) returns uuid
 language plpgsql
@@ -143,7 +144,8 @@ begin
      and rr.created_at >= v_week_start and rr.status <> 'rejected';
   if v_used >= v_cfg.weekly_redeem_limit then raise exception 'weekly_limit'; end if;
 
-  if v_cfg.only_enough and coalesce((select sum(t.delta) from public.star_transactions t
+  -- Giữ sao (reserve) không bao giờ được làm số dư âm, kể cả khi only_enough tắt.
+  if (v_cfg.only_enough or v_cfg.reserve_on_request) and coalesce((select sum(t.delta) from public.star_transactions t
                                       where t.class_id = v_class and t.student_id = v_student), 0) < v_reward.cost then
     raise exception 'insufficient_stars';
   end if;
@@ -155,7 +157,8 @@ begin
     values (v_class, v_student, -v_reward.cost, 'reserve', v_id, (select auth.uid()));
   end if;
   if not v_cfg.require_approval then
-    perform private.approve_request_locked(v_id);
+    -- Học sinh không tự duyệt quà của mình: decided_by để null (audit ghi auto_approved).
+    perform private.approve_request_locked(v_id, null);
   end if;
 
   insert into public.audit_logs (class_id, actor_id, action, entity, entity_id, payload)
@@ -190,7 +193,7 @@ begin
    where rr.id = p_request_id and rr.class_id = v_class for update;
   if v_status <> 'pending' then raise exception 'already_processed'; end if;
 
-  perform private.approve_request_locked(p_request_id);
+  perform private.approve_request_locked(p_request_id, (select auth.uid()));
 
   insert into public.audit_logs (class_id, actor_id, action, entity, entity_id, payload)
   values (v_class, (select auth.uid()), 'rewards.approve', 'reward_request', p_request_id,
@@ -301,12 +304,16 @@ begin
   if not found then raise exception 'student_not_found'; end if;
 
   -- Đã giữ khóa học sinh; không yêu cầu mới nào của em chen vào được.
-  for r in select rr.id, rr.reward_id from public.reward_requests rr
+  -- Khóa mọi quà liên quan (theo id) trước, rồi mới khóa các yêu cầu (theo id).
+  perform 1 from public.rewards w
+   where w.class_id = v_class and w.id in (
+     select rr.reward_id from public.reward_requests rr
+      where rr.class_id = v_class and rr.student_id = p_student_id and rr.status = 'pending')
+   order by w.id for update;
+  for r in select rr.id from public.reward_requests rr
             where rr.class_id = v_class and rr.student_id = p_student_id and rr.status = 'pending'
-            order by rr.reward_id, rr.id
+            order by rr.id for update
   loop
-    perform 1 from public.rewards w where w.id = r.reward_id and w.class_id = v_class for update;
-    perform 1 from public.reward_requests rr where rr.id = r.id for update;
     perform private.reject_request_locked(r.id);
     v_rejected := v_rejected + 1;
   end loop;
@@ -332,3 +339,24 @@ grant execute on function public.reject_reward_request(uuid) to authenticated;
 grant execute on function public.deliver_reward_request(uuid) to authenticated;
 grant execute on function public.set_reward_stock(uuid, int) to authenticated;
 grant execute on function public.archive_student(uuid) to authenticated;
+
+-- Bất biến: stock không âm và không nhỏ hơn số yêu cầu pending, kể cả khi UPDATE trực tiếp.
+create function private.check_reward_stock() returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.stock < 0 or new.stock < (select count(*) from public.reward_requests rr
+                                    where rr.class_id = new.class_id and rr.reward_id = new.id
+                                      and rr.status = 'pending') then
+    raise exception 'stock_below_held';
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function private.check_reward_stock() from public, anon, authenticated;
+
+create trigger rewards_stock_check
+  before update of stock on public.rewards
+  for each row execute function private.check_reward_stock();

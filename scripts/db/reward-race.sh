@@ -33,9 +33,12 @@ delete from public.star_transactions
  where note = 'race-test'
     or reward_request_id in (select rr.id from public.reward_requests rr join public.rewards w on w.id = rr.reward_id where w.name like 'RACE-%');
 alter table public.star_transactions enable trigger star_transactions_immutable;
+delete from public.audit_logs
+ where created_at >= '$START'
+   and ((action like 'rewards.%' and payload ->> 'reward_id' in (select id::text from public.rewards where name like 'RACE-%'))
+        or (action = 'stars.penalize' and payload ->> 'note' = 'race-test'));
 delete from public.reward_requests where reward_id in (select id from public.rewards where name like 'RACE-%');
 delete from public.rewards where name like 'RACE-%';
-delete from public.audit_logs where created_at >= '$START' and (action like 'rewards.%' or action = 'stars.penalize');
 commit;
 SQL
 }

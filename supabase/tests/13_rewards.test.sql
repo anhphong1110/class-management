@@ -1,5 +1,5 @@
 begin;
-select plan(80);
+select plan(89);
 
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A'), ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id, weekly_redeem_limit) values
@@ -95,6 +95,18 @@ reset role;
 update public.class_settings set only_enough = true, reserve_on_request = true where class_id = '00000000-0000-0000-0000-0000000000c1';
 set local role authenticated;
 
+-- reserve bật, only_enough tắt: vẫn không được giữ quá số dư
+reset role;
+update public.class_settings set only_enough = false where class_id = '00000000-0000-0000-0000-0000000000c1';
+set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d4', 'role', 'authenticated')::text, true);
+select throws_ok($$select public.request_reward('00000000-0000-0000-0000-0000000000f2')$$, 'P0001', 'insufficient_stars', 'reserve bật, only_enough tắt, 0 sao: insufficient_stars');
+reset role;
+select is((select count(*)::int from public.reward_requests where student_id = '00000000-0000-0000-0000-0000000000a2'), 1, 'không ghi thêm yêu cầu nào');
+select is((select count(*)::int from public.star_transactions where student_id = '00000000-0000-0000-0000-0000000000a2'), 0, 'không ghi dòng sổ nào');
+update public.class_settings set only_enough = true where class_id = '00000000-0000-0000-0000-0000000000c1';
+set local role authenticated;
+
 -- ===== weekly_redeem_limit =====
 reset role;
 update public.class_settings set weekly_redeem_limit = 1 where class_id = '00000000-0000-0000-0000-0000000000c1';
@@ -119,6 +131,8 @@ select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-
 insert into reqs select 'r6', public.request_reward('00000000-0000-0000-0000-0000000000f5');
 select is((select status::text from public.reward_requests where id = (select v from reqs where k = 'r6')), 'approved', 'require_approval tắt: approved ngay');
 select is((select stock from public.rewards where id = '00000000-0000-0000-0000-0000000000f5'), 9, 'stock Q5 giảm 1');
+select ok((select decided_by is null from public.reward_requests where id = (select v from reqs where k = 'r6')), 'tự duyệt: decided_by null');
+select ok((select decided_at is not null from public.reward_requests where id = (select v from reqs where k = 'r6')), 'tự duyệt: decided_at có giá trị');
 reset role;
 select is((select array_agg(kind::text order by kind::text) from public.star_transactions where reward_request_id = (select v from reqs where k = 'r6')),
   array['redeem', 'release', 'reserve'], 'tự duyệt ghi đủ 3 dòng');
@@ -165,6 +179,18 @@ select throws_ok($$select public.set_reward_stock('00000000-0000-0000-0000-00000
 select lives_ok($$select public.set_reward_stock('00000000-0000-0000-0000-0000000000f2', 1)$$, 'stock 1 bằng số giữ');
 select is((select stock from public.rewards where id = '00000000-0000-0000-0000-0000000000f2'), 1, 'stock Q2 = 1');
 select throws_ok($$select public.set_reward_stock(gen_random_uuid(), 1)$$, 'P0001', 'reward_not_found', 'quà không tồn tại');
+select throws_ok($$update public.rewards set stock = 0 where id = '00000000-0000-0000-0000-0000000000f2'$$, 'P0001', 'stock_below_held', 'UPDATE trực tiếp dưới số pending bị chặn');
+
+-- duyệt khi kho đã về 0 (bỏ qua trigger bằng quyền postgres)
+reset role;
+alter table public.rewards disable trigger rewards_stock_check;
+update public.rewards set stock = 0 where id = '00000000-0000-0000-0000-0000000000f2';
+alter table public.rewards enable trigger rewards_stock_check;
+set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d1', 'role', 'authenticated')::text, true);
+select throws_ok($$select public.approve_reward_request((select v from reqs where k = 'r7'))$$, 'P0001', 'out_of_stock', 'duyệt khi stock 0: out_of_stock');
+select is((select status::text from public.reward_requests where id = (select v from reqs where k = 'r7')), 'pending', 'yêu cầu vẫn pending');
+select is((select array_agg(kind::text) from public.star_transactions where reward_request_id = (select v from reqs where k = 'r7')), array['reserve'], 'không ghi thêm dòng sổ');
 
 -- ===== lưu trữ học sinh =====
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d3', 'role', 'authenticated')::text, true);
