@@ -128,9 +128,10 @@ export function LeaderboardClient({ rows, period, showAll }: { rows: RankRow[]; 
                 <div className="text-[16.5px] font-extrabold">{r.name}</div>
                 <div className="h-2.5 overflow-hidden rounded-md bg-[#E9E6FA]">
                   <div
+                    data-testid="rank-bar"
                     className="h-full rounded-md"
                     style={{
-                      width: `${max > 0 ? Math.round((r.stars / max) * 100) : 0}%`,
+                      width: `${max > 0 ? Math.min(100, Math.max(0, Math.round((r.stars / max) * 100))) : 0}%`,
                       background: 'linear-gradient(90deg,#6675E8,#F46FA5)',
                     }}
                   />

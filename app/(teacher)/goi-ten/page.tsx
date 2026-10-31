@@ -4,7 +4,7 @@ import { ComingSoon } from '@/components/layout/ComingSoon'
 export default function Page() {
   return (
     <>
-      <Header title="Gọi tên ngẫu nhiên" subtitle="Chọn ngẫu nhiên một bạn" />
+      <Header title="Gọi tên ngẫu nhiên" subtitle="Quay số chọn phi hành gia may mắn" />
       <ComingSoon title="Gọi tên ngẫu nhiên" />
     </>
   )

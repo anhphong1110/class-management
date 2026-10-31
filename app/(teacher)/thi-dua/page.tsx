@@ -14,7 +14,7 @@ export default async function Page() {
   ])
   return (
     <>
-      <Header title="Trạm thi đua" subtitle="Cộng, trừ sao và ghi lý do cho phi hành đoàn" />
+      <Header title="Trạm năng lượng ngôi sao" subtitle="Cộng, trừ sao và ghi lý do cho phi hành đoàn" />
       <StarsClient
         students={students}
         groups={groups}

@@ -4,6 +4,23 @@ import { admin, login } from './helpers'
 
 test.describe.configure({ mode: 'serial' })
 
+/** Tiêu đề h1 của từng trang, chép từ bản vẽ (khác nhãn Sidebar). */
+const PAGE_TITLES: Record<string, string> = {
+  '/tong-quan': 'Tổng quan',
+  '/hoc-sinh': 'Quản lý học sinh',
+  '/diem-danh': 'Điểm danh phi hành đoàn',
+  '/thi-dua': 'Trạm năng lượng ngôi sao',
+  '/xep-hang': 'Bảng xếp hạng phi hành gia xuất sắc',
+  '/doi-qua': 'Trạm đổi quà vũ trụ',
+  '/goi-ten': 'Gọi tên ngẫu nhiên',
+  '/thoi-khoa-bieu': 'Lịch bay của phi hành gia',
+  '/thong-bao': 'Tín hiệu từ trạm chỉ huy',
+  '/nhiem-vu': 'Nhiệm vụ phi hành gia',
+  '/bao-cao': 'Thống kê – Báo cáo',
+  '/cai-dat': 'Cài đặt',
+  '/ho-so': 'Hồ sơ và avatar',
+}
+
 const CLASS_ID = '00000000-0000-0000-0000-000000000058'
 
 test('Sidebar và Header ở /tong-quan', async ({ page }, info) => {
@@ -28,7 +45,7 @@ test('bấm từng link Sidebar không lỗi', async ({ page }) => {
       nav.getByRole('link', { name: item.label, exact: true }).click(),
     ])
     expect(res).toBeTruthy()
-    await expect(page.getByRole('heading', { level: 1, name: item.label })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: PAGE_TITLES[item.href] })).toBeVisible()
   }
   const r = await page.goto('/trinh-chieu')
   expect(r!.status()).toBeLessThan(500)

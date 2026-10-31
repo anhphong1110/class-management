@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { login } from './helpers'
-import { resetStars, seedStars } from './helpers/ledger'
+import { resetStars, seedDelta, seedStars } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -8,7 +8,7 @@ async function open(page: Page, query = '') {
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
   await page.goto(`/xep-hang${query}`)
-  await expect(page.getByRole('heading', { level: 1, name: 'Bảng xếp hạng' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Bảng xếp hạng phi hành gia xuất sắc' })).toBeVisible()
 }
 
 const podium = (page: Page) => page.getByTestId('podium')
@@ -71,4 +71,18 @@ test('lớp chưa có giao dịch: mọi bạn 0 sao, cùng hạng 1', async ({ 
     await expect(r.getByTestId('rank-stars')).toHaveText('0')
   }
   await expect(podium(page).getByTestId('podium-step')).toHaveCount(3)
+})
+
+test('điểm âm trong kỳ: thanh phần trăm bằng 0, không tràn', async ({ page }) => {
+  seedStars(1, 5)
+  seedDelta(2, -3)
+  await open(page, '?ky=week&tat-ca=1')
+  const row = rows(page).filter({ hasText: 'Trần Gia Bảo' })
+  await expect(row.getByTestId('rank-stars')).toHaveText('-3')
+  await expect(row.getByTestId('rank-bar')).toHaveCSS('width', '0px')
+})
+
+test('mở ?ky=term khi lớp có đủ ngày học kỳ: tab Học kỳ sáng', async ({ page }) => {
+  await open(page, '?ky=term')
+  await expect(page.getByRole('tab', { name: 'Học kỳ' })).toHaveAttribute('aria-selected', 'true')
 })

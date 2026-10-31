@@ -4,6 +4,11 @@ export const CLASS_ID = '00000000-0000-0000-0000-000000000058'
 export const sid = (n: number) => `00000000-0000-0000-0000-0000000b${String(n).padStart(4, '0')}`
 const DB_CONTAINER = process.env.SUPABASE_DB_CONTAINER ?? 'supabase_db_MaiKhanh-WebQua_nLy'
 
+/**
+ * LƯU Ý: các helper dưới đây dùng chung một lớp seed và xóa toàn bộ sổ sao của lớp,
+ * nên chỉ an toàn khi Playwright chạy `workers: 1` (xem playwright.config.ts). Không chạy song song.
+ */
+
 /** Sổ sao là append-only (trigger chặn DELETE), nên test tắt trigger trong một giao dịch để dọn. */
 function sql(statement: string) {
   execFileSync('docker', ['exec', '-i', DB_CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', statement], {
@@ -28,4 +33,12 @@ export function seedStars(studentNo: number, points: number, daysAgo = 0) {
   const at = daysAgo > 0 ? `now() - interval '${Math.floor(daysAgo)} days'` : 'now()'
   sql(`insert into public.star_transactions (class_id, student_id, delta, kind, note, batch_id, created_at)
        values ('${CLASS_ID}', '${sid(studentNo)}', ${points}, 'award', 'seed', gen_random_uuid(), ${at})`)
+}
+
+/** Chèn giao dịch với delta tùy ý (âm = trừ sao) và mốc `daysAgo` ngày trước. */
+export function seedDelta(studentNo: number, delta: number, daysAgo = 0) {
+  const at = daysAgo > 0 ? `now() - interval '${Math.floor(daysAgo)} days'` : 'now()'
+  const kind = delta < 0 ? 'penalty' : 'award'
+  sql(`insert into public.star_transactions (class_id, student_id, delta, kind, note, batch_id, created_at)
+       values ('${CLASS_ID}', '${sid(studentNo)}', ${delta}, '${kind}', 'seed', gen_random_uuid(), ${at})`)
 }

@@ -4,7 +4,7 @@ import { ComingSoon } from '@/components/layout/ComingSoon'
 export default function Page() {
   return (
     <>
-      <Header title="Thống kê – Báo cáo" subtitle="Số liệu và báo cáo của lớp" />
+      <Header title="Thống kê – Báo cáo" subtitle="Dành riêng cho giáo viên" />
       <ComingSoon title="Thống kê – Báo cáo" />
     </>
   )

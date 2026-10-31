@@ -8,7 +8,7 @@ async function open(page: Page) {
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
   await page.goto('/thi-dua')
-  await expect(page.getByRole('heading', { level: 1, name: 'Trạm thi đua' })).toBeVisible()
+  await expect(page.getByRole("heading", { level: 1, name: "Trạm năng lượng ngôi sao" })).toBeVisible()
 }
 
 const card = (page: Page, name: string) => page.getByTestId('students').getByRole('button', { name: new RegExp(name) })

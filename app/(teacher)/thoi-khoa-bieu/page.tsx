@@ -1,10 +1,14 @@
+import { requireTeacher } from '@/lib/auth/session'
+import { getClassHeaderInfo } from '@/lib/classes/queries'
 import { Header } from '@/components/layout/Header'
 import { ComingSoon } from '@/components/layout/ComingSoon'
 
-export default function Page() {
+export default async function Page() {
+  const user = await requireTeacher()
+  const info = await getClassHeaderInfo(user.classId)
   return (
     <>
-      <Header title="Thời khóa biểu" subtitle="Lịch học trong tuần" />
+      <Header title="Lịch bay của phi hành gia" subtitle={`Thời khóa biểu lớp ${info.short} · Học kỳ ${info.term}`} />
       <ComingSoon title="Thời khóa biểu" />
     </>
   )
