@@ -1,3 +1,4 @@
+import 'server-only'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
 import type { Role, SessionUser } from '@/lib/domain/types'
@@ -41,14 +42,14 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
 export async function requireTeacher(): Promise<SessionUser> {
   const u = await getSessionUser()
-  if (!u) redirect('/dang-nhap')
+  if (!u) redirect('/dang-xuat?reason=no_profile')
   if (u.role !== 'teacher') redirect('/em')
   return u
 }
 
 export async function requireStudent(): Promise<SessionUser> {
   const u = await getSessionUser()
-  if (!u) redirect('/dang-nhap')
+  if (!u) redirect('/dang-xuat?reason=no_profile')
   if (u.role !== 'student') redirect('/tong-quan')
   return u
 }

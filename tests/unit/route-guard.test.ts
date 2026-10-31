@@ -37,7 +37,7 @@ describe('resolveRoute', () => {
     expect(resolveRoute({ pathname: '/favicon.ico', role: null })).toEqual({ action: 'allow' })
   })
   it('không nhầm tiền tố: /tong-quan-x không phải khu giáo viên', () => {
-    expect(resolveRoute({ pathname: '/tong-quan-x', role: 'student' })).toEqual({ action: 'allow' })
+    expect(resolveRoute({ pathname: '/tong-quan-x', role: 'teacher' })).toEqual({ action: 'allow' })
     expect(resolveRoute({ pathname: '/tong-quan-x', role: null })).toEqual(
       redirect('/dang-nhap?next=%2Ftong-quan-x'),
     )
@@ -46,5 +46,14 @@ describe('resolveRoute', () => {
     expect(resolveRoute({ pathname: '/', role: 'teacher' })).toEqual(redirect('/tong-quan'))
     expect(resolveRoute({ pathname: '/', role: 'student' })).toEqual(redirect('/em'))
     expect(resolveRoute({ pathname: '/', role: null })).toEqual(redirect('/dang-nhap?next=%2F'))
+  })
+  it('/dang-xuat công khai cho mọi vai trò', () => {
+    expect(resolveRoute({ pathname: '/dang-xuat', role: 'student' })).toEqual({ action: 'allow' })
+    expect(resolveRoute({ pathname: '/dang-xuat', role: null })).toEqual({ action: 'allow' })
+  })
+  it('học sinh mặc định bị chặn ngoài /em', () => {
+    expect(resolveRoute({ pathname: '/foo', role: 'student' })).toEqual(redirect('/em'))
+    expect(resolveRoute({ pathname: '/em/sao', role: 'student' })).toEqual({ action: 'allow' })
+    expect(resolveRoute({ pathname: '/foo', role: 'teacher' })).toEqual({ action: 'allow' })
   })
 })

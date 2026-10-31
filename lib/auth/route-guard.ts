@@ -1,11 +1,9 @@
-import { TEACHER_NAV } from '@/components/layout/nav'
 import type { Role } from '@/lib/domain/types'
 
 export type RouteDecision = { action: 'allow' } | { action: 'redirect'; to: string }
 
-const TEACHER_PREFIXES = [...TEACHER_NAV.map((n) => n.href), '/trinh-chieu']
 const PUBLIC_PREFIXES = ['/_next', '/brand']
-const PUBLIC_EXACT = ['/favicon.ico']
+const PUBLIC_EXACT = ['/favicon.ico', '/dang-xuat']
 
 function matchesPrefix(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(prefix + '/')
@@ -30,7 +28,7 @@ export function resolveRoute(input: { pathname: string; role: Role | null }): Ro
 
   if (pathname === '/') return { action: 'redirect', to: homeFor(role) }
 
-  if (TEACHER_PREFIXES.some((p) => matchesPrefix(pathname, p)) && role !== 'teacher') {
+  if (role === 'student' && !matchesPrefix(pathname, '/em')) {
     return { action: 'redirect', to: '/em' }
   }
 
