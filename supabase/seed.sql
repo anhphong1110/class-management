@@ -77,3 +77,10 @@ insert into public.subjects (class_id, name, color, sort_order, is_demo) values
   ('00000000-0000-0000-0000-000000000058', 'Tin học', '#2B6110', 10, true),
   ('00000000-0000-0000-0000-000000000058', 'HĐ trải nghiệm', '#3A3769', 11, true),
   ('00000000-0000-0000-0000-000000000058', 'Sinh hoạt lớp', '#3A3769', 12, true);
+
+insert into public.rewards (id, class_id, name, cost, description, icon, stock, is_demo) values
+  ('00000000-0000-0000-0000-0000000e0001', '00000000-0000-0000-0000-000000000058', 'Sticker vũ trụ', 10, 'Bộ sticker phi hành gia và hành tinh.', 'star', 30, true),
+  ('00000000-0000-0000-0000-0000000e0002', '00000000-0000-0000-0000-000000000058', 'Bookmark tên lửa', 15, 'Kẹp sách hình tên lửa nhỏ xinh.', 'book', 20, true),
+  ('00000000-0000-0000-0000-0000000e0003', '00000000-0000-0000-0000-000000000058', 'Bút dễ thương', 25, 'Bút gel hình ngôi sao, mực xanh tím.', 'pen', 8, true),
+  ('00000000-0000-0000-0000-0000000e0004', '00000000-0000-0000-0000-000000000058', 'Huy hiệu phi hành gia', 30, 'Huy hiệu kim loại cài áo đồng phục.', 'badge', 12, true),
+  ('00000000-0000-0000-0000-0000000e0005', '00000000-0000-0000-0000-000000000058', 'Quà bí mật', 50, 'Một bất ngờ do cô Khanh chuẩn bị.', 'gift', 5, true);

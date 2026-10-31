@@ -30,13 +30,13 @@ export type RewardRequestView = {
 
 export async function getRewards(classId: string, opts: { includeHidden: boolean }): Promise<RewardView[]> {
   const supabase = await createServerSupabase()
+  let rewardsQuery = supabase
+    .from('rewards')
+    .select('id, name, cost, description, image_path, icon, stock, hidden')
+    .eq('class_id', classId)
+  if (!opts.includeHidden) rewardsQuery = rewardsQuery.eq('hidden', false)
   const [rewardsRes, heldRes] = await Promise.all([
-    supabase
-      .from('rewards')
-      .select('id, name, cost, description, image_path, icon, stock, hidden')
-      .eq('class_id', classId)
-      .order('cost')
-      .order('created_at'),
+    rewardsQuery.order('cost').order('created_at'),
     supabase.from('reward_requests').select('reward_id').eq('class_id', classId).eq('status', 'pending'),
   ])
   for (const r of [rewardsRes, heldRes]) if (r.error) throw new Error(r.error.message)

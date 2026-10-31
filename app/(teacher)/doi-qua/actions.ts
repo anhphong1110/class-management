@@ -13,6 +13,8 @@ type Result = { error?: string; message?: string }
 type Supabase = Awaited<ReturnType<typeof createServerSupabase>>
 
 // guid: `z.uuid()` của Zod 4 đòi đúng phiên bản RFC, còn id seed thì không có.
+/** Server Action chỉ nhận body tới 2 MB; ảnh lớn hơn phải được nén ở trình duyệt trước. */
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 const uuid = z.guid()
 const rewardInput = z.object({
   id: uuid.optional(),
@@ -56,7 +58,8 @@ export async function saveReward(
     refresh()
     return { id: data.id }
   }
-  const { data: before } = await supabase.from('rewards').select('image_path').eq('id', id).maybeSingle()
+  const { data: before, error: readError } = await supabase.from('rewards').select('image_path').eq('id', id).maybeSingle()
+  if (readError) throw new Error(readError.message)
   const patch: { name: string; cost: number; description: string; icon: string | null; image_path?: null } = {
     name, cost, description, icon,
   }
@@ -96,11 +99,13 @@ export async function uploadRewardImage(form: FormData): Promise<Result> {
   if (!id.success) return invalid()
   const file = form.get('file')
   if (!(file instanceof File)) return { error: toVietnameseMessage('unsupported_type') }
+  if (file.size > MAX_UPLOAD_BYTES) return { error: toVietnameseMessage('file_too_large') }
   const check = validateImageFile(file)
   if (!check.ok) return { error: toVietnameseMessage(check.error) }
 
   const supabase = await createServerSupabase()
-  const { data: reward } = await supabase.from('rewards').select('image_path').eq('id', id.data).maybeSingle()
+  const { data: reward, error: readError } = await supabase.from('rewards').select('image_path').eq('id', id.data).maybeSingle()
+  if (readError) throw new Error(readError.message)
   if (!reward) return { error: toVietnameseMessage('reward_not_found') }
 
   const path = `${user.classId}/rewards/${randomUUID()}.${IMAGE_EXT[file.type]}`
@@ -119,11 +124,12 @@ export async function uploadRewardImage(form: FormData): Promise<Result> {
 
 /** Tên học sinh và giá của yêu cầu, để ghép câu thông báo. */
 async function requestInfo(supabase: Supabase, id: string): Promise<{ name: string; cost: number } | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('reward_requests')
     .select('cost, students(full_name)')
     .eq('id', id)
     .maybeSingle()
+  if (error) throw new Error(error.message)
   if (!data) return null
   const student = data.students as unknown as { full_name: string } | null
   return { name: student?.full_name ?? '', cost: data.cost }
@@ -138,7 +144,7 @@ async function decide(
   if (!uuid.safeParse(id).success) return invalid()
   const supabase = await createServerSupabase()
   const info = await requestInfo(supabase, id)
-  if (!info) return { error: toVietnameseMessage('not_allowed') }
+  if (!info) return { error: toVietnameseMessage('already_processed') }
   const { error } = await supabase.rpc(rpcName, { p_request_id: id })
   if (error) return { error: toVietnameseMessage(error.message) }
   refresh()
