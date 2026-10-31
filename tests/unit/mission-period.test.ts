@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { MISSION_PERIOD_LABELS, missionPeriodKey } from '@/lib/missions/period'
+import type { NullableTermDates } from '@/lib/domain/period'
 
-const T = { term1Start: '2026-09-05', term1End: '2027-01-15', term2Start: '2027-01-18', term2End: '2027-05-31' }
-const key = (p: Parameters<typeof missionPeriodKey>[0], iso: string, terms = T) => missionPeriodKey(p, new Date(iso), terms)
+const T: NullableTermDates = { term1Start: '2026-09-05', term1End: '2027-01-15', term2Start: '2027-01-18', term2End: '2027-05-31' }
+const key = (p: Parameters<typeof missionPeriodKey>[0], iso: string, terms: NullableTermDates = T) => missionPeriodKey(p, new Date(iso), terms)
 
 describe('missionPeriodKey (khớp private.mission_period_key)', () => {
   it('day theo ngày Việt Nam', () => {
