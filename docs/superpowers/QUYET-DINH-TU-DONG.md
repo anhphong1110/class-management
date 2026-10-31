@@ -108,3 +108,46 @@ Kết quả: 401 test cơ sở dữ liệu, 194 unit test, 291 test trình duy�
 ### Việc để sang đợt sau
 49. **Đợt 5 phải sửa đầu tiên, trước khi có trang học sinh:** hiện học sinh đọc được ảnh của thông báo đã xóa và ảnh của quà đã ẩn, vì quyền đọc kho ảnh còn quá rộng.
 50. Danh sách đầy đủ: `docs/superpowers/plans/2026-11-01-dot-4-viec-chuyen-tiep.md`.
+
+## Đợt 5: Nhiệm vụ, Gọi tên, Trình chiếu, Cổng học sinh (xong, đã merge vào `main`)
+
+Kết quả: 557 test cơ sở dữ liệu, 265 unit test, 415/417 test trình duyệt trong lần chạy cả bộ (2 test bị quá giờ khi máy chạy nặng; chạy lại riêng 2 test này 8 lần đều đạt, đã nới thời gian chờ), kịch bản đua 12/12.
+
+### Quyền của học sinh
+51. **Ảnh trong kho chỉ đọc được khi được phép xem bài gốc.** Học sinh chỉ mở được ảnh của thông báo còn hiện và của quà chưa ẩn. Đây là việc phải sửa đầu tiên của đợt 5 (mục 49), giờ đã xong và có test.
+52. **Học sinh đã lưu trữ mất mọi quyền đọc qua API**, kể cả khi phiên đăng nhập cũ vẫn còn. Opus phát hiện điều này trong review cuối đợt.
+53. **Bảng xếp hạng cho học sinh chỉ có tên, avatar, sao và hạng.** Không có số thứ tự trong lớp. Học sinh không gọi được hàm xếp hạng theo khoảng ngày tùy ý (`leaderboard_between`), chỉ gọi được theo tên kỳ: tuần, tháng, học kỳ, năm.
+54. **Mỗi cờ "học sinh được xem …" chặn ở cả hai nơi:** trang ẩn và trả 404, và cơ sở dữ liệu cũng không trả dữ liệu. Riêng Đổi quà cần bật cả `feature_rewards` lẫn `student_can_view_rewards`. *Nếu sai:* cô tắt một cờ mà học sinh vẫn đọc được dữ liệu đó qua API.
+55. **`student_can_view_profile` chưa chặn gì cả.** Để đợt 6 quyết định cờ này dùng vào việc gì.
+
+### Nhiệm vụ & huy hiệu
+56. **Mỗi bạn hoàn thành một nhiệm vụ một lần trong mỗi kỳ.** Kỳ có thể là ngày, tuần (dạng `YYYY-Www`) hoặc học kỳ (dạng `T1-2026-2027`). Ghi lần thứ hai trong cùng kỳ thì báo "đã hoàn thành", không cộng sao lần nữa.
+57. **Hoàn thành nhiệm vụ và trao huy hiệu chỉ ghi qua hàm của cơ sở dữ liệu.** Hoàn tác sao của nhiệm vụ ở /thi-dua thì xóa luôn dòng hoàn thành, nên ghi nhận lại được. Huy hiệu trao nhầm thì bấm "Thu hồi".
+58. **Tắt tính năng nhiệm vụ thì học sinh không thấy nhiệm vụ lẫn huy hiệu.** Trang của cô vẫn dùng được bình thường.
+59. **Câu thành công tự đặt** (thiết kế không có): `Đã ghi nhận "<nhiệm vụ>" cho <tên>. Cộng N sao thi đua.`
+60. **Nhiệm vụ theo học kỳ dựa vào ngày học kỳ trong Cài đặt.** Mỗi năm học cô phải cập nhật các ngày này.
+
+### Gọi tên ngẫu nhiên
+61. **Danh sách "đã được gọi" chỉ lưu trên trình duyệt (sessionStorage) và tự xóa khi sang ngày mới.** Không lưu vào cơ sở dữ liệu.
+62. **Bạn chưa được điểm danh hôm nay vẫn được tính là có mặt.** Cô chưa điểm danh thì không loại ai. Đi trễ cũng tính là có mặt.
+63. **"+1 sao cho bạn này" chỉ bấm được một lần cho mỗi lượt quay.** Tắt tính năng thì máy chủ từ chối cộng sao.
+
+### Trình chiếu
+64. **Bỏ dòng chú thích cuối trong thiết kế** vì dòng đó có chữ "điểm danh", mà trang trình chiếu không được hiện điểm danh.
+65. **"Tự động chuyển khối" mặc định tắt.** Khi bật, cứ 15 giây tô một khối. Trang tự làm mới mỗi 5 phút, nên để qua đêm thì "Hôm nay học gì?" tự đổi theo ngày mới.
+66. **Câu tự đặt:** "Tuần này chưa có sao thi đua.", "Hôm nay không có tiết học.", nhãn "Chiều · Tiết n".
+
+### Cổng học sinh
+67. **Thêm chọn avatar** (thiết kế không có). Bấm avatar ở Trang chủ, mở hộp "Chọn avatar của em", chọn rồi bấm "Lưu avatar". Chỉ hiện khi `student_can_change_avatar` bật; cơ sở dữ liệu cũng kiểm lại cờ này.
+68. **Mọi câu "cô Khanh" trong thiết kế đổi thành "cô giáo"** để năm sau dùng cho lớp khác.
+69. **Tắt quyền xem xếp hạng thì ô "Thứ hạng" ở Trang chủ ẩn đi**, chỉ còn 2 ô.
+70. **Điểm danh của em hiện 10 ngày gần nhất.**
+71. **Khi "Cần cô duyệt" tắt, yêu cầu đổi quà được duyệt ngay.** Câu báo nói đã đổi xong, không còn ghi "chờ cô duyệt".
+72. **Ở chế độ xem thử, cô thấy dữ liệu của học sinh đầu tiên.** Mọi nút gửi đều bị khóa.
+73. **Những câu khác do tôi tự đặt** cho trạng thái trống và thông báo xem thử. Danh sách đầy đủ ở `docs/superpowers/plans/2026-11-01-dot-5-ghi-chu.md`.
+
+### Việc để sang đợt sau
+74. Danh sách đầy đủ ở `docs/superpowers/plans/2026-11-01-dot-5-viec-chuyen-tiep.md`. Những mục chính:
+    - gom tên "TRẠM KHÔNG GIAN NĂM 8" vào một chỗ để đổi được theo lớp;
+    - thứ tự xóa khi "Xóa dữ liệu demo";
+    - quyết định cờ `student_can_view_profile`.
