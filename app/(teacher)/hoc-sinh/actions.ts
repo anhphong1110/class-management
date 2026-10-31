@@ -6,6 +6,9 @@ import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { toVietnameseMessage } from '@/lib/errors'
 import { formatDayLabel } from '@/lib/domain/relative-time'
+import { classShortName } from '@/lib/classes/short-name'
+import { buildStudentWorkbook, exportFileName } from '@/lib/students/export'
+import { getStudentCards } from '@/lib/students/queries'
 import { groupBatches, type TxRow } from '@/lib/stars/history'
 
 type Result = { error?: string }
@@ -61,6 +64,46 @@ export async function createStudent(input: { fullName: string; rollNo: number | 
     if (error.code !== '23505') return { error: toVietnameseMessage('unknown') }
   }
   return { error: toVietnameseMessage('unknown') }
+}
+
+const importInput = z
+  .array(z.object({ rollNo: rollNo.nullable(), fullName: name, code: z.string().trim().max(200).nullable() }))
+  .min(1, 'invalid_rows')
+  .max(500, 'invalid_rows')
+
+export async function importStudents(rows: { rollNo: number | null; fullName: string; code: string | null }[]): Promise<{ error?: string; created?: number }> {
+  await requireTeacher()
+  const parsed = importInput.safeParse(rows)
+  if (!parsed.success) return { error: toVietnameseMessage(parsed.error.issues[0]?.message === 'invalid_rows' ? 'invalid_rows' : 'name_required') }
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase.rpc('import_students', {
+    p_rows: parsed.data.map((r) => ({ roll_no: r.rollNo, full_name: r.fullName, code: r.code || null })),
+  })
+  if (error) return { error: toVietnameseMessage(error.code === '23505' ? 'import_conflict' : error.message) }
+  refresh()
+  return { created: Number(data) }
+}
+
+export async function exportStudents(): Promise<{ error?: string; fileName?: string; base64?: string }> {
+  const user = await requireTeacher()
+  const supabase = await createServerSupabase()
+  const [{ data: cls, error }, students] = await Promise.all([
+    supabase.from('classes').select('class_name').eq('id', user.classId).single(),
+    getStudentCards(user.classId),
+  ])
+  if (error || !cls) return { error: toVietnameseMessage('unknown') }
+  const sorted = [...students].sort((a, b) => a.rollNo - b.rollNo)
+  const buf = buildStudentWorkbook(
+    sorted.map((s) => ({
+      code: s.code,
+      rollNo: s.rollNo,
+      fullName: s.fullName,
+      groupName: s.groupName ?? '',
+      competition: s.competition,
+      available: s.available,
+    })),
+  )
+  return { fileName: exportFileName(classShortName(cls.class_name)), base64: Buffer.from(buf).toString('base64') }
 }
 
 export async function updateStudent(input: { id: string; fullName: string; rollNo: number }): Promise<Result> {

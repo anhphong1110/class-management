@@ -8,8 +8,9 @@ import { Notice } from '@/components/ui/Notice'
 import { givenNameKey, matchesSearch } from '@/lib/domain/vn-text'
 import type { StarGroup } from '@/lib/stars/queries'
 import type { StudentCard, TodayStatus } from '@/lib/students/queries'
-import { archiveStudent, loadProfile, type ProfileDetail } from './actions'
+import { archiveStudent, exportStudents, loadProfile, type ProfileDetail } from './actions'
 import { GroupsView } from './GroupsView'
+import { ImportDialog } from './ImportDialog'
 import { ProfilePanel } from './ProfilePanel'
 import { StudentForm, type EditTarget } from './StudentForm'
 
@@ -62,6 +63,9 @@ export function StudentsClient({ students, groups }: { students: StudentCard[]; 
   const [form, setForm] = useState<{ open: boolean; student: EditTarget | null }>({ open: false, student: null })
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [exporting, startExport] = useTransition()
   const [pending, startTransition] = useTransition()
 
   const list = useMemo(() => {
@@ -75,6 +79,7 @@ export function StudentsClient({ students, groups }: { students: StudentCard[]; 
     return out
   }, [students, q, sort, filter])
 
+  const existingCodes = useMemo(() => new Set(students.map((s) => s.code)), [students])
   const sel = students.find((s) => s.id === selId) ?? null
 
   useEffect(() => {
@@ -101,6 +106,27 @@ export function StudentsClient({ students, groups }: { students: StudentCard[]; 
         setSelId(null)
         setError('')
       }
+    })
+  }
+
+  function exportFile() {
+    setError('')
+    setNotice('')
+    startExport(async () => {
+      const res = await exportStudents()
+      if (res.error || !res.base64 || !res.fileName) {
+        setError(res.error ?? 'Có lỗi xảy ra, vui lòng thử lại.')
+        return
+      }
+      const bytes = Uint8Array.from(atob(res.base64), (c) => c.charCodeAt(0))
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = res.fileName
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
     })
   }
 
@@ -145,11 +171,17 @@ export function StudentsClient({ students, groups }: { students: StudentCard[]; 
             >
               + Thêm học sinh
             </button>
-            {/* Nối ở Task 10. */}
-            <button type="button" disabled className={ghostBtn}>
+            <button
+              type="button"
+              onClick={() => {
+                setNotice('')
+                setImporting(true)
+              }}
+              className={ghostBtn}
+            >
               Nhập Excel / CSV
             </button>
-            <button type="button" disabled className={ghostBtn}>
+            <button type="button" onClick={exportFile} disabled={exporting} className={ghostBtn}>
               Xuất Excel
             </button>
           </div>
@@ -186,6 +218,7 @@ export function StudentsClient({ students, groups }: { students: StudentCard[]; 
       </div>
 
       {error && !confirming && <Notice tone="error">{error}</Notice>}
+      {notice && <Notice tone="success">{notice}</Notice>}
 
       {view === 'groups' && <GroupsView students={students} groups={groups} />}
 
@@ -243,6 +276,15 @@ export function StudentsClient({ students, groups }: { students: StudentCard[]; 
         </div>
       )}
 
+      <ImportDialog
+        open={importing}
+        existingCodes={existingCodes}
+        onClose={() => setImporting(false)}
+        onDone={(n) => {
+          setImporting(false)
+          setNotice(`Đã thêm ${n} học sinh.`)
+        }}
+      />
       <StudentForm open={form.open} student={form.student} onClose={() => setForm({ open: false, student: null })} />
 
       <Modal open={confirming && !!sel} onClose={() => setConfirming(false)} title="Lưu trữ học sinh?">

@@ -20,6 +20,9 @@ const MESSAGES: Record<string, string> = {
   group_name_required: 'Cô hãy nhập tên tổ.',
   not_in_group: 'Học sinh này chưa ở tổ nào.',
   group_not_empty: 'Tổ còn thành viên, cô chuyển các bạn sang tổ khác trước nhé.',
+  missing_name_column: 'File thiếu cột "Họ và tên". Cô tải file mẫu để xem cách điền nhé.',
+  import_conflict: 'Có mã học sinh bị trùng với học sinh đã có, cô kiểm tra lại file nhé.',
+  invalid_rows: 'Danh sách nhập không hợp lệ (tối đa 500 dòng).',
   insufficient_stars: 'Không đủ sao khả dụng.',
 }
 
