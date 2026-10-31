@@ -59,7 +59,7 @@ test('đường dẫn cần đăng nhập rồi quay lại', async ({ page }) =>
   await expect(page).toHaveURL(/\/thoi-khoa-bieu$/)
 })
 
-for (const bad of ['//evil.com', 'https://evil.com', '/\\evil.com', '/\t/evil.com', '/\n/evil.com']) {
+for (const bad of ['//evil.com', 'https://evil.com', '/\\evil.com', '/\t/evil.com', '/\n/evil.com', '/.//evil.com']) {
   test(`next không an toàn bị bỏ qua: ${bad}`, async ({ page }) => {
     await page.goto(`/dang-nhap?next=${encodeURIComponent(bad)}`)
     await fill(page, 'Giáo viên', 'co.khanh', pw('co.khanh'))
