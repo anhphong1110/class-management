@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // chỉ chọn class_name của lớp chưa lưu trữ đầu tiên, không đọc gì khác.
     const { data } = await createAdminSupabase()
       .from("classes")
-      .select("class_name")
+      .select("class_name, brand_title")
       .is("archived_at", null)
       .order("created_at", { ascending: true })
       .limit(1)

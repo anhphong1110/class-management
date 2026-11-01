@@ -3,7 +3,7 @@ import { schoolLabel } from '@/lib/classes/brand'
 import Image from 'next/image'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { toVietnameseMessage } from '@/lib/errors'
-import { brandLines } from '@/lib/classes/brand'
+import { brandSentence } from '@/lib/classes/brand'
 import { themeVars } from '@/lib/domain/theme'
 import LoginForm from './LoginForm'
 
@@ -13,7 +13,7 @@ async function loadClass() {
   const admin = createAdminSupabase()
   const { data } = await admin
     .from('classes')
-    .select('id, school_name, class_name, teacher_name, slogan, theme, logo_path')
+    .select('id, school_name, class_name, brand_title, teacher_name, slogan, theme, logo_path')
     .is('archived_at', null)
     .order('created_at', { ascending: true })
     .limit(1)
@@ -39,7 +39,9 @@ export default async function LoginPage({
   const school = cls?.school_name || 'Tiểu học Chính Nghĩa'
   const className = cls?.class_name ?? ''
   const teacher = cls?.teacher_name ?? ''
-  const brand = brandLines({ class_name: className })
+  // Tiêu đề hai dòng: "Trạm không gian" / "Năm N" (hoặc một dòng nếu tên cô đặt không có tiền tố này).
+  const sentence = brandSentence({ class_name: className, brand_title: cls?.brand_title })
+  const brandParts = /^(trạm không gian)\s+(.+)$/iu.exec(sentence)
   const slogan = cls?.slogan || 'Cùng học – Cùng chơi – Cùng tỏa sáng'
   const initialError =
     sp.error === 'no_profile' || sp.error === 'class_archived' || sp.error === 'account_banned'
@@ -97,11 +99,11 @@ export default async function LoginPage({
           />
         </div>
         <h1 className="m-0 font-display text-[46px] font-extrabold leading-[1.05]">
-          Trạm không gian
-          {brand.accent && (
+          {brandParts ? brandParts[1] : sentence}
+          {brandParts && (
             <>
               <br />
-              {`Năm ${brand.accent.slice(4)}`}
+              {brandParts[2]}
             </>
           )}
         </h1>

@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation'
 import { brandLines, schoolLabel } from '@/lib/classes/brand'
 import { STUDENT_NAV, type StudentPageId } from '@/lib/student/flags'
 
-export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, schoolName }: { pages: StudentPageId[]; classLogoUrl: string | null; schoolLogoUrl?: string | null; className: string; schoolName?: string | null }) {
-  const brand = brandLines({ class_name: className })
+export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, brandName, schoolName }: { pages: StudentPageId[]; classLogoUrl: string | null; schoolLogoUrl?: string | null; className: string; brandName?: string | null; schoolName?: string | null }) {
+  const brand = brandLines({ class_name: className, brand_title: brandName })
   const pathname = usePathname()
   const items = STUDENT_NAV.filter((n) => pages.includes(n.id))
   const activeId = items.find((n) => (n.href === '/em' ? pathname === '/em' : pathname === n.href || pathname.startsWith(n.href + '/')))?.id

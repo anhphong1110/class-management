@@ -2,11 +2,14 @@
 
 import { useCallback, useRef, useState, useTransition } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
+import { Button } from '@/components/ui/Button'
+import { Modal } from '@/components/ui/Modal'
+import { Notice } from '@/components/ui/Notice'
 import { RewardVisual } from '@/components/rewards/RewardVisual'
 import { formatRelative } from '@/lib/domain/relative-time'
 import type { RewardRequestView, RewardView } from '@/lib/rewards/queries'
 import { STAT } from '@/lib/rewards/status'
-import { approveRequest, deliverRequest, rejectRequest, setRewardHidden } from './actions'
+import { approveRequest, deleteReward, deliverRequest, rejectRequest, setRewardHidden } from './actions'
 import { RewardEditor } from './RewardEditor'
 
 type Editing = { kind: 'new' } | { kind: 'edit'; id: string } | null
@@ -24,6 +27,9 @@ export function RewardsClient({
   const [editing, setEditing] = useState<Editing>(null)
   const [msg, setMsg] = useState<Msg>(null)
   const [busy, setBusy] = useState<Set<string>>(new Set())
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null)
+  const [deleteError, setDeleteError] = useState('')
+  const [deletePending, startDelete] = useTransition()
   const inflight = useRef(new Set<string>())
   const [, startTransition] = useTransition()
   const trigger = useRef<HTMLElement | null>(null)
@@ -39,6 +45,19 @@ export function RewardsClient({
 
   const editingReward = editing?.kind === 'edit' ? (rewards.find((r) => r.id === editing.id) ?? null) : null
   const pendingCount = requests.filter((q) => q.status === 'pending').length
+
+  function confirmDelete() {
+    if (!deleting) return
+    startDelete(async () => {
+      const res = await deleteReward(deleting.id)
+      if (res.error) setDeleteError(res.error)
+      else {
+        if (editing?.kind === 'edit' && editing.id === deleting.id) closeEditor()
+        setDeleting(null)
+        setMsg({ tone: 'success', text: res.message ?? 'Đã xóa phần thưởng.' })
+      }
+    })
+  }
 
   function run(key: string, task: () => Promise<{ error?: string; message?: string }>) {
     if (inflight.current.has(key)) return
@@ -136,6 +155,16 @@ export function RewardsClient({
                 >
                   {w.hidden ? 'Hiện' : 'Ẩn'}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteError('')
+                    setDeleting({ id: w.id, name: w.name })
+                  }}
+                  className="min-h-11 flex-1 cursor-pointer rounded-xl border-[1.5px] border-[#F3B8C6] bg-white text-sm font-extrabold text-[#8E1B3B]"
+                >
+                  Xóa
+                </button>
               </div>
             </div>
           )
@@ -222,6 +251,21 @@ export function RewardsClient({
           </div>
         </div>
       </section>
+
+      <Modal open={!!deleting} onClose={() => setDeleting(null)} title="Xóa phần thưởng?">
+        <p className="mb-4 text-[15px] font-semibold text-[#4A476E]">
+          {deleting?.name} sẽ bị xóa hẳn khỏi trạm đổi quà. Quà đã có học sinh đổi thì không xóa được; khi đó cô dùng nút Ẩn nhé.
+        </p>
+        {deleteError && <Notice tone="error">{deleteError}</Notice>}
+        <div className="mt-3 flex flex-wrap justify-end gap-2.5">
+          <Button variant="secondary" onClick={() => setDeleting(null)} disabled={deletePending}>
+            Hủy
+          </Button>
+          <Button variant="danger" onClick={confirmDelete} disabled={deletePending}>
+            Xóa vĩnh viễn
+          </Button>
+        </div>
+      </Modal>
     </>
   )
 }

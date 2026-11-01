@@ -26,12 +26,27 @@ describe('addStep / removeStep', () => {
 describe('infoPayload', () => {
   it('ô ngày trống thành null, chuỗi giữ nguyên', () => {
     const p = infoPayload({
-      school_name: 'A', class_name: 'B', school_year: 'C', teacher_name: 'D', slogan: '',
+      school_name: 'A', class_name: 'B', brand_title: '', school_year: 'C', teacher_name: 'D', slogan: '',
       term1_start: '2026-09-05', term1_end: '', term2_start: '', term2_end: '2027-05-31',
     })
     expect(p.term1_end).toBeNull()
     expect(p.term2_start).toBeNull()
     expect(p.term1_start).toBe('2026-09-05')
     expect(p.slogan).toBe('')
+  })
+})
+
+describe('infoPayload brand_title', () => {
+  const base = {
+    school_name: 'A', class_name: 'Năm 8 (5/8)', school_year: 'C', teacher_name: 'D', slogan: '',
+    term1_start: '', term1_end: '', term2_start: '', term2_end: '',
+  }
+  it('gửi brand_title cô gõ', () => {
+    expect(infoPayload({ ...base, brand_title: 'Trạm không gian Năm 9' }).brand_title).toBe('Trạm không gian Năm 9')
+  })
+  it('ô trống vẫn được gửi (chuỗi rỗng) để cô bỏ tên tự đặt', () => {
+    const p = infoPayload({ ...base, brand_title: '' })
+    expect('brand_title' in p).toBe(true)
+    expect(p.brand_title).toBe('')
   })
 })

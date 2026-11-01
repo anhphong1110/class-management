@@ -20,6 +20,8 @@ describe('toVietnameseMessage', () => {
     ['already_reversed', 'Bản ghi này đã được hoàn tác.'],
     ['insufficient_stars', 'Không đủ sao khả dụng.'],
     ['reward_not_found', 'Quà này không còn trong trạm.'],
+    ['student_account_left', 'Đã xóa học sinh nhưng chưa xóa được tài khoản đăng nhập của em. Cô báo người quản trị hệ thống nhé.'],
+    ['reward_has_requests', 'Quà này đã có lịch sử đổi nên không xóa được. Cô dùng nút Ẩn để quà không còn hiện nữa nhé.'],
     ['out_of_stock', 'Quà này đã hết.'],
     ['weekly_limit', 'Em đã đổi đủ số lượt trong tuần này.'],
     ['already_processed', 'Yêu cầu này đã được xử lý.'],

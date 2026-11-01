@@ -5,10 +5,14 @@ import type { ThemeKey } from '@/lib/domain/theme'
 export type SettingsClass = {
   school_name: string
   class_name: string
+  brand_title: string | null
   school_year: string
   teacher_name: string
   slogan: string
   theme: ThemeKey
+  logo_path: string | null
+  class_logo_path: string | null
+  cover_path: string | null
   term1_start: string | null
   term1_end: string | null
   term2_start: string | null
@@ -37,7 +41,7 @@ export type SettingsFlags = {
 
 export type SettingsData = { cls: SettingsClass; settings: SettingsFlags; saturdaySlots: number }
 
-const CLASS_COLUMNS = 'school_name, class_name, school_year, teacher_name, slogan, theme, term1_start, term1_end, term2_start, term2_end'
+const CLASS_COLUMNS = 'school_name, class_name, brand_title, school_year, teacher_name, slogan, theme, logo_path, class_logo_path, cover_path, term1_start, term1_end, term2_start, term2_end'
 const SETTINGS_COLUMNS =
   'require_approval, reserve_on_request, only_enough, feature_missions, feature_random, feature_display, feature_rewards, student_can_view_profile, student_can_view_history, student_can_view_rank, student_can_view_rewards, student_can_view_timetable, student_can_view_news, student_can_view_attendance, timetable_saturday, weekly_redeem_limit, star_steps'
 

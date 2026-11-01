@@ -30,7 +30,7 @@ export default async function Page() {
   return (
     <DisplayClient
       data={{ ...data, cls: { ...data.cls, className: classShortName(data.cls.className) } }}
-      brand={brandLines({ class_name: data.cls.className })}
+      brand={brandLines({ class_name: data.cls.className, brand_title: data.cls.brandTitle })}
     />
   )
 }

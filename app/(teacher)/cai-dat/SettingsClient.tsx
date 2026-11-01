@@ -13,7 +13,7 @@ import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { addStep, infoPayload, parseStepInput, removeStep, type InfoValues } from '@/lib/settings/form'
 import type { SettingsClass, SettingsData, SettingsFlags } from '@/lib/settings/queries'
-import { saveClassInfo, saveClassSettings, setSaturday, uploadBranding } from './actions'
+import { clearBranding, saveClassInfo, saveClassSettings, setSaturday, uploadBranding } from './actions'
 
 type Msg = { tone: 'success' | 'error'; text: string }
 type FlagKey = { [K in keyof SettingsFlags]: SettingsFlags[K] extends boolean ? K : never }[keyof SettingsFlags]
@@ -31,6 +31,7 @@ const input =
 const INFO_FIELDS: [keyof InfoValues, string][] = [
   ['school_name', 'Tên trường'],
   ['class_name', 'Tên lớp'],
+  ['brand_title', 'Tên trạm (chủ đề của lớp)'],
   ['school_year', 'Năm học'],
   ['teacher_name', 'Giáo viên chủ nhiệm'],
   ['slogan', 'Slogan'],
@@ -46,6 +47,11 @@ const UPLOADS: [UploadKind, string, string, number][] = [
   ['class_logo_path', 'Tải lên logo lớp', 'upload-class-logo', 512],
   ['cover_path', 'Tải lên ảnh bìa lớp', 'upload-cover', 1600],
 ]
+const CLEAR_LABELS: Record<UploadKind, string> = {
+  logo_path: 'Gỡ logo trường',
+  class_logo_path: 'Gỡ logo lớp',
+  cover_path: 'Gỡ ảnh bìa lớp',
+}
 const RULES: [FlagKey, string, string][] = [
   ['require_approval', 'Giáo viên duyệt mọi yêu cầu đổi quà', 'Tắt thì học sinh đổi quà xong là trừ sao ngay'],
   ['reserve_on_request', 'Giữ trước sao và quà khi gửi yêu cầu', 'Tránh bán vượt số lượng quà'],
@@ -71,6 +77,7 @@ function toInfo(c: SettingsClass): InfoValues {
   return {
     school_name: c.school_name,
     class_name: c.class_name,
+    brand_title: c.brand_title ?? '',
     school_year: c.school_year,
     teacher_name: c.teacher_name,
     slogan: c.slogan,
@@ -236,6 +243,14 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
     })
   }
 
+  function onClear(kind: UploadKind) {
+    startTransition(async () => {
+      const res = await call(() => clearBranding(kind))
+      if (res.error) fail(res.error)
+      else ok()
+    })
+  }
+
   const switchRow = (key: FlagKey, label: string, hint?: string) => (
     <div key={key} className={row}>
       <Switch checked={s[key]} onChange={(next) => flip(key, next)} label={label} hint={hint} disabled={pending} />
@@ -258,6 +273,8 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
                 type="text"
                 value={vals[k]}
                 disabled={pending}
+                maxLength={k === 'brand_title' ? 60 : undefined}
+                placeholder={k === 'brand_title' ? 'Để trống: tự lấy từ tên lớp, vd Trạm không gian Năm 8' : undefined}
                 onChange={(e) => setVals({ ...vals, [k]: e.target.value })}
                 className={input}
               />
@@ -326,6 +343,16 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
                 </svg>
                 {label}
               </button>
+              {cls[kind] && (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => onClear(kind)}
+                  className="mt-2 min-h-11 w-full cursor-pointer rounded-xl border-[1.5px] border-[#F3B8C6] bg-white text-sm font-extrabold text-[#8E1B3B] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {CLEAR_LABELS[kind]}
+                </button>
+              )}
             </div>
           ))}
         </div>

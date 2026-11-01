@@ -125,7 +125,7 @@ export default async function Page() {
     <>
       <Header title="Tổng quan" subtitle={`Trạm chỉ huy của lớp ${info.short}`} />
       <div className="flex flex-col gap-5">
-        <Hero greeting={teacherGreetingName(data.teacherName)} coverUrl={data.coverUrl} brand={brandSentence({ class_name: info.className })} />
+        <Hero greeting={teacherGreetingName(data.teacherName)} coverUrl={data.coverUrl} brand={brandSentence({ class_name: info.className, brand_title: info.brandTitle })} />
 
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))' }}>
           {data.stats.map((st, i) => (
