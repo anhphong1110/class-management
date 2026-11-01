@@ -63,6 +63,7 @@ const MESSAGES: Record<string, string> = {
   use_archive_student: 'Cô lưu trữ học sinh bằng nút "Lưu trữ" nhé.',
   completion_not_found: 'Không tìm thấy lượt hoàn thành này.',
   invalid_range: 'Khoảng ngày chưa hợp lệ: ngày bắt đầu không được sau ngày kết thúc, tối đa 400 ngày.',
+  invalid_backup: 'File sao lưu không hợp lệ.',
   before_school_year: 'Ngày này trước khi năm học bắt đầu.',
 }
 

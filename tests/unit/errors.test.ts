@@ -47,6 +47,7 @@ describe('toVietnameseMessage', () => {
     ['use_archive_student', 'Cô lưu trữ học sinh bằng nút "Lưu trữ" nhé.'],
     ['completion_not_found', 'Không tìm thấy lượt hoàn thành này.'],
     ['before_school_year', 'Ngày này trước khi năm học bắt đầu.'],
+    ['invalid_backup', 'File sao lưu không hợp lệ.'],
     ['khong_biet', 'Có lỗi xảy ra, vui lòng thử lại.'],
   ]
   it.each(cases)('%s', (key, msg) => {
