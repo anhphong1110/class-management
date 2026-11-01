@@ -164,7 +164,7 @@ test('không hoàn tác được lượt cộng khi sao đang được giữ cho
   await open(page)
   await history(page).getByRole('button', { name: 'Hoàn tác' }).first().click()
   await page.getByRole('dialog').getByRole('button', { name: 'Đồng ý hoàn tác' }).click()
-  await expect(page.getByText('Không thể hoàn tác vì Võ Hà My không đủ sao khả dụng.')).toBeVisible()
+  await expect(page.getByText('Không hoàn tác được: một phần sao đang được giữ cho yêu cầu đổi quà.')).toBeVisible()
   const { data: tx } = await admin().from('star_transactions').select('kind, delta').eq('student_id', sid(5))
   expect(tx!.filter((t) => t.kind === 'reversal')).toHaveLength(0)
   const competition = tx!.filter((t) => ['award', 'penalty', 'reversal'].includes(t.kind)).reduce((n, t) => n + t.delta, 0)

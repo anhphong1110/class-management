@@ -9,7 +9,7 @@ import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
 import { THEMES, type ThemeKey } from '@/lib/domain/theme'
-import { validateImageFile } from '@/lib/domain/upload'
+import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { addStep, infoPayload, parseStepInput, removeStep, type InfoValues } from '@/lib/settings/form'
 import type { SettingsClass, SettingsData, SettingsFlags } from '@/lib/settings/queries'
@@ -218,7 +218,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
     startTransition(async () => {
       try {
         const small = await compressImage(file, maxSide)
-        const recheck = validateImageFile(small)
+        const recheck = validateImageFile(small, MAX_UPLOAD_BYTES)
         if (!recheck.ok) {
           fail(toVietnameseMessage(recheck.error))
         } else {

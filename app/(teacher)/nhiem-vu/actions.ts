@@ -85,6 +85,16 @@ export async function completeMission(missionId: string, studentId: string): Pro
   return {}
 }
 
+export async function undoMissionCompletion(completionId: string): Promise<Result> {
+  await requireTeacher()
+  if (!uuid.safeParse(completionId).success) return { error: toVietnameseMessage('completion_not_found') }
+  const supabase = await createServerSupabase()
+  const { error } = await supabase.rpc('undo_mission_completion', { p_completion_id: completionId })
+  if (error) return { error: toVietnameseMessage(error.message) }
+  refresh()
+  return {}
+}
+
 export async function awardBadge(badgeId: string, studentId: string): Promise<Result> {
   await requireTeacher()
   if (!uuid.safeParse(badgeId).success || !uuid.safeParse(studentId).success) return invalid()

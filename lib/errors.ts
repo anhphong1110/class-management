@@ -15,7 +15,7 @@ const MESSAGES: Record<string, string> = {
   avatar_not_allowed: 'Cô chưa bật quyền tự đổi avatar.',
   avatar_not_found: 'Avatar này không còn trong thư viện.',
   not_allowed: 'Bạn không có quyền làm việc này.',
-  file_too_large: 'Ảnh lớn hơn 5 MB, cô chọn ảnh nhỏ hơn nhé.',
+  file_too_large: 'Ảnh lớn hơn 2 MB, cô chọn ảnh nhỏ hơn nhé.',
   upload_failed: 'Chưa tải được ảnh lên, cô thử lại nhé.',
   unsupported_type: 'Chỉ nhận ảnh JPG, PNG hoặc WEBP.',
   no_students: 'Cô hãy chọn ít nhất một học sinh.',
@@ -55,6 +55,7 @@ const MESSAGES: Record<string, string> = {
   mission_not_found: 'Nhiệm vụ này không còn nữa.',
   badge_not_found: 'Huy hiệu này không còn nữa.',
   invalid_input: 'Thông tin chưa hợp lệ, cô kiểm tra lại nhé.',
+  invalid_input_student: 'Có lỗi nhỏ, em tải lại trang rồi thử lại nhé.',
   invalid_term_dates: 'Ngày học kỳ chưa hợp lý. Cô kiểm tra lại thứ tự các ngày nhé.',
   invalid_redeem_limit: 'Số lượt đổi quà mỗi tuần phải từ 1 đến 20.',
   invalid_star_steps: 'Mức sao phải là số từ 1 đến 50, không trùng, tối đa 8 mức.',
@@ -66,6 +67,7 @@ const MESSAGES: Record<string, string> = {
   invalid_backup: 'File sao lưu không hợp lệ.',
   stale_class: 'Năm học vừa thay đổi, cô tải lại trang nhé.',
   demo_accounts_left: 'Đã xóa dữ liệu demo nhưng chưa xóa hết tài khoản đăng nhập của các bạn mẫu. Cô báo người quản trị hệ thống nhé.',
+  class_list_changed: 'Danh sách lớp vừa thay đổi, cô tải lại trang nhé.',
   before_school_year: 'Ngày này trước khi năm học bắt đầu.',
 }
 

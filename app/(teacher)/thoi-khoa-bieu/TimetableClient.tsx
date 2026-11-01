@@ -287,7 +287,7 @@ export function TimetableClient({
                   onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                   onBlur={(e) => {
                     const input = e.currentTarget
-                    const v = input.value.trim()
+                    const v = input.value.normalize('NFC').trim()
                     if (v === s.name) return
                     // Giữ chữ cô vừa gõ trong lúc lưu; chỉ trả về tên cũ khi lỗi.
                     // Khi lưu được, `key` đổi theo tên mới và ô dựng lại.

@@ -37,7 +37,11 @@ export async function saveAttendance(
     p_date: d.data,
     p_rows: r.data.map((x) => ({ student_id: x.studentId, status: x.status })),
   })
-  if (error) return { error: toVietnameseMessage(error.message === 'invalid_rows' ? 'invalid_input' : error.message) }
+  if (error) {
+    // student_not_found: một bạn trong danh sách đã chuyển/lưu trữ khi cô đang điểm danh.
+    const key = error.message === 'invalid_rows' ? 'invalid_input' : error.message === 'student_not_found' ? 'class_list_changed' : error.message
+    return { error: toVietnameseMessage(key) }
+  }
   revalidatePath('/diem-danh')
   revalidatePath('/tong-quan')
   revalidatePath('/hoc-sinh')

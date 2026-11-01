@@ -11,7 +11,7 @@ const avatarInput = z.guid()
 export async function saveMyAvatar(avatarId: string): Promise<{ error?: string }> {
   await requireStudent()
   const parsed = avatarInput.safeParse(avatarId)
-  if (!parsed.success) return { error: toVietnameseMessage('invalid_input') }
+  if (!parsed.success) return { error: toVietnameseMessage('invalid_input_student') }
   const supabase = await createServerSupabase()
   const { error } = await supabase.rpc('set_my_avatar', { p_avatar_id: parsed.data })
   if (error) return { error: toVietnameseMessage(error.message) }

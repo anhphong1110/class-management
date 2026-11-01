@@ -6,6 +6,7 @@ import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { toVietnameseMessage } from '@/lib/errors'
 import { joinNames } from '@/lib/domain/names'
+import { allBlockedByReservation } from '@/lib/stars/undo'
 
 type Result = { error?: string; message?: string }
 
@@ -88,6 +89,26 @@ export async function penalizeStars(input: {
   return change('penalize_stars', input)
 }
 
+/** Các bạn thiếu sao để hoàn tác có thiếu chỉ vì sao đang được giữ cho yêu cầu đổi quà đang chờ không. */
+async function shortOnlyBecauseOfHold(supabase: Supabase, batchId: string, studentIds: string[]): Promise<boolean> {
+  if (!studentIds.length) return false
+  const [ledgerRes, pendingRes] = await Promise.all([
+    supabase.from('star_transactions').select('student_id, delta, kind, batch_id, reward_request_id').in('student_id', studentIds),
+    supabase.from('reward_requests').select('id').in('student_id', studentIds).eq('status', 'pending'),
+  ])
+  for (const r of [ledgerRes, pendingRes]) if (r.error) throw new Error(r.error.message)
+  const pending = new Set((pendingRes.data ?? []).map((r) => r.id))
+  const per = new Map(studentIds.map((id) => [id, { available: 0, held: 0, needed: 0 }]))
+  for (const t of ledgerRes.data ?? []) {
+    const p = per.get(t.student_id)
+    if (!p) continue
+    p.available += t.delta
+    if (t.kind === 'reserve' && t.reward_request_id && pending.has(t.reward_request_id)) p.held -= t.delta
+    if (t.kind === 'award' && t.batch_id === batchId) p.needed += t.delta
+  }
+  return allBlockedByReservation([...per.values()])
+}
+
 export async function undoBatch(batchId: string): Promise<Result> {
   await requireTeacher()
   if (!uuid.safeParse(batchId).success) return { error: toVietnameseMessage('batch_not_found') }
@@ -95,7 +116,11 @@ export async function undoBatch(batchId: string): Promise<Result> {
   const { error } = await supabase.rpc('reverse_batch', { p_batch_id: batchId })
   if (error) {
     if (error.message === 'insufficient_stars') {
-      const names = await namesOf(supabase, (error.details ?? '').split(','))
+      const shortIds = (error.details ?? '').split(',').filter((i) => uuid.safeParse(i).success)
+      if (await shortOnlyBecauseOfHold(supabase, batchId, shortIds)) {
+        return { error: 'Không hoàn tác được: một phần sao đang được giữ cho yêu cầu đổi quà.' }
+      }
+      const names = await namesOf(supabase, shortIds)
       return {
         error: names.length
           ? `Không thể hoàn tác vì ${joinNames(names)} không đủ sao khả dụng.`

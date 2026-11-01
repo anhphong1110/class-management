@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
-import { validateImageFile } from '@/lib/domain/upload'
+import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { saveAvatar, setStudentCanChangeAvatar, uploadAvatar, type AvatarTarget } from './actions'
 
@@ -64,6 +64,12 @@ export function ProfileClient({
     startTransition(async () => {
       try {
         const small = await compressImage(file)
+        const recheck = validateImageFile(small, MAX_UPLOAD_BYTES)
+        if (!recheck.ok) {
+          setMsg({ tone: 'error', text: toVietnameseMessage(recheck.error) })
+          if (fileRef.current) fileRef.current.value = ''
+          return
+        }
         const form = new FormData()
         form.set('file', small)
         form.set('label', file.name.replace(/\.[^.]+$/, ''))

@@ -17,6 +17,7 @@ export async function getDay(classId: string, date: string): Promise<Record<stri
     .eq('class_id', classId)
     .eq('date', date)
     .is('students.archived_at', null)
+    .order('student_id')
   if (error) throw new Error(error.message)
   return Object.fromEntries((data ?? []).map((r) => [r.student_id as string, r.status as Status]))
 }

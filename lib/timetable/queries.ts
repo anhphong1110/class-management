@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { countUsed } from './used'
 
 export type TimetableSubject = { id: string; name: string; color: string; sortOrder: number; usedCount: number }
 export type Timetable = {
@@ -18,11 +19,9 @@ export async function getTimetable(classId: string): Promise<Timetable> {
   ])
   for (const r of [subjectsRes, slotsRes, settingsRes]) if (r.error) throw new Error(r.error.message)
   const slots: Record<string, string | null> = {}
-  const used = new Map<string, number>()
-  for (const s of slotsRes.data ?? []) {
-    slots[`${s.weekday}-${s.session}-${s.period}`] = s.subject_id
-    if (s.subject_id) used.set(s.subject_id, (used.get(s.subject_id) ?? 0) + 1)
-  }
+  const saturday = settingsRes.data?.timetable_saturday ?? false
+  for (const s of slotsRes.data ?? []) slots[`${s.weekday}-${s.session}-${s.period}`] = s.subject_id
+  const used = countUsed(slotsRes.data ?? [], saturday)
   return {
     subjects: (subjectsRes.data ?? []).map((s) => ({
       id: s.id,
@@ -32,6 +31,6 @@ export async function getTimetable(classId: string): Promise<Timetable> {
       usedCount: used.get(s.id) ?? 0,
     })),
     slots,
-    saturday: settingsRes.data?.timetable_saturday ?? false,
+    saturday,
   }
 }

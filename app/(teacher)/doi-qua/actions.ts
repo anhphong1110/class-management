@@ -6,15 +6,13 @@ import { z } from 'zod'
 import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { toVietnameseMessage } from '@/lib/errors'
-import { IMAGE_EXT, validateImageFile } from '@/lib/domain/upload'
+import { IMAGE_EXT, MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { REWARD_PRESET_KEYS } from '@/lib/rewards/presets'
 
 type Result = { error?: string; message?: string }
 type Supabase = Awaited<ReturnType<typeof createServerSupabase>>
 
 // guid: `z.uuid()` của Zod 4 đòi đúng phiên bản RFC, còn id seed thì không có.
-/** Server Action chỉ nhận body tới 2 MB; ảnh lớn hơn phải được nén ở trình duyệt trước. */
-const MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 const uuid = z.guid()
 const rewardInput = z.object({
   id: uuid.optional(),

@@ -9,12 +9,13 @@ import { classShortName } from '@/lib/classes/short-name'
 import { buildTimetableWorkbook, timetableFileName } from '@/lib/timetable/export'
 import { nextInk, SUBJECT_PALETTE } from '@/lib/timetable/palette'
 import { getTimetable } from '@/lib/timetable/queries'
+import { subjectNameSchema } from '@/lib/timetable/subject-name'
 
 type Result = { error?: string }
 
 // guid: `z.uuid()` của Zod 4 đòi đúng phiên bản RFC, còn id seed thì không có.
 const uuid = z.guid()
-const nameSchema = z.string().trim().min(1).max(40)
+const nameSchema = subjectNameSchema
 const slotInput = z
   .object({
     weekday: z.number().int().min(1).max(6),

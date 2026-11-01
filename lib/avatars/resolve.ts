@@ -18,7 +18,9 @@ export async function signAvatarPaths(
   const urls = new Map<string, string>()
   const unique = [...new Set(paths)]
   if (!unique.length) return urls
-  const { data } = await supabase.storage.from('class-media').createSignedUrls(unique, SIGNED_URL_TTL)
+  const { data, error } = await supabase.storage.from('class-media').createSignedUrls(unique, SIGNED_URL_TTL)
+  // Ảnh lỗi thì vẫn trả avatar mặc định, nhưng phải để lại dấu vết để biết vì sao.
+  if (error) console.error('signAvatarPaths: createSignedUrls failed', error.message)
   for (const s of data ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl)
   return urls
 }

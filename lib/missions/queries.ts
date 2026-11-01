@@ -11,6 +11,8 @@ export type MissionView = {
   active: boolean
   /** Số bạn đang học đã hoàn thành trong kỳ hiện tại. */
   doneCount: number
+  /** Các lượt hoàn thành của kỳ hiện tại (để hoàn tác từng lượt). */
+  completions: { id: string; studentId: string }[]
 }
 
 export type BadgeView = {
@@ -43,7 +45,7 @@ export async function getMissionsData(classId: string, now = new Date()): Promis
       .eq('class_id', classId)
       .order('created_at')
       .order('id'),
-    supabase.from('mission_completions').select('mission_id, student_id, period_key').eq('class_id', classId),
+    supabase.from('mission_completions').select('id, mission_id, student_id, period_key').eq('class_id', classId),
     supabase.from('badges').select('id, name, icon, gradient').eq('class_id', classId).order('created_at').order('id'),
     supabase.from('student_badges').select('badge_id, student_id').eq('class_id', classId),
   ])
@@ -67,6 +69,7 @@ export async function getMissionsData(classId: string, now = new Date()): Promis
     missions: (missionsRes.data ?? []).map((m) => {
       const period = m.period as MissionPeriod
       const key = missionPeriodKey(period, now, terms)
+      const current = completions.filter((c) => c.mission_id === m.id && c.period_key === key)
       return {
         id: m.id,
         name: m.name,
@@ -74,7 +77,8 @@ export async function getMissionsData(classId: string, now = new Date()): Promis
         condition: m.condition,
         rewardStars: m.reward_stars,
         active: m.active,
-        doneCount: completions.filter((c) => c.mission_id === m.id && c.period_key === key).length,
+        doneCount: current.length,
+        completions: current.map((c) => ({ id: c.id as string, studentId: c.student_id as string })),
       }
     }),
     badges: (badgesRes.data ?? []).map((b) => ({

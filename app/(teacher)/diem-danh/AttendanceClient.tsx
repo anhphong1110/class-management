@@ -6,13 +6,15 @@ import { useEffect, useState, useTransition } from 'react'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Notice } from '@/components/ui/Notice'
 import type { Status } from '@/lib/attendance/csv'
+import { shouldConfirmLeave } from '@/lib/attendance/leave-guard'
 import { saveAttendance } from './actions'
 import { MonthCalendar, type CalendarDay } from './MonthCalendar'
 
 type Student = { id: string; code: string; fullName: string; avatar: AvatarValue }
 type HistoryRow = { date: string; label: string; present: number; absent: number; excused: number; late: number }
 
-// [trạng thái, nhãn, nền, chữ] theo thiết kế.
+// [trạng thái, nhãn, nền, chữ] theo thiết kế. Trang học sinh dùng bảng màu nhạt cùng ý nghĩa ở
+// lib/student/attendance.ts (ATTENDANCE_STATUS): đổi màu một nơi thì xem lại nơi kia.
 const OPT: [Status, string, string, string][] = [
   ['present', 'Có mặt', '#12794F', '#FFFFFF'],
   ['absent_unexcused', 'Vắng không phép', '#C0314E', '#FFFFFF'],
@@ -78,7 +80,7 @@ export function AttendanceClient({
       const a = (e.target as Element | null)?.closest?.('a[href^="/"]') as HTMLAnchorElement | null
       if (!a || e.defaultPrevented || a.target === '_blank') return
       const to = new URL(a.href, window.location.href)
-      if (to.pathname === window.location.pathname && to.search === window.location.search) return
+      if (!shouldConfirmLeave(to, new URL(window.location.href), today, e)) return
       if (!window.confirm(LEAVE_MESSAGE)) {
         e.preventDefault()
         e.stopPropagation()
@@ -90,7 +92,7 @@ export function AttendanceClient({
       window.removeEventListener('beforeunload', h)
       document.removeEventListener('click', c, true)
     }
-  }, [dirty])
+  }, [dirty, today])
 
   // Các liên kết trong trang đã được bộ chặn ở trên hỏi; chỉ còn việc đổi ngày bằng ô chọn ngày.
   const confirmLeave = () => !dirty || window.confirm(LEAVE_MESSAGE)

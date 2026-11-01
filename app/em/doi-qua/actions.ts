@@ -11,7 +11,7 @@ const rewardInput = z.guid()
 export async function requestReward(rewardId: string): Promise<{ error?: string; approved?: boolean }> {
   await requireStudent()
   const parsed = rewardInput.safeParse(rewardId)
-  if (!parsed.success) return { error: toVietnameseMessage('invalid_input') }
+  if (!parsed.success) return { error: toVietnameseMessage('invalid_input_student') }
   const supabase = await createServerSupabase()
   const { data: requestId, error } = await supabase.rpc('request_reward', { p_reward_id: parsed.data })
   // Lỗi (out_of_stock, ...) vẫn làm mới trang để số quà còn lại đúng.

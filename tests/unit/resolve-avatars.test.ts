@@ -43,4 +43,12 @@ describe('resolveAvatars', () => {
     expect(from).not.toHaveBeenCalled()
     expect(map.size).toBe(0)
   })
+  it('logs and still returns the default avatar when signing fails', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    createSignedUrls.mockResolvedValue({ data: null, error: { message: 'boom' } })
+    const map = await resolveAvatars(['c'])
+    expect(map.get('c')).toBeNull()
+    expect(spy).toHaveBeenCalledWith('signAvatarPaths: createSignedUrls failed', 'boom')
+    spy.mockRestore()
+  })
 })

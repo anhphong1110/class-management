@@ -243,7 +243,7 @@ test('giáo viên xem thử /em thấy dữ liệu học sinh đầu tiên', asy
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
   await page.goto('/em')
-  await expect(page.getByText('Cô đang xem thử giao diện học sinh.')).toBeVisible()
+  await expect(page.getByText('Đây là bản xem thử giao diện học sinh.')).toBeVisible()
   await expect(page.getByText('Hôm nay em còn 7 sao khả dụng.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Đổi avatar' })).toHaveCount(0)
 })

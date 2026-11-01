@@ -199,6 +199,29 @@ test('in: lưới đủ rộng, không còn thanh bên', async ({ page }, info) 
   expect(await scroll.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
 })
 
+test('in ở bề rộng 1050px: lưới nằm gọn trong trang', async ({ page }, info) => {
+  test.skip(info.project.name === 'mobile', 'bản in dùng khổ ngang, kiểm tra ở màn hình rộng')
+  seedSlot(5, 'morning', 1, 'Toán')
+  await page.setViewportSize({ width: 1050, height: 800 })
+  await open(page)
+  await page.emulateMedia({ media: 'print' })
+  const box = (await page.locator('[data-testid=day-head]', { hasText: 'Thứ Sáu' }).boundingBox())!
+  expect(box.x + box.width).toBeLessThanOrEqual(1050)
+  const scroll = page.getByTestId('timetable-scroll')
+  expect(await scroll.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+})
+
+test('in ở chế độ Theo ngày: chỉ in ngày đang xem', async ({ page }, info) => {
+  test.skip(info.project.name === 'mobile', 'bản in dùng khổ ngang, kiểm tra ở màn hình rộng')
+  seedSlot(3, 'morning', 1, 'Toán')
+  await open(page)
+  await page.getByRole('button', { name: 'Theo ngày' }).click()
+  await page.getByRole('button', { name: 'Thứ Tư' }).click()
+  await page.emulateMedia({ media: 'print' })
+  await expect(page.getByTestId('day-head')).toHaveText(['Thứ Tư'])
+  await expect(page.getByRole('button', { name: 'Thứ Tư' })).toBeHidden()
+})
+
 test('điện thoại: trang không cuộn ngang, lưới tự cuộn', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'chỉ kiểm tra ở màn hình điện thoại')
   await open(page)

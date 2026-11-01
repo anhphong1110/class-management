@@ -6,14 +6,12 @@ import { z } from 'zod'
 import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { toVietnameseMessage } from '@/lib/errors'
-import { IMAGE_EXT, validateImageFile } from '@/lib/domain/upload'
+import { IMAGE_EXT, MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { announcementInput } from '@/lib/announcements/types'
 
 type Result = { error?: string; message?: string }
 type Supabase = Awaited<ReturnType<typeof createServerSupabase>>
 
-/** Server Action chỉ nhận body tới 2 MB; ảnh lớn hơn phải được nén ở trình duyệt trước. */
-const MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 const uuid = z.guid()
 
 function refresh() {
@@ -55,6 +53,7 @@ export async function saveAnnouncement(raw: unknown): Promise<Result & { id?: st
     .from('announcements')
     .update({ title, body, type, pinned })
     .eq('id', id)
+    .eq('class_id', user.classId)
     .is('archived_at', null)
     .select('id')
   if (error) return { error: toVietnameseMessage(error.message) }
@@ -63,22 +62,16 @@ export async function saveAnnouncement(raw: unknown): Promise<Result & { id?: st
   return { id, message: 'Đã lưu thay đổi. Học sinh thấy nội dung mới.' }
 }
 
-export async function togglePin(id: string): Promise<Result> {
-  await requireTeacher()
-  if (!uuid.safeParse(id).success) return invalid()
+/** `pinned` là trạng thái đích: bấm hai lần liên tiếp hoặc ở hai tab không làm đảo ngược nhau. */
+export async function togglePin(id: string, pinned: boolean): Promise<Result> {
+  const user = await requireTeacher()
+  if (!uuid.safeParse(id).success || typeof pinned !== 'boolean') return invalid()
   const supabase = await createServerSupabase()
-  const { data: row, error: readError } = await supabase
-    .from('announcements')
-    .select('pinned')
-    .eq('id', id)
-    .is('archived_at', null)
-    .maybeSingle()
-  if (readError) throw new Error(readError.message)
-  if (!row) return notFound()
   const { data, error } = await supabase
     .from('announcements')
-    .update({ pinned: !row.pinned })
+    .update({ pinned })
     .eq('id', id)
+    .eq('class_id', user.classId)
     .is('archived_at', null)
     .select('id')
   if (error) return { error: toVietnameseMessage(error.message) }
@@ -89,13 +82,14 @@ export async function togglePin(id: string): Promise<Result> {
 
 /** "Xóa" chỉ đặt archived_at: dòng và ảnh vẫn còn, nhưng học sinh và Tổng quan không thấy nữa. */
 export async function archiveAnnouncement(id: string): Promise<Result> {
-  await requireTeacher()
+  const user = await requireTeacher()
   if (!uuid.safeParse(id).success) return invalid()
   const supabase = await createServerSupabase()
   const { data, error } = await supabase
     .from('announcements')
     .update({ archived_at: new Date().toISOString() })
     .eq('id', id)
+    .eq('class_id', user.classId)
     .is('archived_at', null)
     .select('id')
   if (error) return { error: toVietnameseMessage(error.message) }
@@ -118,6 +112,7 @@ export async function uploadAnnouncementImage(id: string, form: FormData): Promi
     .from('announcements')
     .select('image_path')
     .eq('id', id)
+    .eq('class_id', user.classId)
     .is('archived_at', null)
     .maybeSingle()
   if (readError) throw new Error(readError.message)
@@ -127,7 +122,7 @@ export async function uploadAnnouncementImage(id: string, form: FormData): Promi
   const up = await supabase.storage.from('class-media').upload(path, file, { contentType: file.type })
   if (up.error) return { error: toVietnameseMessage('upload_failed') }
 
-  const { data, error } = await supabase.from('announcements').update({ image_path: path }).eq('id', id).select('id')
+  const { data, error } = await supabase.from('announcements').update({ image_path: path }).eq('id', id).eq('class_id', user.classId).select('id')
   if (error || !data?.length) {
     await removeFile(supabase, path)
     return { error: toVietnameseMessage('upload_failed') }
@@ -138,17 +133,18 @@ export async function uploadAnnouncementImage(id: string, form: FormData): Promi
 }
 
 export async function removeAnnouncementImage(id: string): Promise<Result> {
-  await requireTeacher()
+  const user = await requireTeacher()
   if (!uuid.safeParse(id).success) return invalid()
   const supabase = await createServerSupabase()
   const { data: row, error: readError } = await supabase
     .from('announcements')
     .select('image_path')
     .eq('id', id)
+    .eq('class_id', user.classId)
     .maybeSingle()
   if (readError) throw new Error(readError.message)
   if (!row) return notFound()
-  const { error } = await supabase.from('announcements').update({ image_path: null }).eq('id', id)
+  const { error } = await supabase.from('announcements').update({ image_path: null }).eq('id', id).eq('class_id', user.classId)
   if (error) return { error: toVietnameseMessage(error.message) }
   await removeFile(supabase, row.image_path)
   refresh()

@@ -13,6 +13,7 @@ import { starHistoryLabel } from './history-label'
 import { getRewardPreset } from '@/lib/rewards/presets'
 import type { RewardRequestStatus } from '@/lib/rewards/queries'
 import type { RewardVisualValue } from '@/components/rewards/RewardVisual'
+import type { LbRow } from '@/lib/stars/leaderboard-row'
 import {
   STUDENT_SETTING_COLUMNS,
   visibleStudentPages,
@@ -82,8 +83,6 @@ export type StudentProfile = {
   rankYear: number | null
   classSize: number
 }
-
-type LbRow = { student_id: string; full_name: string; avatar_id: string | null; stars: number | string; rank: number | string }
 
 export const getStudentProfile = cache(async (): Promise<StudentProfile | null> => {
   const ctx = await getStudentContext()

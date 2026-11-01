@@ -127,6 +127,32 @@ test('ghi nhận nhầm: hoàn tác ở /thi-dua thì ghi nhận lại được 
   expect(await stars(5)).toBe(3)
 })
 
+test('nút Hoàn tác ở từng lượt hoàn thành: hỏi xác nhận, trả lại sao, ghi nhận lại được', async ({ page }) => {
+  await open(page)
+  const m = card(page, 'Hoàn thành nhiệm vụ học tập')
+  await page.getByLabel('Ghi nhận cho').selectOption({ label: 'Võ Hà My' })
+  await m.getByRole('button', { name: 'Ghi nhận thêm 1 bạn' }).click()
+  await expect(m).toContainText('1/10 bạn đã hoàn thành')
+  expect(await stars(5)).toBe(3)
+
+  await m.getByRole('button', { name: /Hoàn tác .* của Võ Hà My/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Hoàn tác nhiệm vụ' })
+  await dialog.getByRole('button', { name: 'Hủy' }).click()
+  await expect(dialog).toBeHidden()
+  expect(await stars(5)).toBe(3)
+
+  await m.getByRole('button', { name: /Hoàn tác .* của Võ Hà My/ }).click()
+  await dialog.getByRole('button', { name: 'Đồng ý hoàn tác' }).click()
+  await expect(status(page, 'Đã hoàn tác "Hoàn thành nhiệm vụ học tập" của Võ Hà My.')).toBeVisible()
+  await expect(m).toContainText('0/10 bạn đã hoàn thành')
+  await expect(m.getByTestId('completion-list')).toHaveCount(0)
+  expect(await stars(5)).toBe(0)
+
+  await m.getByRole('button', { name: 'Ghi nhận thêm 1 bạn' }).click()
+  await expect(m).toContainText('1/10 bạn đã hoàn thành')
+  expect(await stars(5)).toBe(3)
+})
+
 test('trao nhầm huy hiệu: thu hồi có hộp xác nhận, huy hiệu biến mất', async ({ page }) => {
   await open(page)
   await page.getByLabel('Trao cho').selectOption({ label: 'Võ Hà My' })

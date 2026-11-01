@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/Switch'
 import { toVietnameseMessage } from '@/lib/errors'
 import { MISSION_PERIODS, MISSION_PERIOD_LABELS, type MissionPeriod } from '@/lib/missions/period'
 import type { MissionsData } from '@/lib/missions/queries'
-import { awardBadge, completeMission, revokeBadge, saveMission, setFeatureMissions, toggleMission } from './actions'
+import { awardBadge, completeMission, revokeBadge, saveMission, setFeatureMissions, toggleMission, undoMissionCompletion } from './actions'
 
 type Result = { error?: string; message?: string }
 type Student = { id: string; fullName: string }
@@ -32,6 +32,7 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
   const [badgeNote, setBadgeNote] = useState<Note>(null)
   const [msg, setMsg] = useState('')
   const [revoking, setRevoking] = useState<MissionsData['badges'][number] | null>(null)
+  const [undoing, setUndoing] = useState<{ id: string; mission: MissionsData['missions'][number]; studentName: string } | null>(null)
   const [busy, startTransition] = useTransition()
 
   const person = students.find((s) => s.id === who) ?? null
@@ -94,6 +95,16 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
           tone: 'success',
           text: `Đã ghi nhận "${m.name}" cho ${person.fullName}.${m.rewardStars > 0 ? ` Cộng ${m.rewardStars} sao thi đua.` : ''}`,
         }),
+      (text) => setGridNote({ tone: 'error', text }),
+    )
+  }
+
+  function undo(u: NonNullable<typeof undoing>) {
+    clearNotes()
+    setUndoing(null)
+    run(
+      () => undoMissionCompletion(u.id),
+      () => setGridNote({ tone: 'success', text: `Đã hoàn tác "${u.mission.name}" của ${u.studentName}.` }),
       (text) => setGridNote({ tone: 'error', text }),
     )
   }
@@ -268,6 +279,27 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
                 {m.doneCount}/{data.studentCount} bạn đã hoàn thành
               </span>
             </div>
+            {m.completions.length > 0 && (
+              <ul data-testid="completion-list" className="m-0 flex list-none flex-col gap-1.5 p-0">
+                {m.completions.map((c) => {
+                  const studentName = students.find((s) => s.id === c.studentId)?.fullName ?? ''
+                  return (
+                    <li key={c.id} className="flex items-center justify-between gap-2 rounded-xl bg-[#F6F4FF] py-1 pl-3 pr-1.5">
+                      <span className="min-w-0 truncate text-[13.5px] font-bold">{studentName}</span>
+                      <button
+                        type="button"
+                        aria-label={`Hoàn tác ${m.name} của ${studentName}`}
+                        disabled={busy}
+                        onClick={() => setUndoing({ id: c.id, mission: m, studentName })}
+                        className={`${ghost} min-h-11 shrink-0 px-3 text-[13px] !text-[#8E1B3B]`}
+                      >
+                        Hoàn tác
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
             <div className="mt-1 flex gap-2">
               <button
                 type="button"
@@ -350,6 +382,21 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
           ))}
         </div>
       </div>
+
+      <Modal open={undoing !== null} onClose={() => setUndoing(null)} title="Hoàn tác nhiệm vụ">
+        <p className="m-0 mb-4 text-[15.5px] font-bold">
+          Cô muốn hoàn tác việc ghi nhận &quot;{undoing?.mission.name}&quot; cho {undoing?.studentName}?
+          {undoing && undoing.mission.rewardStars > 0 ? ` Số sao thưởng (${undoing.mission.rewardStars}) sẽ được trừ lại.` : ''}
+        </p>
+        <div className="flex justify-end gap-2.5">
+          <Button variant="secondary" onClick={() => setUndoing(null)}>
+            Hủy
+          </Button>
+          <Button variant="danger" disabled={busy} onClick={() => undoing && undo(undoing)}>
+            Đồng ý hoàn tác
+          </Button>
+        </div>
+      </Modal>
 
       <Modal open={revoking !== null} onClose={() => setRevoking(null)} title="Thu hồi huy hiệu">
         <p className="m-0 mb-4 text-[15.5px] font-bold">

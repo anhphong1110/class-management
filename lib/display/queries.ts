@@ -8,10 +8,9 @@ import type { AnnouncementView } from '@/lib/announcements/types'
 import { getGroups } from '@/lib/stars/queries'
 import { getTimetable } from '@/lib/timetable/queries'
 import { buildHighlight, buildTodayLessons, type DisplayLesson } from './logic'
+import type { LbRow } from '@/lib/stars/leaderboard-row'
 
 export { buildHighlight, buildTodayLessons, selectDisplayWeekday } from './logic'
-
-type LbRow = { student_id: string; full_name: string; avatar_id: string | null; stars: number | string; rank: number | string }
 
 export type DisplayTop5Row = { id: string; name: string; stars: number; rank: number; avatar: AvatarValue; crown: boolean }
 export type DisplayWeekRow = { id: string; name: string; stars: number }

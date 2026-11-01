@@ -6,12 +6,10 @@ import { z } from 'zod'
 import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { toVietnameseMessage } from '@/lib/errors'
-import { IMAGE_EXT, validateImageFile } from '@/lib/domain/upload'
+import { IMAGE_EXT, MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 
 type Result = { error?: string }
 
-/** Server Action chỉ nhận body tới 2 MB; ảnh lớn hơn phải được nén ở trình duyệt trước. */
-const MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 
 const text = z.string().max(500)
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()

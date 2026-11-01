@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { RewardVisual } from '@/components/rewards/RewardVisual'
 import { compressImage } from '@/lib/domain/compress-image'
-import { validateImageFile } from '@/lib/domain/upload'
+import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { REWARD_PRESETS } from '@/lib/rewards/presets'
 import type { RewardView } from '@/lib/rewards/queries'
@@ -123,7 +123,7 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
             setMsg(`Đã lưu ${saved}; ${toVietnameseMessage('upload_failed')}`)
             return
           }
-          const check = validateImageFile(small)
+          const check = validateImageFile(small, MAX_UPLOAD_BYTES)
           if (!check.ok) {
             setMsg(`Đã lưu ${saved}; ${toVietnameseMessage(check.error)}`)
             return

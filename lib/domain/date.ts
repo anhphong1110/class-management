@@ -1,5 +1,5 @@
 const TZ = 'Asia/Ho_Chi_Minh'
-const WEEKDAYS = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
+export const WEEKDAYS = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
 
 const fmt = new Intl.DateTimeFormat('vi-VN', {
   timeZone: TZ,

@@ -1,6 +1,11 @@
 import { attended } from '@/lib/attendance/rules'
+import { WEEKDAYS } from '@/lib/domain/date'
 
-/** Nhãn và màu [nền, chữ] của từng trạng thái; màu chép từ Student.dc.html (attDays, attStats). */
+/**
+ * Nhãn và màu [nền, chữ] của từng trạng thái; màu chép từ Student.dc.html (attDays, attStats).
+ * Trang giáo viên dùng bảng màu đậm riêng ở app/(teacher)/diem-danh/AttendanceClient.tsx (OPT) và
+ * MonthCalendar.tsx; đổi màu ở đây thì xem lại hai nơi đó cho khớp ý nghĩa từng trạng thái.
+ */
 export const ATTENDANCE_STATUS: Record<string, { label: string; bg: string; ink: string }> = {
   present: { label: 'Có mặt', bg: '#DDF6F1', ink: '#0B5A4D' },
   late: { label: 'Đi trễ', bg: '#FFF1CC', ink: '#6E4700' },
@@ -20,8 +25,6 @@ export function attendanceStats(rows: { status: string }[]): AttendanceStats {
     excused: count('absent_excused'),
   }
 }
-
-const WEEKDAYS = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
 
 /** `YYYY-MM-DD` (cột date, không có múi giờ) thành "Thứ Sáu, 30/10". */
 export function attendanceDayLabel(iso: string): string {

@@ -89,7 +89,7 @@ test('đổi avatar cho Hà My và giữ sau khi tải lại', async ({ page }) 
   await expect(page.getByTestId('current')).toContainText('Avatar hiện tại: Phi hành gia 3')
 })
 
-test('tải ảnh lên thư viện và từ chối ảnh quá 5 MB', async ({ page }) => {
+test('tải ảnh lên thư viện và từ chối ảnh quá lớn', async ({ page }) => {
   await open(page)
   const tiles = page.getByTestId('library').locator('button[aria-pressed]')
   await expect(tiles).toHaveCount(12)
@@ -102,7 +102,7 @@ test('tải ảnh lên thư viện và từ chối ảnh quá 5 MB', async ({ pa
   await expect(tiles.nth(12)).toHaveText('avatar')
 
   await input.setInputFiles({ name: 'lon.png', mimeType: 'image/png', buffer: Buffer.alloc(6 * 1024 * 1024) })
-  await expect(page.getByText('Ảnh lớn hơn 5 MB, cô chọn ảnh nhỏ hơn nhé.')).toBeVisible()
+  await expect(page.getByText('Ảnh lớn hơn 2 MB, cô chọn ảnh nhỏ hơn nhé.')).toBeVisible()
   await expect(tiles).toHaveCount(13)
 
   await input.setInputFiles({ name: 'a.gif', mimeType: 'image/gif', buffer: Buffer.alloc(10) })

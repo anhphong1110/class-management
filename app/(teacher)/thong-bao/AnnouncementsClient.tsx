@@ -5,7 +5,7 @@ import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
 import { formatDayLabel } from '@/lib/domain/relative-time'
-import { validateImageFile } from '@/lib/domain/upload'
+import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { ANNOUNCEMENT_TYPES, announcementColors, type AnnouncementView } from '@/lib/announcements/types'
 import {
@@ -135,7 +135,7 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
           } catch {
             return partial(toVietnameseMessage('upload_failed'))
           }
-          const check = validateImageFile(small)
+          const check = validateImageFile(small, MAX_UPLOAD_BYTES)
           if (!check.ok) return partial(toVietnameseMessage(check.error))
           try {
             const form = new FormData()
@@ -317,7 +317,7 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
                     disabled={busy}
                     onClick={() => {
                       setConfirmDel(null)
-                      run(() => togglePin(n.id))
+                      run(() => togglePin(n.id, !n.pinned))
                     }}
                     className={ghost}
                   >

@@ -115,7 +115,7 @@ test('giáo viên xem thử /em', async ({ page }) => {
   await expect(page).toHaveURL(/\/tong-quan$/)
   await page.goto('/em')
   await expect(page).toHaveURL(/\/em$/)
-  await expect(page.getByText('Cô đang xem thử giao diện học sinh.')).toBeVisible()
+  await expect(page.getByText('Đây là bản xem thử giao diện học sinh.')).toBeVisible()
   await expect(page.getByRole('heading', { name: /^Xin chào/ })).toBeVisible()
 })
 
@@ -123,7 +123,7 @@ test('học sinh: /em chào tên, /hoc-sinh bị đưa về /em', async ({ page 
   await login(page, 'Học sinh', 'hs.hamy')
   await expect(page).toHaveURL(/\/em$/)
   await expect(page.getByRole('heading', { name: 'Xin chào, Hà My!' })).toBeVisible()
-  await expect(page.getByText('Cô đang xem thử')).toHaveCount(0)
+  await expect(page.getByText('Đây là bản xem thử')).toHaveCount(0)
   await page.goto('/hoc-sinh')
   await expect(page).toHaveURL(/\/em$/)
 })
