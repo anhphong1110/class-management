@@ -24,8 +24,11 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   )
 
   let role: Role | null = null
+  let banned = false
   try {
-    const { data: userData } = await supabase.auth.getUser()
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    // Tài khoản vừa bị khóa: GoTrue từ chối token cũ. Đưa qua /dang-xuat để xóa phiên và báo đúng câu.
+    banned = userError?.code === 'user_banned'
     if (userData?.user) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -37,6 +40,13 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     }
   } catch {
     role = null
+  }
+
+  if (banned && request.nextUrl.pathname !== '/dang-xuat') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dang-xuat'
+    url.search = '?reason=account_banned'
+    return NextResponse.redirect(url)
   }
 
   const decision = resolveRoute({ pathname: request.nextUrl.pathname, role })

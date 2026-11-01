@@ -563,3 +563,28 @@ begin
       r.tbl);
   end loop;
 end $$;
+
+-- 15) Trạng thái phiên của học sinh, đọc một lần cho cả lớp, hồ sơ và khóa đăng nhập.
+--     Học sinh của lớp/học sinh đã lưu trữ không đọc được lớp và hồ sơ học sinh của mình qua RLS (my_class_id /
+--     my_student_id trả null), nên cần hàm security definer để phân biệt các lý do từ chối. Chỉ trả trạng thái của
+--     chính người gọi (auth.uid()), không nhận tham số.
+create function public.my_student_session() returns table (status text, avatar_id uuid)
+language sql stable security definer set search_path = ''
+as $$
+  select case
+           when p.id is null then 'no_profile'
+           when p.login_disabled then 'login_disabled'
+           when p.role = 'student' and p.student_id is null then 'no_profile'
+           when p.role = 'student' and c.archived_at is not null then 'archived_class'
+           when p.role = 'student' and s.id is null then 'no_profile'
+           when p.role = 'student' and s.archived_at is not null then 'archived_student'
+           else 'ok'
+         end,
+         s.avatar_id
+    from (select 1) one
+    left join public.profiles p on p.id = (select auth.uid())
+    left join public.classes c on c.id = p.class_id
+    left join public.students s on s.id = p.student_id
+$$;
+revoke execute on function public.my_student_session() from public, anon;
+grant execute on function public.my_student_session() to authenticated;

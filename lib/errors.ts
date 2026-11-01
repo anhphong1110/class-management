@@ -9,6 +9,8 @@ const MESSAGES: Record<string, string> = {
   account_create_failed: 'Hệ thống chưa tạo được tài khoản này.',
   account_profile_failed: 'Chưa lưu được hồ sơ tài khoản này.',
   account_update_failed: 'Chưa cập nhật được tài khoản, cô thử lại nhé.',
+  account_rollback_failed: 'Tài khoản này tạo dở dang và chưa xóa được. Cô báo người quản trị hệ thống nhé.',
+  account_state_mismatch: 'Trạng thái khóa của tài khoản này chưa đồng bộ. Cô bấm công tắc lại để thử lần nữa nhé.',
   account_not_found: 'Học sinh này chưa có tài khoản.',
   avatar_not_allowed: 'Cô chưa bật quyền tự đổi avatar.',
   avatar_not_found: 'Avatar này không còn trong thư viện.',

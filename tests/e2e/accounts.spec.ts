@@ -28,6 +28,23 @@ async function cleanAccounts() {
   }
 }
 
+/** Email của các tài khoản Auth không có profiles (tài khoản mồ côi). */
+async function orphans() {
+  const db = admin()
+  const { data, error } = await db.auth.admin.listUsers({ perPage: 1000 })
+  expect(error).toBeNull()
+  const have = new Set(await profileIds())
+  return (data?.users ?? []).filter((u) => !have.has(u.id)).map((u) => u.email)
+}
+
+/** Đóng Modal mật khẩu tạm: bấm "Đóng" rồi xác nhận "Đã ghi, đóng". */
+async function closeTemp(page: Page) {
+  const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
+  await dialog.getByRole('button', { name: 'Đóng' }).click()
+  await page.getByRole('dialog', { name: /Cô đã in hoặc ghi lại mật khẩu tạm chưa/ }).getByRole('button', { name: 'Đã ghi, đóng' }).click()
+  await expect(dialog).toBeHidden()
+}
+
 async function removeAuthUser(username: string) {
   const db = admin()
   const { data } = await db.auth.admin.listUsers({ perPage: 1000 })
@@ -47,6 +64,7 @@ test.afterAll(async () => {
   await cleanAccounts()
   await deleteTestStudents()
   expect(new Set(await profileIds())).toEqual(seededProfiles)
+  expect(await orphans()).toEqual([])
 })
 
 async function openSettings(page: Page) {
@@ -71,12 +89,13 @@ async function studentLogin(page: Page, username: string, pass: string) {
 
 test('một bạn bị Auth từ chối: các bạn khác vẫn được tạo, không còn hồ sơ dư', async ({ page }) => {
   const db = admin()
-  const { data: blocker, error } = await db.auth.admin.createUser({
+  const created = await db.auth.admin.createUser({
     email: `${USERNAME}@${domain()}`,
     password: 'Mat-khau-chan-1',
     email_confirm: true,
   })
-  expect(error).toBeNull()
+  expect(created.error).toBeNull()
+  const blocker = created.data.user
   try {
     await openSettings(page)
     await expect(row(page)).toContainText('Chưa có tài khoản')
@@ -90,14 +109,53 @@ test('một bạn bị Auth từ chối: các bạn khác vẫn được tạo, 
 
     const { data: made } = await db.from('profiles').select('username').in('username', ['hs.giabao', USERNAME])
     expect((made ?? []).map((p) => p.username)).toEqual(['hs.giabao'])
-    const { data: stray } = await db.from('profiles').select('id').eq('id', blocker.user!.id)
-    expect(stray).toEqual([])
+    // Ngoài tài khoản chặn do test tạo, không còn tài khoản Auth nào thiếu profiles.
+    expect(await orphans()).toEqual([`${USERNAME}@${domain()}`])
 
-    await dialog.getByRole('button', { name: 'Đóng' }).click()
-    await expect(dialog).toBeHidden()
+    await closeTemp(page)
     await expect(row(page)).toContainText('Chưa có tài khoản')
   } finally {
-    await db.auth.admin.deleteUser(blocker.user!.id)
+    if (blocker) await db.auth.admin.deleteUser(blocker.id)
+    await cleanAccounts()
+  }
+})
+
+// Nhánh hoàn tác: Auth nhận, nhưng chèn profiles lỗi. Một trigger tạm (chỉ có trong test này) làm lệnh chèn profiles
+// của đúng học sinh test thất bại, nên kết quả không phụ thuộc thứ tự hay thời gian. Phải xóa tài khoản Auth vừa tạo.
+test('chèn profiles lỗi thì hoàn tác: bạn đó ở "Chưa tạo được:", không còn tài khoản Auth mồ côi', async ({ page }) => {
+  sql(`create function public.tmp_block_profile() returns trigger language plpgsql as $f$
+         begin if new.display_name = '${NAME}' then raise exception 'tmp_block_profile'; end if; return new; end $f$;
+       create trigger tmp_block_profile before insert on public.profiles for each row execute function public.tmp_block_profile()`)
+  try {
+    await openSettings(page)
+    await page.getByRole('button', { name: 'Tạo tài khoản hàng loạt' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
+    await expect(dialog.getByText('Chưa tạo được:')).toBeVisible()
+    await expect(dialog.getByRole('listitem').filter({ hasText: NAME })).toContainText('Chưa lưu được hồ sơ tài khoản này.')
+    await expect(dialog.getByRole('cell', { name: 'hs.giabao' })).toBeVisible()
+    expect(await orphans()).toEqual([])
+    const { data } = await admin().auth.admin.listUsers({ perPage: 1000 })
+    expect(data?.users.some((u) => u.email === `${USERNAME}@${domain()}`)).toBe(false)
+    await closeTemp(page)
+  } finally {
+    sql('drop trigger if exists tmp_block_profile on public.profiles; drop function if exists public.tmp_block_profile()')
+    await cleanAccounts()
+  }
+})
+
+test('Esc không đóng Modal mật khẩu tạm; "Quay lại" giữ nguyên bảng', async ({ page }) => {
+  try {
+    await openSettings(page)
+    await page.getByRole('button', { name: 'Tạo tài khoản hàng loạt' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
+    await expect(dialog).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole('button', { name: 'Đóng' }).click()
+    await page.getByRole('dialog', { name: /Cô đã in hoặc ghi lại/ }).getByRole('button', { name: 'Quay lại' }).click()
+    await expect(dialog.getByRole('cell', { name: USERNAME })).toBeVisible()
+    await closeTemp(page)
+  } finally {
     await cleanAccounts()
   }
 })
@@ -112,7 +170,7 @@ test('tạo tài khoản hàng loạt, học sinh mới đăng nhập được',
   password = (await cells.nth(2).innerText()).trim()
   expect(password).toMatch(/^[abcdefghjkmnpqrstuvwxyz23456789]{10}$/)
   await expect(dialog.getByRole('button', { name: 'In danh sách' })).toBeVisible()
-  await dialog.getByRole('button', { name: 'Đóng' }).click()
+  await closeTemp(page)
   await expect(row(page)).toContainText(USERNAME)
   await expect(row(page).getByRole('switch', { name: 'Được đăng nhập' })).toBeVisible()
 
@@ -128,7 +186,7 @@ test('đặt lại mật khẩu: mật khẩu cũ hết dùng được', async (
   const next = (await dialog.getByRole('row').filter({ hasText: USERNAME }).getByRole('cell').nth(2).innerText()).trim()
   expect(next).toMatch(/^[abcdefghjkmnpqrstuvwxyz23456789]{10}$/)
   expect(next).not.toBe(password)
-  await dialog.getByRole('button', { name: 'Đóng' }).click()
+  await closeTemp(page)
 
   await studentLogin(page, USERNAME, password)
   await expect(page.getByText('Tên đăng nhập hoặc mật khẩu chưa đúng.')).toBeVisible()
@@ -151,4 +209,23 @@ test('khóa rồi mở lại tài khoản', async ({ page }) => {
   await expect(row(page).getByRole('switch', { name: 'Được đăng nhập' })).toBeVisible()
   await studentLogin(page, USERNAME, password)
   await expect(page).toHaveURL(/\/em$/)
+})
+
+test('đang đăng nhập mà bị khóa thì lần mở trang kế tiếp bị chặn', async ({ page, browser }, testInfo) => {
+  await studentLogin(page, USERNAME, password)
+  await expect(page).toHaveURL(/\/em$/)
+
+  const teacher = await browser.newContext({ baseURL: testInfo.project.use.baseURL ?? 'http://localhost:3000' })
+  try {
+    const tp = await teacher.newPage()
+    await openSettings(tp)
+    await row(tp).getByRole('switch', { name: 'Được đăng nhập' }).click()
+    await expect(row(tp).getByRole('switch', { name: 'Đã khóa' })).toBeVisible()
+  } finally {
+    await teacher.close()
+  }
+
+  await page.goto('/em')
+  await expect(page).toHaveURL(/\/dang-nhap\?error=account_banned$/)
+  await expect(page.getByText(BANNED)).toBeVisible()
 })

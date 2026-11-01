@@ -46,6 +46,7 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [shown, setShown] = useState<Shown | null>(null)
+  const [confirmClose, setConfirmClose] = useState(false)
   const missing = accounts.filter((a) => a.username === null).length
 
   const unknown = () => setError(toVietnameseMessage('unknown'))
@@ -136,7 +137,8 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
         </ul>
       </div>
 
-      <Modal open={shown !== null} onClose={() => setShown(null)} title="Mật khẩu tạm">
+      {/* Chỉ đóng bằng nút "Đóng" (không Esc, không bấm nền) để cô không lỡ mất mật khẩu tạm. */}
+      <Modal open={shown !== null} onClose={() => {}} title="Mật khẩu tạm">
         {shown && (
           <div className="flex flex-col gap-3">
             {shown.rows.length > 0 && (
@@ -163,10 +165,36 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
                   In danh sách
                 </Button>
               )}
-              <Button onClick={() => setShown(null)}>Đóng</Button>
+              <Button
+                onClick={() => {
+                  if (shown.rows.length > 0) setConfirmClose(true)
+                  else setShown(null)
+                }}
+              >
+                Đóng
+              </Button>
             </div>
           </div>
         )}
+      </Modal>
+      <Modal
+        open={confirmClose}
+        onClose={() => setConfirmClose(false)}
+        title="Cô đã in hoặc ghi lại mật khẩu tạm chưa? Đóng rồi sẽ không xem lại được."
+      >
+        <div className="flex flex-wrap justify-end gap-2.5">
+          <Button variant="secondary" onClick={() => setConfirmClose(false)}>
+            Quay lại
+          </Button>
+          <Button
+            onClick={() => {
+              setConfirmClose(false)
+              setShown(null)
+            }}
+          >
+            Đã ghi, đóng
+          </Button>
+        </div>
       </Modal>
       {shown && shown.rows.length > 0 &&
         createPortal(

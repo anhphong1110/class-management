@@ -2,10 +2,9 @@ import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
-import { createAdminSupabase } from '@/lib/supabase/admin'
 import type { Role, SessionUser } from '@/lib/domain/types'
 
-export type SessionDenied = 'no_profile' | 'class_archived'
+export type SessionDenied = 'no_profile' | 'class_archived' | 'account_banned'
 type SessionState = { user: SessionUser; reason?: undefined } | { user: null; reason: SessionDenied }
 
 const denied = (reason: SessionDenied): SessionState => ({ user: null, reason })
@@ -28,23 +27,16 @@ const getSessionState = cache(async (): Promise<SessionState> => {
 
   if (role === 'student') {
     if (!profile.student_id) return denied('no_profile')
-    // Học sinh của lớp đã lưu trữ (năm học đã kết thúc) không vào được nữa. RLS (private.my_class_id) che
-    // luôn lớp và hồ sơ học sinh khỏi họ, nên phải đọc cột archived_at của chính lớp mình bằng khóa dịch vụ.
-    const { data: cls, error: clsError } = await createAdminSupabase()
-      .from('classes')
-      .select('archived_at')
-      .eq('id', profile.class_id)
-      .maybeSingle()
-    if (clsError) throw new Error(clsError.message)
-    if (!cls || cls.archived_at !== null) return denied('class_archived')
-
-    const { data: student } = await supabase
-      .from('students')
-      .select('avatar_id, archived_at')
-      .eq('id', profile.student_id)
-      .maybeSingle()
-    if (!student || student.archived_at !== null) return denied('no_profile')
-    avatarId = student.avatar_id ?? null
+    // Một lần gọi hàm định danh cho cả lớp, học sinh đã lưu trữ và khóa đăng nhập (RLS che lớp và hồ sơ khỏi
+    // học sinh đã lưu trữ nên không đọc trực tiếp được).
+    const { data: rows, error } = await supabase.rpc('my_student_session')
+    if (error) throw new Error(error.message)
+    const session = rows?.[0]
+    if (!session) return denied('no_profile')
+    if (session.status === 'archived_class') return denied('class_archived')
+    if (session.status === 'login_disabled') return denied('account_banned')
+    if (session.status !== 'ok') return denied('no_profile')
+    avatarId = session.avatar_id ?? null
   }
 
   return {

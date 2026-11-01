@@ -66,8 +66,12 @@ export async function createStudentAccounts(): Promise<CreateAccountsResult> {
     })
     if (insertError) {
       // Không để lại tài khoản Auth mồ côi (không có profiles).
-      await admin.auth.admin.deleteUser(made.user.id)
-      result.failed.push({ name: s.full_name, reason: toVietnameseMessage('account_profile_failed') })
+      const { error: rollbackError } = await admin.auth.admin.deleteUser(made.user.id)
+      if (rollbackError) console.error('Không xóa được tài khoản Auth mồ côi:', made.user.id, rollbackError.message)
+      result.failed.push({
+        name: s.full_name,
+        reason: toVietnameseMessage(rollbackError ? 'account_rollback_failed' : 'account_profile_failed'),
+      })
       continue
     }
     result.created.push({ name: s.full_name, username, password })
@@ -85,6 +89,23 @@ export async function createStudentAccounts(): Promise<CreateAccountsResult> {
 
   revalidatePath('/cai-dat')
   return result
+}
+
+/** Nhật ký chỉ ghi mã học sinh (và cờ bật/tắt), không bao giờ ghi mật khẩu. Lỗi ghi nhật ký không làm hỏng thao tác đã xong. */
+async function audit(
+  user: { classId: string; userId: string },
+  action: string,
+  studentId: string,
+  extra: Record<string, boolean> = {},
+) {
+  const { error } = await createAdminSupabase().from('audit_logs').insert({
+    class_id: user.classId,
+    actor_id: user.userId,
+    action,
+    entity: 'profiles',
+    payload: { student_id: studentId, ...extra },
+  })
+  if (error) console.error(`audit_logs ${action}:`, error.message)
 }
 
 async function findStudentProfile(classId: string, studentId: string) {
@@ -108,6 +129,7 @@ export async function resetStudentPassword(studentId: string): Promise<TempAccou
   const password = generateTempPassword()
   const { error } = await createAdminSupabase().auth.admin.updateUserById(profile.id, { password })
   if (error) return { error: toVietnameseMessage('account_update_failed') }
+  await audit(user, 'account_password_reset', studentId)
   return { name: profile.display_name, username: profile.username, password }
 }
 
@@ -124,9 +146,15 @@ export async function setStudentLogin(studentId: string, enabled: boolean): Prom
 
   const { error: updateError } = await admin.from('profiles').update({ login_disabled: !enabled }).eq('id', profile.id)
   if (updateError) {
-    await ban(!enabled) // hoàn lại để khóa trong Auth và cột login_disabled không lệch nhau
+    // Hoàn lại để khóa trong Auth và cột login_disabled không lệch nhau.
+    const { error: revertError } = await ban(!enabled)
+    if (revertError) {
+      console.error('Không hoàn lại được khóa đăng nhập:', profile.id, revertError.message)
+      return { error: toVietnameseMessage('account_state_mismatch') }
+    }
     return { error: toVietnameseMessage('account_update_failed') }
   }
+  await audit(user, 'account_login_set', studentId, { enabled })
   revalidatePath('/cai-dat')
   return {}
 }
