@@ -4,8 +4,9 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { resolveAvatars } from '@/lib/avatars/resolve'
 import { periodRange, resolvePeriod, type Period } from '@/lib/domain/period'
 import { LeaderboardClient, type RankRow } from './LeaderboardClient'
+import type { LbRow as BaseLbRow } from '@/lib/stars/leaderboard-row'
 
-type LbRow = { student_id: string; full_name: string; avatar_id: string | null; roll_no: number; stars: number | string; rank: number | string }
+type LbRow = BaseLbRow & { roll_no: number }
 
 const PERIODS: Period[] = ['week', 'month', 'term', 'year']
 

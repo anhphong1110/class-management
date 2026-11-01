@@ -1,4 +1,5 @@
 import 'server-only'
+import type { LbRow } from '@/lib/stars/leaderboard-row'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { resolveAvatars, type AvatarValue } from '@/lib/avatars/resolve'
 import { periodRange } from '@/lib/domain/period'
@@ -30,7 +31,6 @@ export type OverviewData = {
   news: NewsItem[]
 }
 
-type LbRow = { student_id: string; full_name: string; avatar_id: string | null; stars: number | string; rank: number | string }
 
 const NO_TERMS = { term1Start: '', term1End: '', term2Start: '', term2End: '' }
 
