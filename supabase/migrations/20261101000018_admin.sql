@@ -339,6 +339,15 @@ begin
       if jsonb_typeof(v) <> 'string' or (v #>> '{}') not in ('indigo', 'pink', 'mint', 'gold') then
         raise exception 'invalid_input';
       end if;
+    elsif k in ('logo_path', 'class_logo_path', 'cover_path') then
+      -- Ảnh thương hiệu phải nằm trong <class_id>/branding/ của chính lớp này; null để bỏ ảnh.
+      if jsonb_typeof(v) = 'string' then
+        if (v #>> '{}') !~ ('^' || v_class::text || '/branding/[A-Za-z0-9._-]+$') or (v #>> '{}') like '%..%' then
+          raise exception 'invalid_input';
+        end if;
+      elsif jsonb_typeof(v) <> 'null' then
+        raise exception 'invalid_input';
+      end if;
     elsif k in ('term1_start', 'term1_end', 'term2_start', 'term2_end') then
       if jsonb_typeof(v) = 'string' then
         begin
@@ -377,6 +386,9 @@ begin
     teacher_name = case when p ? 'teacher_name' then btrim(p ->> 'teacher_name') else teacher_name end,
     slogan = case when p ? 'slogan' then btrim(p ->> 'slogan') else slogan end,
     theme = case when p ? 'theme' then p ->> 'theme' else theme end,
+    logo_path = case when p ? 'logo_path' then p ->> 'logo_path' else logo_path end,
+    class_logo_path = case when p ? 'class_logo_path' then p ->> 'class_logo_path' else class_logo_path end,
+    cover_path = case when p ? 'cover_path' then p ->> 'cover_path' else cover_path end,
     term1_start = t1s, term1_end = t1e, term2_start = t2s, term2_end = t2e
    where id = v_class;
 
@@ -384,6 +396,23 @@ begin
   values (v_class, (select auth.uid()), 'class.info', 'class', v_class, p);
 end;
 $$;
+
+-- 10b) Học sinh đọc được ảnh thương hiệu của lớp (folder branding), cùng các folder đã có ở 20261101000015.
+drop policy class_media_select on storage.objects;
+create policy class_media_select on storage.objects for select to authenticated
+  using (
+    bucket_id = 'class-media'
+    and (storage.foldername(name))[1] = (select private.my_class_id())::text
+    and (
+      (select private.is_teacher())
+      or (storage.foldername(name))[2] in ('avatars', 'logo', 'cover', 'branding')
+      or ((storage.foldername(name))[2] = 'announcements'
+          and exists (select 1 from public.announcements a where a.image_path = objects.name))
+      or ((storage.foldername(name))[2] = 'rewards'
+          and (select private.setting_on('feature_rewards'))
+          and exists (select 1 from public.rewards r where r.image_path = objects.name and not r.hidden))
+    )
+  );
 
 -- 11) Lưu cài đặt lớp. Chỉ cập nhật các khóa được gửi; timetable_saturday phải đi qua set_timetable_saturday.
 create function public.save_class_settings(p jsonb) returns void

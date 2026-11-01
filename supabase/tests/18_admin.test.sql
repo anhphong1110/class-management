@@ -1,5 +1,5 @@
 begin;
-select plan(156);
+select plan(166);
 
 create function pg_temp.as_user(u uuid) returns void language sql
 as $$ select set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true) $$;
@@ -157,6 +157,20 @@ select throws_ok($$select public.save_class_info('{"term1_end":"infinity"}')$$, 
 select throws_ok($$select public.save_class_info('{"term2_start":"-infinity"}')$$, 'P0001', 'invalid_term_dates', 'ngày -infinity bị từ chối');
 select throws_ok($$select public.save_class_info('{"school_name":5}')$$, 'P0001', 'invalid_input', 'school_name không phải chuỗi');
 select is((select count(*)::int from public.audit_logs where action = 'class.info' and class_id = '00000000-0000-0000-0000-0000000000c1'), 2, 'audit class.info');
+
+-- ===== đường dẫn ảnh thương hiệu (logo_path, class_logo_path, cover_path) =====
+select lives_ok($$select public.save_class_info('{"logo_path":"00000000-0000-0000-0000-0000000000c1/branding/a.png","class_logo_path":"00000000-0000-0000-0000-0000000000c1/branding/b.webp","cover_path":"00000000-0000-0000-0000-0000000000c1/branding/c-1.jpg"}')$$, 'ba đường dẫn branding hợp lệ');
+select is((select cover_path from public.classes where id = '00000000-0000-0000-0000-0000000000c1'), '00000000-0000-0000-0000-0000000000c1/branding/c-1.jpg', 'cover_path được lưu');
+select throws_ok($$select public.save_class_info('{"cover_path":"00000000-0000-0000-0000-0000000000c2/branding/x.png"}')$$, 'P0001', 'invalid_input', 'đường dẫn của lớp khác bị từ chối');
+select throws_ok($$select public.save_class_info('{"logo_path":"00000000-0000-0000-0000-0000000000c1/logo/x.png"}')$$, 'P0001', 'invalid_input', 'không nằm trong thư mục branding');
+select throws_ok($$select public.save_class_info('{"class_logo_path":"00000000-0000-0000-0000-0000000000c1/branding/../../00000000-0000-0000-0000-0000000000c2/x.png"}')$$, 'P0001', 'invalid_input', 'đường dẫn có ..');
+select throws_ok($$select public.save_class_info('{"cover_path":5}')$$, 'P0001', 'invalid_input', 'đường dẫn không phải chuỗi');
+select lives_ok($$select public.save_class_info('{"cover_path":null}')$$, 'cover_path null để bỏ ảnh');
+select is((select cover_path from public.classes where id = '00000000-0000-0000-0000-0000000000c1'), null, 'cover_path đã bỏ');
+select lives_ok($$insert into storage.objects (bucket_id, name, owner_id) values ('class-media', '00000000-0000-0000-0000-0000000000c1/branding/a.png', '00000000-0000-0000-0000-0000000000d1')$$, 'giáo viên tải được vào branding');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000d3');
+select is((select count(*)::int from storage.objects where bucket_id = 'class-media' and name = '00000000-0000-0000-0000-0000000000c1/branding/a.png'), 1, 'học sinh cùng lớp đọc được ảnh branding');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
 
 -- ===== save_class_settings =====
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000d3');

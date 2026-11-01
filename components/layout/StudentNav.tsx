@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { brandLines } from '@/lib/classes/brand'
 import { STUDENT_NAV, type StudentPageId } from '@/lib/student/flags'
 
-export function StudentNav({ pages, classLogoUrl, className }: { pages: StudentPageId[]; classLogoUrl: string | null; className: string }) {
+export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className }: { pages: StudentPageId[]; classLogoUrl: string | null; schoolLogoUrl?: string | null; className: string }) {
   const brand = brandLines({ class_name: className })
   const pathname = usePathname()
   const items = STUDENT_NAV.filter((n) => pages.includes(n.id))
@@ -16,7 +16,7 @@ export function StudentNav({ pages, classLogoUrl, className }: { pages: StudentP
         <div className="relative size-11 flex-none overflow-hidden rounded-full bg-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/logo-truong.jpg"
+            src={schoolLogoUrl ?? '/brand/logo-truong.jpg'}
             alt="Logo trường Tiểu học Chính Nghĩa"
             className="absolute -left-px -top-px size-[46px] max-w-none object-cover"
           />

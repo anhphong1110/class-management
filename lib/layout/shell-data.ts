@@ -11,6 +11,7 @@ export type ShellClass = {
   teacher_name: string
   slogan: string
   class_logo_path: string | null
+  logo_path: string | null
   theme: 'indigo' | 'pink' | 'mint' | 'gold'
 }
 
@@ -20,17 +21,16 @@ export const getShellData = cache(async () => {
   const supabase = await createServerSupabase()
   const { data: cls } = await supabase
     .from('classes')
-    .select('school_name, class_name, school_year, teacher_name, slogan, class_logo_path, theme')
+    .select('school_name, class_name, school_year, teacher_name, slogan, class_logo_path, logo_path, theme')
     .eq('id', user.classId)
     .maybeSingle()
   if (!cls) return null
-  let classLogoUrl: string | null = null
-  if (cls.class_logo_path) {
-    const { data: signed } = await supabase.storage
-      .from('class-media')
-      .createSignedUrl(cls.class_logo_path, 3600)
-    classLogoUrl = signed?.signedUrl ?? null
+  const sign = async (path: string | null) => {
+    if (!path) return null
+    const { data: signed } = await supabase.storage.from('class-media').createSignedUrl(path, 3600)
+    return signed?.signedUrl ?? null
   }
+  const [classLogoUrl, schoolLogoUrl] = await Promise.all([sign(cls.class_logo_path), sign(cls.logo_path)])
   const avatar = await resolveAvatar(user.avatarId)
-  return { user, cls: cls as ShellClass, classLogoUrl, avatar }
+  return { user, cls: cls as ShellClass, classLogoUrl, schoolLogoUrl, avatar }
 })

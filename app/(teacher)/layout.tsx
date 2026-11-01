@@ -19,6 +19,7 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
         <Sidebar
           teacher={{ displayName: data?.user.displayName ?? '', avatar: data?.avatar ?? null }}
           classLogoUrl={data?.classLogoUrl ?? null}
+          schoolLogoUrl={data?.schoolLogoUrl ?? null}
           className={data?.cls.class_name ?? ''}
         />
       </div>
