@@ -13,7 +13,8 @@
     "build:template": "tsx scripts/build-template.ts",
     "seed:dev": "tsx --env-file=.env.local scripts/seed-dev-users.ts",
     "create-teacher": "tsx --env-file=.env.local scripts/create-teacher.ts",
-    "create-teacher:prod": "tsx --env-file=.env.production.local scripts/create-teacher.ts"
+    "create-teacher:prod": "tsx --env-file=.env.production.local scripts/create-teacher.ts",
+    "bootstrap:prod": "tsx --env-file=.env.production.local scripts/bootstrap-class.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
