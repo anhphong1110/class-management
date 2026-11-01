@@ -5,7 +5,7 @@ import { CLASS_ID, deleteTestStudents, resetAttendance, resetGroups, resetStars,
 test.describe.configure({ mode: 'serial' })
 
 async function reset() {
-  deleteTestStudents()
+  await deleteTestStudents()
   resetStars()
   await resetRewards()
   resetAttendance()

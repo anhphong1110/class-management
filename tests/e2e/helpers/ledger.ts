@@ -44,8 +44,19 @@ export function seedDelta(studentNo: number, delta: number, daysAgo = 0) {
        values ('${CLASS_ID}', '${sid(studentNo)}', ${delta}, '${kind}', 'seed', gen_random_uuid(), ${at})`)
 }
 
-/** Xóa học sinh test (mã khác HS01–HS10 của seed) cùng sổ sao và điểm danh của họ. */
-export function deleteTestStudents() {
+/** Xóa học sinh test (không phải học sinh demo) cùng tài khoản Auth (profiles xóa theo), sổ sao và điểm danh của họ. */
+export async function deleteTestStudents() {
+  const db = admin()
+  const { data: test, error } = await db.from('students').select('id').eq('class_id', CLASS_ID).eq('is_demo', false)
+  if (error) throw error
+  if (test?.length) {
+    const { data: profiles, error: profError } = await db.from('profiles').select('id').in('student_id', test.map((s) => s.id))
+    if (profError) throw profError
+    for (const p of profiles ?? []) {
+      const { error: delError } = await db.auth.admin.deleteUser(p.id)
+      if (delError) throw delError
+    }
+  }
   sql(`
     begin;
     alter table public.star_transactions disable trigger star_transactions_immutable;

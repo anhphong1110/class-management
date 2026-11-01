@@ -12,6 +12,6 @@ export async function GET(request: NextRequest) {
   const reason = request.nextUrl.searchParams.get('reason')
   const url = request.nextUrl.clone()
   url.pathname = '/dang-nhap'
-  url.search = reason === 'no_profile' ? '?error=no_profile' : ''
+  url.search = reason === 'no_profile' || reason === 'class_archived' ? `?error=${reason}` : ''
   return NextResponse.redirect(url)
 }

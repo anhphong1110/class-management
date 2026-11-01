@@ -39,7 +39,8 @@ export default async function LoginPage({
   const teacher = cls?.teacher_name ?? ''
   const brand = brandLines({ class_name: className })
   const slogan = cls?.slogan || 'Cùng học – Cùng chơi – Cùng tỏa sáng'
-  const initialError = sp.error === 'no_profile' ? toVietnameseMessage('no_profile') : undefined
+  const initialError =
+    sp.error === 'no_profile' || sp.error === 'class_archived' ? toVietnameseMessage(sp.error) : undefined
 
   return (
     <main style={themeVars(cls?.theme) as CSSProperties} className="relative box-border flex min-h-screen flex-wrap items-center justify-center gap-6 overflow-hidden bg-[radial-gradient(circle_at_20%_20%,#4B4FB5_0%,#2B2E7E_45%,#1E2160_100%)] p-6 font-body">

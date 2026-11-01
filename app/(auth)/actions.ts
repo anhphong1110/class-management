@@ -2,9 +2,10 @@
 
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase/server'
-import { getSessionUser } from '@/lib/auth/session'
+import { getSessionDenial, getSessionUser } from '@/lib/auth/session'
 import { safeNext } from '@/lib/auth/safe-next'
 import { normalizeUsername, usernameToEmail } from '@/lib/auth/username'
+import { signInErrorKey } from '@/lib/auth/sign-in-error'
 import { toVietnameseMessage } from '@/lib/errors'
 
 export type SignInState = { error?: string }
@@ -19,12 +20,13 @@ export async function signIn(_prev: SignInState, form: FormData): Promise<SignIn
     email: usernameToEmail(parsed.username),
     password,
   })
-  if (error) return { error: toVietnameseMessage('invalid_credentials') }
+  if (error) return { error: toVietnameseMessage(signInErrorKey(error)) }
 
   const user = await getSessionUser()
   if (!user) {
+    const reason = await getSessionDenial()
     await supabase.auth.signOut()
-    return { error: toVietnameseMessage('no_profile') }
+    return { error: toVietnameseMessage(reason) }
   }
 
   const next = safeNext(form.get('next'))

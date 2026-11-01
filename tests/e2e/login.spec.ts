@@ -111,6 +111,28 @@ test('học sinh đã lưu trữ không bị lặp chuyển hướng', async ({ 
   }
 })
 
+test('học sinh của lớp đã lưu trữ thấy câu năm học kết thúc', async ({ page }) => {
+  const setClass = (value: string) => sql(`update public.classes set archived_at = ${value} where id = '00000000-0000-0000-0000-000000000058'`)
+  const ENDED = 'Năm học của em đã kết thúc.'
+  try {
+    // Đang đăng nhập thì lớp được lưu trữ: vào /em đi theo /dang-xuat rồi về trang đăng nhập kèm câu báo.
+    await page.goto('/dang-nhap')
+    await fill(page, 'Học sinh', 'hs.hamy', pw('hs.hamy'))
+    await expect(page).toHaveURL(/\/em$/)
+    setClass('now()')
+    await page.goto('/em')
+    await expect(page).toHaveURL(/\/dang-nhap\?error=class_archived$/)
+    await expect(page.getByText(ENDED)).toBeVisible()
+    // Đăng nhập lại khi lớp đã lưu trữ cũng báo đúng câu đó.
+    await page.goto('/dang-nhap')
+    await fill(page, 'Học sinh', 'hs.hamy', pw('hs.hamy'))
+    await expect(page.getByText(ENDED)).toBeVisible()
+    await expect(page).toHaveURL(/\/dang-nhap/)
+  } finally {
+    setClass('null')
+  }
+})
+
 test('ảnh logo và không tràn ngang', async ({ page }) => {
   await page.goto('/dang-nhap')
   await expect(page.getByAltText('Logo trường Tiểu học Chính Nghĩa')).toBeVisible()
