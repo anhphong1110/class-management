@@ -3,11 +3,11 @@ export type Status = 'present' | 'absent_unexcused' | 'absent_excused' | 'late'
 const SYMBOL: Record<Status, string> = { present: 'C', absent_unexcused: 'K', absent_excused: 'P', late: 'T' }
 
 /** Ô văn bản bắt đầu bằng = + - @ hoặc tab/CR bị Excel hiểu là công thức, nên thêm dấu nháy đơn phía trước. */
-function safe(v: string): string {
+export function safe(v: string): string {
   return /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
 }
 
-function field(v: string): string {
+export function field(v: string): string {
   return /[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
 }
 

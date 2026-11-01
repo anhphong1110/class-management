@@ -62,6 +62,7 @@ const MESSAGES: Record<string, string> = {
   use_set_saturday: 'Không đổi được học thứ Bảy theo cách này.',
   use_archive_student: 'Cô lưu trữ học sinh bằng nút "Lưu trữ" nhé.',
   completion_not_found: 'Không tìm thấy lượt hoàn thành này.',
+  invalid_range: 'Khoảng ngày chưa hợp lệ: ngày bắt đầu phải trước ngày kết thúc và tối đa 400 ngày.',
   before_school_year: 'Ngày này trước khi năm học bắt đầu.',
 }
 
