@@ -211,7 +211,7 @@ $$;
 
 -- 7) Khôi phục vào một lớp MỚI; lớp hiện tại được đóng (lưu trữ); giáo viên chuyển sang lớp mới.
 --    Sổ sao chỉ chèn (trigger chặn sửa/xóa vẫn bật). Dòng reversal chèn sau các dòng khác để trigger kiểm gốc đúng.
-create function public.restore_class_backup(p_backup jsonb) returns jsonb
+create function public.restore_class_backup(p_backup jsonb, p_expected_class uuid default null) returns jsonb
 language plpgsql
 security definer
 set search_path = ''
@@ -234,6 +234,8 @@ begin
   -- Một giáo viên khôi phục một lần tại một thời điểm.
   perform 1 from public.profiles p where p.id = v_user for update;
   v_current := private.my_class_id();
+  -- Lớp đang hiển thị trên trang khác lớp hiện tại (gửi trùng, hoặc đã đổi năm ở tab khác): không làm gì.
+  if p_expected_class is not null and v_current is distinct from p_expected_class then raise exception 'stale_class'; end if;
   v_old := (p_backup #>> '{class,id}')::uuid;
 
   begin
@@ -380,10 +382,10 @@ create policy class_backups_teacher_delete on storage.objects for delete to auth
          and (storage.foldername(name))[1] = (select private.my_class_id())::text);
 
 revoke execute on function public.export_class_backup(uuid) from public, anon;
-revoke execute on function public.restore_class_backup(jsonb) from public, anon;
+revoke execute on function public.restore_class_backup(jsonb, uuid) from public, anon;
 revoke execute on function public.my_archived_classes() from public, anon;
 grant execute on function public.export_class_backup(uuid) to authenticated;
-grant execute on function public.restore_class_backup(jsonb) to authenticated;
+grant execute on function public.restore_class_backup(jsonb, uuid) to authenticated;
 grant execute on function public.my_archived_classes() to authenticated;
 
 -- ===================================================================================================
@@ -392,7 +394,8 @@ grant execute on function public.my_archived_classes() to authenticated;
 
 -- 11) Mở năm học mới: tạo lớp mới (owner_id = giáo viên), chép danh mục đã chọn với id mới, đóng lớp cũ bằng
 --     private.close_class (từ chối yêu cầu pending, trả sao giữ, đặt archived_at), chuyển giáo viên sang lớp mới.
---     Không chép học sinh, sổ sao, điểm danh, thông báo; bản sao danh mục luôn is_demo = false.
+--     Không chép học sinh, sổ sao, điểm danh, thông báo; bản sao danh mục giữ cờ is_demo của dòng gốc.
+--     p.expected_class_id (bắt buộc) là lớp hiển thị trong form: khác lớp hiện tại thì stale_class (chống gửi trùng).
 --     Khóa: close_class khóa students (FOR NO KEY UPDATE) -> rewards -> reward_requests của lớp cũ; phần chép chỉ
 --     chạm dòng của lớp mới nên không đảo thứ tự khóa.
 create function public.start_new_school_year(p jsonb) returns uuid
@@ -418,6 +421,10 @@ begin
   if jsonb_typeof(p) is distinct from 'object' then raise exception 'invalid_input'; end if;
 
   -- Bắt buộc: năm học, tên lớp. Tùy chọn: school_name, teacher_name, slogan, theme (chuỗi hoặc null).
+  if jsonb_typeof(p -> 'expected_class_id') is distinct from 'string'
+     or (p ->> 'expected_class_id') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    raise exception 'invalid_input';
+  end if;
   foreach k in array array['school_year', 'class_name', 'school_name', 'teacher_name', 'slogan', 'theme'] loop
     if jsonb_typeof(p -> k) not in ('string', 'null') and (p -> k) is not null then raise exception 'invalid_input'; end if;
     if char_length(coalesce(p ->> k, '')) > 200 then raise exception 'invalid_input'; end if;
@@ -443,6 +450,8 @@ begin
   perform 1 from public.profiles pr where pr.id = v_user for update;
   v_old := private.my_class_id();
   if v_old is null then raise exception 'not_allowed'; end if;
+  -- Chống gửi trùng: lớp đang hiển thị trong form phải là lớp hiện tại của giáo viên.
+  if v_old <> (p ->> 'expected_class_id')::uuid then raise exception 'stale_class'; end if;
   select * into o from public.classes c where c.id = v_old and c.archived_at is null;
   if not found then raise exception 'not_allowed'; end if;
 
@@ -460,43 +469,44 @@ begin
           private.backup_remap_path(to_jsonb(o.cover_path), v_old, v_new),
           v_user);
 
+  -- Bản sao giữ nguyên cờ is_demo của dòng gốc.
   -- Quà chèn khi mở năm mới không ghi reward_created từng dòng (đã có một dòng school_year_opened).
   perform set_config('app.restoring', 'on', true);
 
   if 'avatars' = any (v_copy) then
-    insert into public.avatar_library (id, class_id, kind, preset, image_path, label, hidden)
+    insert into public.avatar_library (id, class_id, kind, preset, image_path, label, hidden, is_demo)
     select private.backup_new_id(v_new, a.id::text), v_new, a.kind, a.preset,
-           private.backup_remap_path(to_jsonb(a.image_path), v_old, v_new), a.label, a.hidden
+           private.backup_remap_path(to_jsonb(a.image_path), v_old, v_new), a.label, a.hidden, a.is_demo
       from public.avatar_library a where a.class_id = v_old;
   end if;
   if 'subjects' = any (v_copy) then
-    insert into public.subjects (id, class_id, name, color, sort_order)
-    select private.backup_new_id(v_new, s.id::text), v_new, s.name, s.color, s.sort_order
+    insert into public.subjects (id, class_id, name, color, sort_order, is_demo)
+    select private.backup_new_id(v_new, s.id::text), v_new, s.name, s.color, s.sort_order, s.is_demo
       from public.subjects s where s.class_id = v_old;
   end if;
   if 'timetable' = any (v_copy) then
-    insert into public.timetable_slots (class_id, weekday, session, period, subject_id)
+    insert into public.timetable_slots (class_id, weekday, session, period, subject_id, is_demo)
     select v_new, t.weekday, t.session, t.period,
-           case when t.subject_id is null then null else private.backup_new_id(v_new, t.subject_id::text) end
+           case when t.subject_id is null then null else private.backup_new_id(v_new, t.subject_id::text) end, t.is_demo
       from public.timetable_slots t where t.class_id = v_old;
   end if;
   if 'criteria' = any (v_copy) then
-    insert into public.star_criteria (id, class_id, label, kind, default_points, sort_order, archived_at)
-    select private.backup_new_id(v_new, c.id::text), v_new, c.label, c.kind, c.default_points, c.sort_order, c.archived_at
+    insert into public.star_criteria (id, class_id, label, kind, default_points, sort_order, archived_at, is_demo)
+    select private.backup_new_id(v_new, c.id::text), v_new, c.label, c.kind, c.default_points, c.sort_order, c.archived_at, c.is_demo
       from public.star_criteria c where c.class_id = v_old;
   end if;
   if 'rewards' = any (v_copy) then
-    insert into public.rewards (id, class_id, name, cost, description, image_path, icon, stock, hidden)
+    insert into public.rewards (id, class_id, name, cost, description, image_path, icon, stock, hidden, is_demo)
     select private.backup_new_id(v_new, w.id::text), v_new, w.name, w.cost, w.description,
-           private.backup_remap_path(to_jsonb(w.image_path), v_old, v_new), w.icon, w.stock, w.hidden
+           private.backup_remap_path(to_jsonb(w.image_path), v_old, v_new), w.icon, w.stock, w.hidden, w.is_demo
       from public.rewards w where w.class_id = v_old;
   end if;
   if 'missions' = any (v_copy) then
-    insert into public.missions (id, class_id, name, period, condition, reward_stars, active)
-    select private.backup_new_id(v_new, m.id::text), v_new, m.name, m.period, m.condition, m.reward_stars, m.active
+    insert into public.missions (id, class_id, name, period, condition, reward_stars, active, is_demo)
+    select private.backup_new_id(v_new, m.id::text), v_new, m.name, m.period, m.condition, m.reward_stars, m.active, m.is_demo
       from public.missions m where m.class_id = v_old;
-    insert into public.badges (id, class_id, name, icon, gradient)
-    select private.backup_new_id(v_new, b.id::text), v_new, b.name, b.icon, b.gradient
+    insert into public.badges (id, class_id, name, icon, gradient, is_demo)
+    select private.backup_new_id(v_new, b.id::text), v_new, b.name, b.icon, b.gradient, b.is_demo
       from public.badges b where b.class_id = v_old;
   end if;
   if 'settings' = any (v_copy) then

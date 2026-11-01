@@ -135,6 +135,7 @@ export function DataSection({
     startTransition(async () => {
       try {
         const res = await openNewYear({
+          expected_class_id: classId,
           school_year: yearForm.schoolYear,
           class_name: yearForm.className,
           teacher_name: yearForm.teacherName,

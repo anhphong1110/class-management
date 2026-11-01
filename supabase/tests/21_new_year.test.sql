@@ -1,6 +1,6 @@
 -- Đợt 6, Task 7: mở năm học mới (start_new_school_year) và xóa dữ liệu demo (delete_demo_data).
 begin;
-select plan(99);
+select plan(106);
 
 create function pg_temp.u(h text) returns uuid language sql immutable
 as $$ select ('00000000-0000-0000-0000-' || lpad(h, 12, '0'))::uuid $$;
@@ -46,7 +46,8 @@ insert into public.reward_requests (id, class_id, student_id, reward_id, cost, s
   (pg_temp.u('31'), pg_temp.u('c1'), pg_temp.u('a1'), pg_temp.u('21'), 5, 'pending');
 insert into public.star_transactions (id, class_id, student_id, delta, kind, reward_request_id, actor_id) values
   (pg_temp.u('45'), pg_temp.u('c1'), pg_temp.u('a1'), -5, 'reserve', pg_temp.u('31'), pg_temp.u('d3'));
-insert into public.subjects (id, class_id, name) values (pg_temp.u('51'), pg_temp.u('c1'), 'Toán'), (pg_temp.u('52'), pg_temp.u('c1'), 'Văn');
+insert into public.subjects (id, class_id, name, is_demo) values (pg_temp.u('51'), pg_temp.u('c1'), 'Toán', false), (pg_temp.u('52'), pg_temp.u('c1'), 'Văn', true);
+update public.rewards set is_demo = true where id = pg_temp.u('22');
 insert into public.timetable_slots (class_id, weekday, session, period, subject_id) values
   (pg_temp.u('c1'), 1, 'morning', 1, pg_temp.u('51')), (pg_temp.u('c1'), 6, 'morning', 2, pg_temp.u('52'));
 insert into public.missions (id, class_id, name, period, reward_stars) values (pg_temp.u('61'), pg_temp.u('c1'), 'M1', 'week', 3);
@@ -65,19 +66,19 @@ select ok(not has_function_privilege('public', 'public.delete_demo_data()', 'exe
 -- ===== học sinh: not_allowed =====
 set local role authenticated;
 select pg_temp.as_user(pg_temp.u('d3'));
-select throws_ok($$select public.start_new_school_year('{"school_year":"2027 – 2028","class_name":"6A"}'::jsonb)$$, 'P0001', 'not_allowed', 'học sinh mở năm học mới: not_allowed');
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","school_year":"2027 – 2028","class_name":"6A"}'::jsonb)$$, 'P0001', 'not_allowed', 'học sinh mở năm học mới: not_allowed');
 select throws_ok($$select public.delete_demo_data()$$, 'P0001', 'not_allowed', 'học sinh xóa dữ liệu demo: not_allowed');
 
 -- ===== dữ liệu đầu vào sai: invalid_input, không đổi gì =====
 select pg_temp.as_user(pg_temp.u('d1'));
-select throws_ok($$select public.start_new_school_year('{"school_year":"2027 – 2028","class_name":"6A","copy":["timetable"]}'::jsonb)$$, 'P0001', 'invalid_input', 'chép timetable mà thiếu subjects: invalid_input');
-select throws_ok($$select public.start_new_school_year('{"school_year":"2027 – 2028","class_name":"6A","copy":["timetable","criteria"]}'::jsonb)$$, 'P0001', 'invalid_input', 'timetable với criteria (không có subjects): invalid_input');
-select throws_ok($$select public.start_new_school_year('{"school_year":"2027 – 2028","class_name":"6A","copy":["students"]}'::jsonb)$$, 'P0001', 'invalid_input', 'chép học sinh: invalid_input');
-select throws_ok($$select public.start_new_school_year('{"school_year":"2027 – 2028","class_name":"6A","copy":"subjects"}'::jsonb)$$, 'P0001', 'invalid_input', 'copy không phải mảng: invalid_input');
-select throws_ok($$select public.start_new_school_year('{"school_year":"2027 – 2028","class_name":"  "}'::jsonb)$$, 'P0001', 'invalid_input', 'tên lớp trống: invalid_input');
-select throws_ok($$select public.start_new_school_year('{"class_name":"6A"}'::jsonb)$$, 'P0001', 'invalid_input', 'thiếu năm học: invalid_input');
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","school_year":"2027 – 2028","class_name":"6A","copy":["timetable"]}'::jsonb)$$, 'P0001', 'invalid_input', 'chép timetable mà thiếu subjects: invalid_input');
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","school_year":"2027 – 2028","class_name":"6A","copy":["timetable","criteria"]}'::jsonb)$$, 'P0001', 'invalid_input', 'timetable với criteria (không có subjects): invalid_input');
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","school_year":"2027 – 2028","class_name":"6A","copy":["students"]}'::jsonb)$$, 'P0001', 'invalid_input', 'chép học sinh: invalid_input');
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","school_year":"2027 – 2028","class_name":"6A","copy":"subjects"}'::jsonb)$$, 'P0001', 'invalid_input', 'copy không phải mảng: invalid_input');
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","school_year":"2027 – 2028","class_name":"  "}'::jsonb)$$, 'P0001', 'invalid_input', 'tên lớp trống: invalid_input');
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","class_name":"6A"}'::jsonb)$$, 'P0001', 'invalid_input', 'thiếu năm học: invalid_input');
 select throws_ok($$select public.start_new_school_year('[]'::jsonb)$$, 'P0001', 'invalid_input', 'không phải object: invalid_input');
-select throws_ok($$select public.start_new_school_year('{"school_year":"2027 – 2028","class_name":"6A","theme":"neon"}'::jsonb)$$, 'P0001', 'invalid_input', 'theme lạ: invalid_input');
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","school_year":"2027 – 2028","class_name":"6A","theme":"neon"}'::jsonb)$$, 'P0001', 'invalid_input', 'theme lạ: invalid_input');
 reset role;
 select is((select count(*)::int from public.classes), (select n::int from base), 'đầu vào sai không tạo lớp');
 select is((select archived_at from public.classes where id = pg_temp.u('c1')), null, 'đầu vào sai không lưu trữ lớp cũ');
@@ -89,7 +90,7 @@ select is((select pg_temp.avail(pg_temp.u('a1'))), 5::bigint, 'trước đó yê
 set local role authenticated;
 select pg_temp.as_user(pg_temp.u('d1'));
 select set_config('app.ny', public.start_new_school_year(jsonb_build_object(
-  'school_year', '2027 – 2028', 'class_name', '6A', 'teacher_name', 'Cô T mới',
+  'expected_class_id', pg_temp.u('c1'), 'school_year', '2027 – 2028', 'class_name', '6A', 'teacher_name', 'Cô T mới',
   'copy', jsonb_build_array('subjects', 'timetable', 'criteria', 'rewards', 'avatars', 'settings', 'missions')))::text, true);
 reset role;
 create temp table ny as select current_setting('app.ny')::uuid as id;
@@ -127,6 +128,10 @@ select is((select avatar_id from public.profiles where id = pg_temp.u('d1')),
 select is((select count(*)::int from public.audit_logs where class_id = (select id from ny) and action = 'school_year_opened'), 1, 'ghi nhật ký school_year_opened');
 select is((select count(*)::int from public.audit_logs where class_id = pg_temp.u('c1') and action = 'class_archived'), 1, 'ghi nhật ký class_archived cho lớp cũ');
 
+select is((select count(*)::int from public.subjects where class_id = (select id from ny) and is_demo and name = 'Văn'), 1, 'bản sao môn giữ is_demo của dòng gốc (true)');
+select is((select count(*)::int from public.subjects where class_id = (select id from ny) and not is_demo and name = 'Toán'), 1, 'bản sao môn giữ is_demo của dòng gốc (false)');
+select is((select count(*)::int from public.rewards where class_id = (select id from ny) and is_demo), 1, 'bản sao quà giữ is_demo');
+
 -- Review Focus 4
 select is((select status::text from public.reward_requests where id = pg_temp.u('31')), 'rejected', 'yêu cầu pending bị từ chối');
 select is((select pg_temp.avail(pg_temp.u('a1'))), 10::bigint, 'sao khả dụng của học sinh về như trước khi gửi yêu cầu (10)');
@@ -135,14 +140,21 @@ set local role authenticated;
 select pg_temp.as_user(pg_temp.u('d3'));
 select is((select count(*)::int from public.my_profile_summary()), 0, 'học sinh năm cũ gọi my_profile_summary không còn dữ liệu');
 select is((select status from public.my_student_session()), 'archived_class', 'học sinh năm cũ có trạng thái archived_class (không đăng nhập được)');
-select throws_ok($$select public.start_new_school_year('{"school_year":"x","class_name":"y"}'::jsonb)$$, 'P0001', 'not_allowed', 'học sinh năm cũ vẫn không mở được năm học');
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","school_year":"x","class_name":"y"}'::jsonb)$$, 'P0001', 'not_allowed', 'học sinh năm cũ vẫn không mở được năm học');
 -- Giáo viên vào lớp mới thấy trống học sinh.
 select pg_temp.as_user(pg_temp.u('d1'));
 select is((select count(*)::int from public.students), 0, 'giáo viên vào lớp mới: không thấy học sinh nào');
 select is((select count(*)::int from public.my_archived_classes()), 1, 'năm học cũ nằm trong danh sách lưu trữ');
 
 -- Chép một phần: chỉ môn học; cài đặt về mặc định; tiêu chí không có.
-select set_config('app.ny2', public.start_new_school_year('{"school_year":"2028 – 2029","class_name":"7A","school_name":"Trường mới","copy":["subjects"]}'::jsonb)::text, true);
+-- Gửi trùng (form còn trỏ lớp cũ): stale_class, không tạo thêm lớp nào.
+create temp table cls_n as select count(*) as n from public.classes;
+grant select on cls_n to public;
+select throws_ok($$select public.start_new_school_year('{"expected_class_id":"00000000-0000-0000-0000-0000000000c1","school_year":"2028 – 2029","class_name":"7A"}'::jsonb)$$, 'P0001', 'stale_class', 'gửi lần hai với lớp cũ: stale_class');
+select is((select count(*) from public.classes), (select n from cls_n), 'gửi trùng không tạo thêm lớp (đúng một lớp mới)');
+select is((select count(*)::int from public.classes where owner_id = pg_temp.u('d1') and archived_at is null), 1, 'sau gửi trùng giáo viên vẫn chỉ có một lớp đang dùng');
+select throws_ok($$select public.start_new_school_year('{"school_year":"2028 – 2029","class_name":"7A"}'::jsonb)$$, 'P0001', 'invalid_input', 'thiếu expected_class_id: invalid_input');
+select set_config('app.ny2', public.start_new_school_year(jsonb_build_object('expected_class_id', (select id from ny), 'school_year', '2028 – 2029', 'class_name', '7A', 'school_name', 'Trường mới', 'copy', jsonb_build_array('subjects')))::text, true);
 reset role;
 select is((select pg_temp.cnt('subjects', current_setting('app.ny2')::uuid)), 2::bigint, 'chép một phần: có 2 môn');
 select is((select pg_temp.cnt('star_criteria', current_setting('app.ny2')::uuid) + pg_temp.cnt('rewards', current_setting('app.ny2')::uuid)

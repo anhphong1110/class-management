@@ -86,7 +86,7 @@ export async function restoreBackup(path: string): Promise<{ error: string }> {
     if (!check.ok) return invalid()
     const oldClassId = (json as { class: { id: string } }).class.id
 
-    const { data, error } = await supabase.rpc('restore_class_backup', { p_backup: json as never })
+    const { data, error } = await supabase.rpc('restore_class_backup', { p_backup: json as never, p_expected_class: path.split('/')[0] })
     if (error) return { error: toVietnameseMessage(error.message) }
     const parsed = restoreResult.parse(data)
 
@@ -101,6 +101,7 @@ export async function restoreBackup(path: string): Promise<{ error: string }> {
 }
 
 const newYearInput = z.object({
+  expected_class_id: guid,
   school_year: z.string().trim().min(1).max(100),
   class_name: z.string().trim().min(1).max(100),
   teacher_name: z.string().trim().max(100).optional(),
@@ -135,16 +136,21 @@ export async function openNewYear(input: unknown): Promise<{ error: string }> {
   const user = await requireTeacher()
   const parsed = newYearInput.safeParse(input)
   if (!parsed.success) return { error: toVietnameseMessage('invalid_input') }
-  const { school_year, class_name, teacher_name, copy } = parsed.data
+  const { expected_class_id, school_year, class_name, teacher_name, copy } = parsed.data
 
   const supabase = await createServerSupabase()
   const { data, error } = await supabase.rpc('start_new_school_year', {
-    p: { school_year, class_name, ...(teacher_name ? { teacher_name } : {}), copy },
+    p: { expected_class_id, school_year, class_name, ...(teacher_name ? { teacher_name } : {}), copy },
   })
   if (error) return { error: toVietnameseMessage(error.message) }
   const classId = guid.parse(data)
 
-  await copyNewYearImages(user.userId, user.classId, classId)
+  try {
+    await copyNewYearImages(user.userId, user.classId, classId)
+  } catch (e) {
+    // Năm học đã mở; ảnh chép lỗi không được chặn việc chuyển trang và báo thành công.
+    console.error('new-year: chép ảnh lỗi:', e instanceof Error ? e.message : e)
+  }
 
   ;(await cookies()).set(FLASH_COOKIE, `Đã mở năm học ${school_year}.`, { path: '/', maxAge: 60, sameSite: 'lax' })
   revalidatePath('/', 'layout')

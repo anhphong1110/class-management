@@ -1,5 +1,5 @@
 begin;
-select plan(120);
+select plan(122);
 
 create function pg_temp.u(h text) returns uuid language sql immutable
 as $$ select ('00000000-0000-0000-0000-' || lpad(h, 12, '0'))::uuid $$;
@@ -105,8 +105,8 @@ select cmp_ok((select count(*)::int from bk_tables), '=', 17, 'liệt kê đư�
 -- ===== quyền hàm =====
 select ok(has_function_privilege('authenticated', 'public.export_class_backup(uuid)', 'execute'), 'authenticated gọi được export_class_backup');
 select ok(not has_function_privilege('anon', 'public.export_class_backup(uuid)', 'execute'), 'anon không gọi được export_class_backup');
-select ok(has_function_privilege('authenticated', 'public.restore_class_backup(jsonb)', 'execute'), 'authenticated gọi được restore_class_backup');
-select ok(not has_function_privilege('anon', 'public.restore_class_backup(jsonb)', 'execute'), 'anon không gọi được restore_class_backup');
+select ok(has_function_privilege('authenticated', 'public.restore_class_backup(jsonb, uuid)', 'execute'), 'authenticated gọi được restore_class_backup');
+select ok(not has_function_privilege('anon', 'public.restore_class_backup(jsonb, uuid)', 'execute'), 'anon không gọi được restore_class_backup');
 select ok(has_function_privilege('authenticated', 'public.my_archived_classes()', 'execute'), 'authenticated gọi được my_archived_classes');
 select ok(not has_function_privilege('anon', 'public.my_archived_classes()', 'execute'), 'anon không gọi được my_archived_classes');
 select ok(not has_function_privilege('authenticated', 'private.close_class(uuid)', 'execute'), 'authenticated không gọi được private.close_class');
@@ -317,6 +317,8 @@ set local role authenticated;
 select pg_temp.as_user(pg_temp.u('d1'));
 select throws_ok($$select public.restore_class_backup((select j from bk5))$$, 'P0001', 'invalid_backup', 'số dư sao -1000 -> invalid_backup');
 select throws_ok($$select public.restore_class_backup((select j from bk6))$$, 'P0001', 'invalid_backup', 'yêu cầu pending vượt tồn kho -> invalid_backup');
+select throws_ok($$select public.restore_class_backup((select j from bk), '00000000-0000-0000-0000-0000000000c1')$$, 'P0001', 'stale_class', 'khôi phục với lớp đã cũ (form trỏ lớp khác lớp hiện tại): stale_class');
+select lives_ok($$select public.restore_class_backup((select j from bk), (select class_id from public.profiles where id = '00000000-0000-0000-0000-0000000000d1'))$$, 'khôi phục với đúng lớp hiện tại: chạy được');
 reset role;
 
 select * from finish();
