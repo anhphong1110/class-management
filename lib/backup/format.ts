@@ -28,7 +28,7 @@ export const BACKUP_TABLES_WITHOUT_ID: readonly string[] = ['class_settings']
 export const BACKUP_BUCKET = 'class-backups'
 
 /** Giới hạn dung lượng file khôi phục. */
-export const MAX_BACKUP_BYTES = 20 * 1024 * 1024
+export const MAX_BACKUP_BYTES = 50 * 1024 * 1024
 
 export type BackupSummary = { className: string; schoolYear: string; counts: Record<string, number> }
 export type BackupCheck = { ok: true; summary: BackupSummary } | { ok: false }

@@ -1,5 +1,5 @@
 begin;
-select plan(122);
+select plan(123);
 
 create function pg_temp.u(h text) returns uuid language sql immutable
 as $$ select ('00000000-0000-0000-0000-' || lpad(h, 12, '0'))::uuid $$;
@@ -320,6 +320,8 @@ select throws_ok($$select public.restore_class_backup((select j from bk6))$$, 'P
 select throws_ok($$select public.restore_class_backup((select j from bk), '00000000-0000-0000-0000-0000000000c1')$$, 'P0001', 'stale_class', 'khôi phục với lớp đã cũ (form trỏ lớp khác lớp hiện tại): stale_class');
 select lives_ok($$select public.restore_class_backup((select j from bk), (select class_id from public.profiles where id = '00000000-0000-0000-0000-0000000000d1'))$$, 'khôi phục với đúng lớp hiện tại: chạy được');
 reset role;
+
+select is((select file_size_limit from storage.buckets where id = 'class-backups'), 52428800::bigint, 'bucket class-backups giới hạn 50 MB');
 
 select * from finish();
 rollback;

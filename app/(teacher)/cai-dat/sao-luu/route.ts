@@ -7,6 +7,14 @@ import { BACKUP_BUCKET } from '@/lib/backup/format'
 
 const guid = z.guid()
 
+const EXPORT_ERROR = 'Không tạo được bản sao lưu. Cô thử lại sau nhé.'
+
+/** Trang lỗi thân thiện (thay cho trang 500 mặc định) kèm liên kết quay về Cài đặt. */
+function exportFailed() {
+  const html = `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sao lưu</title></head><body style="font-family:system-ui,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;background:#F4F6FF;color:#1F2250"><main style="max-width:420px;padding:24px;text-align:center"><p style="font-size:18px;font-weight:700">${EXPORT_ERROR}</p><a href="/cai-dat" style="color:#4B4FB5;font-weight:700">Quay lại Cài đặt</a></main></body></html>`
+  return new NextResponse(html, { status: 500, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } })
+}
+
 /** Route handler không đi qua layout nên tự kiểm đăng nhập và vai giáo viên. */
 export async function GET(request: NextRequest) {
   const user = await getSessionUser()
@@ -21,7 +29,8 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.rpc('export_class_backup', { p_class_id: classId })
   if (error) {
     if (error.message === 'not_allowed') return new NextResponse('Forbidden', { status: 403 })
-    throw new Error(error.message)
+    console.error('sao lưu: export_class_backup lỗi:', error.message)
+    return exportFailed()
   }
 
   const className = typeof (data as { class?: { class_name?: unknown } })?.class?.class_name === 'string'
@@ -34,7 +43,10 @@ export async function GET(request: NextRequest) {
   const store = supabase.storage.from(BACKUP_BUCKET)
   const path = `${user.classId}/export-${crypto.randomUUID()}.json`
   const up = await store.upload(path, Buffer.from(JSON.stringify(data)), { contentType: 'application/json' })
-  if (up.error) throw new Error(up.error.message)
+  if (up.error) {
+    console.error('sao lưu: không tải file lên Storage:', up.error.message)
+    return exportFailed()
+  }
 
   // Dọn file tạm cũ hơn 1 ngày (cơ hội, mỗi lần xuất); lỗi dọn không làm hỏng lần xuất này.
   try {
@@ -47,7 +59,10 @@ export async function GET(request: NextRequest) {
   }
 
   const { data: signed, error: signError } = await store.createSignedUrl(path, 60, { download: backupFileName(className, today) })
-  if (signError || !signed) throw new Error(signError?.message ?? 'Không tạo được liên kết tải')
+  if (signError || !signed) {
+    console.error('sao lưu: không ký được liên kết tải:', signError?.message)
+    return exportFailed()
+  }
   const res = NextResponse.redirect(signed.signedUrl)
   res.headers.set('Cache-Control', 'no-store')
   return res

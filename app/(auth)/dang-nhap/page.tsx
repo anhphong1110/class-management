@@ -12,15 +12,16 @@ async function loadClass() {
   const admin = createAdminSupabase()
   const { data } = await admin
     .from('classes')
-    .select('school_name, class_name, teacher_name, slogan, theme, logo_path, class_logo_path')
+    .select('id, school_name, class_name, teacher_name, slogan, theme, logo_path, class_logo_path')
     .is('archived_at', null)
     .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle()
   // Ngoại lệ có chủ ý: trang đăng nhập chưa có phiên (không gọi được requireTeacher), nên dùng khóa dịch vụ
-  // chỉ để ký hai đường dẫn logo của lớp. Hàm save_class_info đã bảo đảm các đường dẫn này nằm trong <lớp>/branding/.
+  // chỉ để ký hai đường dẫn logo của lớp. Chỉ ký đường dẫn nằm trong <lớp>/branding/ (save_class_info bảo đảm điều này,
+  // và giáo viên không còn quyền UPDATE trực tiếp các cột đường dẫn).
   const sign = async (path: string | null | undefined) => {
-    if (!path) return null
+    if (!path || !data || !path.startsWith(`${data.id}/branding/`)) return null
     const { data: signed } = await admin.storage.from('class-media').createSignedUrl(path, 3600)
     return signed?.signedUrl ?? null
   }

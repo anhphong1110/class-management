@@ -7,6 +7,9 @@ import { AccountsSection } from './AccountsSection'
 import { DataSection } from './DataSection'
 import { SettingsClient } from './SettingsClient'
 
+// Áp dụng cho cả Server Actions của trang (tạo tài khoản hàng loạt gọi GoTrue nhiều lần).
+export const maxDuration = 60
+
 export default async function Page() {
   const user = await requireTeacher()
   const [data, accounts, archived, demoCount] = await Promise.all([

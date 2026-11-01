@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validateBackup } from '@/lib/backup/validate'
-import { BACKUP_FORMAT, BACKUP_TABLES } from '@/lib/backup/format'
+import { BACKUP_FORMAT, BACKUP_TABLES, MAX_BACKUP_BYTES } from '@/lib/backup/format'
 
 const ID = '00000000-0000-0000-0000-0000000000c1'
 
@@ -104,4 +104,8 @@ describe('validateBackup', () => {
     ;(b.tables as Record<string, unknown>).students = [{ id: 'khong-phai-guid' }]
     expect(validateBackup(b)).toEqual({ ok: false })
   })
+})
+
+describe('MAX_BACKUP_BYTES', () => {
+  it('50 MB, khớp giới hạn bucket class-backups', () => expect(MAX_BACKUP_BYTES).toBe(52428800))
 })

@@ -544,15 +544,29 @@ grant execute on function
   to authenticated;
 
 -- 14) Quyền cột: giáo viên không sửa trực tiếp các cột chỉ đi qua hàm (owner_id, archived_at của lớp,
---     timetable_saturday, stock của quà). Các cột còn lại vẫn sửa được qua RLS như cũ.
+--     timetable_saturday, stock của quà, đường dẫn ảnh thương hiệu của lớp chỉ do save_class_info ghi) và không
+--     bao giờ sửa is_demo (cờ này quyết định "Xóa dữ liệu demo" xóa gì). profiles: chỉ display_name và avatar_id
+--     (role, student_id, login_disabled, class_id chỉ do máy chủ ghi bằng service role). Các cột còn lại vẫn sửa
+--     được qua RLS như cũ.
 do $$
 declare
   r record;
 begin
   for r in select * from (values
-    ('classes', array['id', 'owner_id', 'archived_at', 'created_at']),
+    ('classes', array['id', 'owner_id', 'archived_at', 'created_at', 'logo_path', 'class_logo_path', 'cover_path']),
     ('class_settings', array['class_id', 'timetable_saturday', 'created_at', 'is_demo']),
-    ('rewards', array['id', 'class_id', 'stock', 'created_at', 'is_demo'])) v(tbl, excluded)
+    ('rewards', array['id', 'class_id', 'stock', 'created_at', 'is_demo']),
+    ('profiles', array['id', 'class_id', 'role', 'username', 'student_id', 'login_disabled', 'created_at']),
+    ('avatar_library', array['is_demo']),
+    ('students', array['is_demo']),
+    ('groups', array['is_demo']),
+    ('group_members', array['is_demo']),
+    ('star_criteria', array['is_demo']),
+    ('subjects', array['is_demo']),
+    ('timetable_slots', array['is_demo']),
+    ('announcements', array['is_demo']),
+    ('missions', array['is_demo']),
+    ('badges', array['is_demo'])) v(tbl, excluded)
   loop
     execute format('revoke update on public.%I from authenticated', r.tbl);
     execute format('grant update (%s) on public.%I to authenticated',

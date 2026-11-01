@@ -1,5 +1,5 @@
 begin;
-select plan(168);
+select plan(172);
 
 create function pg_temp.as_user(u uuid) returns void language sql
 as $$ select set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true) $$;
@@ -346,6 +346,26 @@ select ok(not has_function_privilege('anon', 'public.set_timetable_saturday(bool
 select ok(not has_function_privilege('anon', 'public.undo_mission_completion(uuid)', 'execute')
   and not has_function_privilege('public', 'public.undo_mission_completion(uuid)', 'execute')
   and has_function_privilege('authenticated', 'public.undo_mission_completion(uuid)', 'execute'), 'quyền undo_mission_completion');
+
+-- Quyền cột (đợt sửa cuối): ảnh thương hiệu chỉ do save_class_info ghi; profiles chỉ display_name/avatar_id; is_demo không sửa được.
+select ok(not has_column_privilege('authenticated', 'public.classes', 'logo_path', 'update')
+  and not has_column_privilege('authenticated', 'public.classes', 'class_logo_path', 'update')
+  and not has_column_privilege('authenticated', 'public.classes', 'cover_path', 'update')
+  and has_column_privilege('authenticated', 'public.classes', 'slogan', 'update'), 'classes: không UPDATE trực tiếp ba cột đường dẫn ảnh');
+select ok(has_column_privilege('authenticated', 'public.profiles', 'display_name', 'update')
+  and has_column_privilege('authenticated', 'public.profiles', 'avatar_id', 'update'), 'profiles: UPDATE được display_name và avatar_id');
+select ok(not has_column_privilege('authenticated', 'public.profiles', 'role', 'update')
+  and not has_column_privilege('authenticated', 'public.profiles', 'student_id', 'update')
+  and not has_column_privilege('authenticated', 'public.profiles', 'login_disabled', 'update')
+  and not has_column_privilege('authenticated', 'public.profiles', 'class_id', 'update')
+  and not has_column_privilege('authenticated', 'public.profiles', 'username', 'update'), 'profiles: không UPDATE role, student_id, login_disabled, class_id, username');
+select is((select count(*)::int
+             from pg_attribute a join pg_class c on c.oid = a.attrelid join pg_namespace n on n.oid = c.relnamespace
+            where n.nspname = 'public' and c.relkind = 'r' and a.attname = 'is_demo' and not a.attisdropped
+              and has_column_privilege('authenticated', c.oid, a.attnum, 'update')
+              and exists (select 1 from pg_policies pp where pp.schemaname = 'public' and pp.tablename = c.relname
+                             and pp.cmd in ('UPDATE', 'ALL') and pp.policyname = 'teacher_update')), 0,
+  'không bảng nào cho giáo viên UPDATE cột is_demo');
 
 select * from finish();
 rollback;

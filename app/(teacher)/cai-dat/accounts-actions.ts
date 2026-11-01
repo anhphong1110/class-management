@@ -109,7 +109,8 @@ async function audit(
 }
 
 async function findStudentProfile(classId: string, studentId: string) {
-  const { data, error } = await createAdminSupabase()
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase
     .from('profiles')
     .select('id, username, display_name, login_disabled')
     .eq('class_id', classId)

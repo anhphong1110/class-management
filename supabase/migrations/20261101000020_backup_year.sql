@@ -364,12 +364,12 @@ end;
 $$;
 
 -- 10) Kho tạm cho file sao lưu: tải lên/tải xuống qua Storage thay vì thân Server Action (Vercel giới hạn 4,5 MB).
---     Bucket riêng (class-media chỉ nhận ảnh 5 MB). Đường dẫn <class_id>/<tên>.json; chỉ giáo viên của lớp đó,
+--     Bucket riêng (class-media chỉ nhận ảnh 5 MB; 50 MB là trần chung của gói Free). Đường dẫn <class_id>/<tên>.json; chỉ giáo viên của lớp đó,
 --     học sinh không đọc được.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('class-backups', 'class-backups', false, 20971520, array['application/json'])
+values ('class-backups', 'class-backups', false, 52428800, array['application/json'])
 on conflict (id) do update
-  set public = false, file_size_limit = 20971520, allowed_mime_types = array['application/json'];
+  set public = false, file_size_limit = 52428800, allowed_mime_types = array['application/json'];
 
 create policy class_backups_teacher_select on storage.objects for select to authenticated
   using (bucket_id = 'class-backups' and private.is_teacher()
