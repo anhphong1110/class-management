@@ -19,7 +19,7 @@ export default async function Page() {
       <Header title="Cài đặt" subtitle="Thiết lập lớp học, quyền học sinh và dữ liệu" />
       <SettingsClient {...data} />
       <AccountsSection accounts={accounts} />
-      <DataSection archived={archived} />
+      <DataSection archived={archived} classId={user.classId} />
       {/* Task 7 thêm các nút "Lưu trữ năm học" và "Xóa dữ liệu demo" vào DataSection. */}
     </>
   )

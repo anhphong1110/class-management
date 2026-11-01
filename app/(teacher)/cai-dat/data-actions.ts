@@ -7,7 +7,8 @@ import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { toVietnameseMessage } from '@/lib/errors'
-import { MAX_BACKUP_BYTES } from '@/lib/backup/format'
+import { BACKUP_BUCKET, MAX_BACKUP_BYTES } from '@/lib/backup/format'
+import { restorePathSchema } from '@/lib/backup/storage'
 import { validateBackup } from '@/lib/backup/validate'
 
 const BUCKET = 'class-media'
@@ -57,29 +58,40 @@ async function copyImages(userId: string, oldClassId: string, classId: string, p
   for (const r of results) if (r.error) console.error('restore: không bỏ được đường dẫn ảnh:', r.error.message)
 }
 
-/** Khôi phục từ file sao lưu vào một lớp mới. Thành công thì chuyển về Tổng quan; lỗi thì trả câu báo. */
-export async function restoreBackup(formData: FormData): Promise<{ error: string }> {
+/**
+ * Khôi phục từ file sao lưu vào một lớp mới. Trình duyệt đã tải file lên `class-backups/<lớp>/<uuid>.json`
+ * (Vercel giới hạn thân yêu cầu 4,5 MB nên file không đi qua Server Action). Thành công thì chuyển về Tổng quan;
+ * lỗi thì trả câu báo. File tạm luôn bị xóa (client admin, vì sau khi khôi phục giáo viên đã sang lớp khác).
+ */
+export async function restoreBackup(path: string): Promise<{ error: string }> {
   const user = await requireTeacher()
-  const file = formData.get('file')
-  if (!(file instanceof File) || file.size === 0 || file.size > MAX_BACKUP_BYTES) return invalid()
+  if (!restorePathSchema(user.classId).safeParse(path).success) return invalid()
 
-  let json: unknown
   try {
-    json = JSON.parse(await file.text())
-  } catch {
-    return invalid()
-  }
-  const check = validateBackup(json)
-  if (!check.ok) return invalid()
-  const oldClassId = (json as { class: { id: string } }).class.id
+    const supabase = await createServerSupabase()
+    const { data: blob, error: downloadError } = await supabase.storage.from(BACKUP_BUCKET).download(path)
+    if (downloadError || !blob) return invalid()
+    if (blob.size === 0 || blob.size > MAX_BACKUP_BYTES) return invalid()
 
-  const supabase = await createServerSupabase()
-  const { data, error } = await supabase.rpc('restore_class_backup', { p_backup: json as never })
-  if (error) return { error: toVietnameseMessage(error.message) }
-  const parsed = restoreResult.parse(data)
+    let json: unknown
+    try {
+      json = JSON.parse(await blob.text())
+    } catch {
+      return invalid()
+    }
+    const check = validateBackup(json)
+    if (!check.ok) return invalid()
+    const oldClassId = (json as { class: { id: string } }).class.id
 
-  await copyImages(user.userId, oldClassId, parsed.classId, parsed.imagePaths)
+    const { data, error } = await supabase.rpc('restore_class_backup', { p_backup: json as never })
+    if (error) return { error: toVietnameseMessage(error.message) }
+    const parsed = restoreResult.parse(data)
 
-  revalidatePath('/', 'layout')
-  redirect('/tong-quan')
+    await copyImages(user.userId, oldClassId, parsed.classId, parsed.imagePaths)
+
+    revalidatePath('/', 'layout')
+  } finally {
+    const { error } = await createAdminSupabase().storage.from(BACKUP_BUCKET).remove([path])
+    if (error) console.error('restore: không xóa được file tạm:', error.message)
+  }  redirect('/tong-quan')
 }

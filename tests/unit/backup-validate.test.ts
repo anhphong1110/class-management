@@ -88,6 +88,14 @@ describe('validateBackup', () => {
     ;(c.tables as Record<string, unknown>).rewards = [null]
     expect(validateBackup(c)).toEqual({ ok: false })
   })
+  it('từ chối class_settings rỗng hoặc có hai dòng', () => {
+    const a = valid()
+    ;(a.tables as Record<string, unknown>).class_settings = []
+    expect(validateBackup(a)).toEqual({ ok: false })
+    const b = valid()
+    ;(b.tables as Record<string, unknown>).class_settings = [{ class_id: ID }, { class_id: ID }]
+    expect(validateBackup(b)).toEqual({ ok: false })
+  })
   it('từ chối dòng thiếu id hoặc id không phải GUID (trừ class_settings)', () => {
     const a = valid()
     ;(a.tables as Record<string, unknown>).students = [{ code: 'HS01' }]

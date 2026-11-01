@@ -1,5 +1,5 @@
 begin;
-select plan(104);
+select plan(120);
 
 create function pg_temp.u(h text) returns uuid language sql immutable
 as $$ select ('00000000-0000-0000-0000-' || lpad(h, 12, '0'))::uuid $$;
@@ -159,6 +159,8 @@ select throws_ok($$select public.restore_class_backup(current_setting('app.bk'):
 select throws_ok($$select public.restore_class_backup(jsonb_set(current_setting('app.bk')::jsonb, '{tables,rewards}', '{}'))$$, 'P0001', 'invalid_backup', 'bảng không phải mảng -> invalid_backup');
 select throws_ok($$select public.restore_class_backup(jsonb_set(current_setting('app.bk')::jsonb, '{tables,rewards}', '[1]'))$$, 'P0001', 'invalid_backup', 'dòng không phải object -> invalid_backup');
 select throws_ok($$select public.restore_class_backup(jsonb_set(current_setting('app.bk')::jsonb, '{tables,students,0,id}', '"khong-phai-guid"'))$$, 'P0001', 'invalid_backup', 'id không phải GUID -> invalid_backup');
+select throws_ok($$select public.restore_class_backup(jsonb_set(current_setting('app.bk')::jsonb, '{tables,class_settings}', '[]'))$$, 'P0001', 'invalid_backup', 'class_settings rỗng -> invalid_backup');
+select throws_ok($$select public.restore_class_backup(jsonb_set(current_setting('app.bk')::jsonb, '{tables,class_settings}', (current_setting('app.bk')::jsonb #> '{tables,class_settings}') || (current_setting('app.bk')::jsonb #> '{tables,class_settings}')))$$, 'P0001', 'invalid_backup', 'class_settings hai dòng -> invalid_backup');
 -- Sai ở tầng dữ liệu (qua kiểm tra hình dạng nhưng vi phạm ràng buộc) cũng là invalid_backup và hoàn tác trọn vẹn.
 select throws_ok($$select public.restore_class_backup(jsonb_set(current_setting('app.bk')::jsonb, '{tables,star_transactions,0,delta}', '0'))$$, 'P0001', 'invalid_backup', 'delta 0 -> invalid_backup');
 select throws_ok($$select public.restore_class_backup(jsonb_set(current_setting('app.bk')::jsonb, '{tables,students,0,avatar_id}', to_jsonb(gen_random_uuid()::text)))$$, 'P0001', 'invalid_backup', 'khóa ngoại mồ côi -> invalid_backup');
@@ -168,6 +170,19 @@ select is((select count(*) from public.classes), (select classes from state_befo
 select is((select count(*) from public.students), (select students from state_before), 'không thêm học sinh khi file sai');
 select is((select class_id from public.profiles where id = pg_temp.u('d1')), (select teacher_class from state_before), 'giáo viên vẫn ở lớp cũ khi file sai');
 select is((select archived_at from public.classes where id = pg_temp.u('c1')), null, 'lớp cũ chưa bị lưu trữ khi file sai');
+
+-- ===== kho tạm class-backups =====
+set local role authenticated;
+select pg_temp.as_user(pg_temp.u('d1'));
+select lives_ok($$insert into storage.objects (bucket_id, name, owner_id) values ('class-backups', '00000000-0000-0000-0000-0000000000c1/x.json', '00000000-0000-0000-0000-0000000000d1')$$, 'giáo viên lưu file sao lưu vào thư mục lớp mình');
+select is((select count(*)::int from storage.objects where bucket_id = 'class-backups'), 1, 'giáo viên thấy file của lớp mình');
+select pg_temp.as_user(pg_temp.u('d2'));
+select throws_ok($$insert into storage.objects (bucket_id, name) values ('class-backups', '00000000-0000-0000-0000-0000000000c1/y.json')$$, '42501', null, 'giáo viên lớp khác không lưu vào thư mục lớp này');
+select is((select count(*)::int from storage.objects where bucket_id = 'class-backups'), 0, 'giáo viên lớp khác không thấy file');
+select pg_temp.as_user(pg_temp.u('d3'));
+select throws_ok($$insert into storage.objects (bucket_id, name) values ('class-backups', '00000000-0000-0000-0000-0000000000c1/z.json')$$, '42501', null, 'học sinh không lưu được vào class-backups');
+select is((select count(*)::int from storage.objects where bucket_id = 'class-backups'), 0, 'học sinh không đọc được class-backups');
+reset role;
 
 -- ===== khôi phục thật =====
 set local role authenticated;
@@ -224,6 +239,11 @@ select is((select count(*)::int from public.audit_logs where class_id = (select 
 select throws_ok($$update public.star_transactions set note = 'x' where class_id = (select id from newc)$$, 'P0001', 'ledger_immutable', 'sổ sao vẫn chặn sửa');
 select throws_ok($$delete from public.star_transactions where class_id = (select id from newc)$$, 'P0001', 'ledger_immutable', 'sổ sao vẫn chặn xóa');
 
+select is((select count(*)::int from public.star_transactions where class_id = (select id from newc) and actor_id is not null and actor_id <> pg_temp.u('d1')), 0, 'actor_id khác giáo viên khôi phục bị đặt null');
+select is((select count(*)::int from public.audit_logs where class_id = (select id from newc) and action = 'reward_created'), 0, 'khôi phục không ghi reward_created');
+select is(private.close_class(pg_temp.u('c1')), 0, 'close_class trên lớp đã lưu trữ trả 0');
+select is((select count(*)::int from public.audit_logs where class_id = pg_temp.u('c1') and action = 'class_archived'), 1, 'close_class lần hai không ghi nhật ký thêm');
+
 -- đường dẫn ảnh
 select is(j -> 'imagePaths' @> jsonb_build_array(jsonb_build_object('from', pg_temp.u('c1') || '/avatars/x.png', 'to', (select id from newc) || '/avatars/x.png')), true, 'imagePaths có ảnh avatar') from res;
 select is(j -> 'imagePaths' @> jsonb_build_array(jsonb_build_object('from', pg_temp.u('c1') || '/rewards/r.png', 'to', (select id from newc) || '/rewards/r.png')), true, 'imagePaths có ảnh quà') from res;
@@ -274,6 +294,30 @@ select is((select count(*)::int from public.reward_requests where class_id = (cu
 select is((select count(*)::int from public.student_badges where class_id = (current_setting('app.res3')::jsonb ->> 'classId')::uuid and awarded_by is not null), 0, 'awarded_by không còn -> null');
 select is((select class_id from public.profiles where id = pg_temp.u('d1')), (current_setting('app.res3')::jsonb ->> 'classId')::uuid, 'giáo viên chuyển tiếp sang lớp mới nhất');
 select is((select count(*)::int from public.classes where owner_id = pg_temp.u('d1') and archived_at is not null), 2, 'lớp liền trước cũng được lưu trữ (2 lớp đã lưu trữ)');
+
+-- ===== cột thiếu lấy mặc định; bất biến sổ sao và kho =====
+create temp table bk4 as
+  select jsonb_set(jsonb_set(j, '{tables,students}', (select jsonb_agg(e - 'is_demo') from jsonb_array_elements(j #> '{tables,students}') e)),
+                   '{tables,rewards}', (select jsonb_agg(e - 'is_demo' - 'hidden') from jsonb_array_elements(j #> '{tables,rewards}') e)) as j
+    from bk;
+grant select on bk4 to public;
+set local role authenticated;
+select pg_temp.as_user(pg_temp.u('d1'));
+select lives_ok($$select set_config('app.res4', public.restore_class_backup((select j from bk4))::text, true)$$, 'dòng thiếu is_demo vẫn khôi phục được');
+reset role;
+select is((select count(*)::int from public.students where class_id = (current_setting('app.res4')::jsonb ->> 'classId')::uuid and is_demo = false), 3, 'cột thiếu lấy mặc định (is_demo false)');
+create temp table bk5 as
+  select jsonb_set(j, '{tables,star_transactions}', (select jsonb_agg(case when e ->> 'id' = pg_temp.u('45')::text then e || '{"delta": -1000}' else e end)
+         from jsonb_array_elements(j #> '{tables,star_transactions}') e)) as j from bk;
+create temp table bk6 as
+  select jsonb_set(j, '{tables,rewards}', (select jsonb_agg(case when e ->> 'id' = pg_temp.u('21')::text then e || '{"stock": 0}' else e end)
+         from jsonb_array_elements(j #> '{tables,rewards}') e)) as j from bk;
+grant select on bk5, bk6 to public;
+set local role authenticated;
+select pg_temp.as_user(pg_temp.u('d1'));
+select throws_ok($$select public.restore_class_backup((select j from bk5))$$, 'P0001', 'invalid_backup', 'số dư sao -1000 -> invalid_backup');
+select throws_ok($$select public.restore_class_backup((select j from bk6))$$, 'P0001', 'invalid_backup', 'yêu cầu pending vượt tồn kho -> invalid_backup');
+reset role;
 
 select * from finish();
 rollback;

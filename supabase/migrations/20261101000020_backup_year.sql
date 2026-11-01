@@ -64,6 +64,8 @@ begin
   foreach t in array private.backup_tables() loop
     rows := p -> 'tables' -> t;
     if jsonb_typeof(rows) is distinct from 'array' then return false; end if;
+    -- Cài đặt lớp: đúng một dòng.
+    if t = 'class_settings' and jsonb_array_length(rows) <> 1 then return false; end if;
     for e in select x from jsonb_array_elements(rows) x loop
       if jsonb_typeof(e) <> 'object' then return false; end if;
       if t <> 'class_settings'
@@ -77,8 +79,8 @@ end;
 $$;
 revoke execute on function private.backup_valid(jsonb) from public, anon, authenticated;
 
--- 4) Đổi một dòng của bản sao lưu sang lớp mới: id, class_id, khóa ngoại, đường dẫn ảnh; người dùng không còn thì null.
-create function private.backup_remap_row(p_table text, p_row jsonb, p_old uuid, p_new uuid) returns jsonb
+-- 4) Đổi một dòng của bản sao lưu sang lớp mới: id, class_id, khóa ngoại, đường dẫn ảnh; người dùng khác giáo viên gọi thì null.
+create function private.backup_remap_row(p_table text, p_row jsonb, p_old uuid, p_new uuid, p_user uuid) returns jsonb
 language plpgsql
 stable
 security definer
@@ -117,9 +119,8 @@ begin
     end if;
   end loop;
   foreach c in array actors loop
-    if not (jsonb_typeof(v -> c) = 'string'
-            and (v ->> c) ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-            and exists (select 1 from auth.users u where u.id = (v ->> c)::uuid)) then
+    -- Chỉ giữ người dùng là chính giáo viên đang khôi phục; mọi người khác (kể cả còn tồn tại) đặt null.
+    if not (jsonb_typeof(v -> c) = 'string' and lower(v ->> c) = p_user::text) then
       v := v || jsonb_build_object(c, null::text);
     end if;
   end loop;
@@ -129,7 +130,7 @@ begin
   return v;
 end;
 $$;
-revoke execute on function private.backup_remap_row(text, jsonb, uuid, uuid) from public, anon, authenticated;
+revoke execute on function private.backup_remap_row(text, jsonb, uuid, uuid, uuid) from public, anon, authenticated;
 
 -- 5) Đóng một lớp: khóa học sinh, từ chối mọi yêu cầu pending (trả sao đang giữ), đặt archived_at, ghi nhật ký.
 --    Người gọi (hàm public) đã kiểm quyền giáo viên và quyền với lớp này. Trả số yêu cầu đã từ chối.
@@ -143,6 +144,11 @@ declare
   r record;
   v_rejected int := 0;
 begin
+  -- Lớp đã lưu trữ rồi: không làm gì, không ghi nhật ký lần nữa.
+  if exists (select 1 from public.classes c where c.id = p_class_id and c.archived_at is not null) then
+    return 0;
+  end if;
+
   -- Thứ tự khóa chung: students -> rewards -> reward_requests (mỗi nhóm theo id).
   perform 1 from (select s.id from public.students s where s.class_id = p_class_id order by s.id for no key update) l;
   perform 1 from (select w.id from public.rewards w
@@ -219,6 +225,7 @@ declare
   v_rows jsonb;
   v_avatar uuid;
   v_paths jsonb;
+  v_cols text;
   t text;
 begin
   if not private.is_teacher() then raise exception 'not_allowed'; end if;
@@ -242,18 +249,39 @@ begin
     -- Trigger classes_create_settings vừa tạo dòng mặc định; thay bằng cài đặt trong bản sao lưu.
     delete from public.class_settings where class_id = v_new;
 
+    -- Cờ giao dịch: rewards_audit bỏ qua dòng quà chèn khi khôi phục (chỉ vai không phải API mới có hiệu lực).
+    perform set_config('app.restoring', 'on', true);
+
     foreach t in array private.backup_tables() loop
-      select coalesce(jsonb_agg(private.backup_remap_row(t, x.e, v_old, v_new) order by x.n), '[]'::jsonb) into v_rows
+      select coalesce(jsonb_agg(private.backup_remap_row(t, x.e, v_old, v_new, v_user) order by x.n), '[]'::jsonb) into v_rows
         from jsonb_array_elements(p_backup -> 'tables' -> t) with ordinality x(e, n);
+      continue when jsonb_array_length(v_rows) = 0;
+      -- Danh sách cột: cột có thật của bảng VÀ có mặt ở mọi dòng. Cột thiếu lấy giá trị mặc định,
+      -- khóa lạ bị bỏ.
+      select string_agg(format('%I', c.column_name), ', ' order by c.ordinal_position) into v_cols
+        from information_schema.columns c
+       where c.table_schema = 'public' and c.table_name = t and c.is_generated = 'NEVER'
+         and not exists (select 1 from jsonb_array_elements(v_rows) e where not (e ? c.column_name));
       if t = 'star_transactions' then
-        execute 'insert into public.star_transactions select r.* from jsonb_populate_recordset(null::public.star_transactions, $1) r
-                  where r.kind <> ''reversal'' order by r.created_at, r.id' using v_rows;
-        execute 'insert into public.star_transactions select r.* from jsonb_populate_recordset(null::public.star_transactions, $1) r
-                  where r.kind = ''reversal'' order by r.created_at, r.id' using v_rows;
+        execute format('insert into public.star_transactions (%1$s) select %1$s from jsonb_populate_recordset(null::public.star_transactions, $1) r
+                         where r.kind <> ''reversal'' order by r.created_at, r.id', v_cols) using v_rows;
+        execute format('insert into public.star_transactions (%1$s) select %1$s from jsonb_populate_recordset(null::public.star_transactions, $1) r
+                         where r.kind = ''reversal'' order by r.created_at, r.id', v_cols) using v_rows;
       else
-        execute format('insert into public.%I select r.* from jsonb_populate_recordset(null::public.%I, $1) r', t, t) using v_rows;
+        execute format('insert into public.%1$I (%2$s) select %2$s from jsonb_populate_recordset(null::public.%1$I, $1) r', t, v_cols) using v_rows;
       end if;
     end loop;
+
+    -- Bất biến của sổ sao và kho: file chế tay không được phá chúng.
+    if exists (select 1 from public.star_transactions st where st.class_id = v_new
+                group by st.student_id having sum(st.delta) < 0)
+       or exists (select 1 from public.rewards w
+                   where w.class_id = v_new
+                     and w.stock < (select count(*) from public.reward_requests rr
+                                     where rr.class_id = v_new and rr.reward_id = w.id and rr.status = 'pending')) then
+      raise exception 'invalid_backup';
+    end if;
+    perform set_config('app.restoring', 'off', true);
   exception when others then
     -- Mọi lỗi dữ liệu (kiểu sai, khóa ngoại mồ côi, vi phạm ràng buộc hoặc trigger) = file không dùng được; hoàn tác trọn vẹn.
     raise exception 'invalid_backup';
@@ -301,6 +329,55 @@ begin
      order by c.archived_at desc, c.id;
 end;
 $$;
+
+-- 9) rewards_audit: không ghi reward_created cho quà chèn khi khôi phục (cờ app.restoring chỉ đặt trong restore_class_backup, theo giao dịch; vai API không có đường nào để đặt GUC).
+create or replace function private.audit_reward() returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_payload jsonb;
+begin
+  if tg_op = 'INSERT' then
+    if coalesce(current_setting('app.restoring', true), '') = 'on' then return new; end if;
+    insert into public.audit_logs (class_id, actor_id, action, entity, entity_id, payload)
+    values (new.class_id, (select auth.uid()), 'reward_created', 'reward', new.id,
+            jsonb_build_object('name', new.name, 'cost', new.cost, 'description', new.description,
+                               'icon', new.icon, 'image_path', new.image_path, 'stock', new.stock, 'hidden', new.hidden));
+    return new;
+  end if;
+
+  select coalesce(jsonb_object_agg(n.key, n.value), '{}'::jsonb) into v_payload
+    from jsonb_each(to_jsonb(new)) n
+    join jsonb_each(to_jsonb(old)) o on o.key = n.key
+   where n.value is distinct from o.value and n.key not in ('created_at', 'is_demo');
+  if v_payload = '{}'::jsonb or v_payload = jsonb_build_object('stock', new.stock) then
+    return new;
+  end if;
+  insert into public.audit_logs (class_id, actor_id, action, entity, entity_id, payload)
+  values (new.class_id, (select auth.uid()), 'reward_updated', 'reward', new.id, v_payload);
+  return new;
+end;
+$$;
+
+-- 10) Kho tạm cho file sao lưu: tải lên/tải xuống qua Storage thay vì thân Server Action (Vercel giới hạn 4,5 MB).
+--     Bucket riêng (class-media chỉ nhận ảnh 5 MB). Đường dẫn <class_id>/<tên>.json; chỉ giáo viên của lớp đó,
+--     học sinh không đọc được.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('class-backups', 'class-backups', false, 20971520, array['application/json'])
+on conflict (id) do update
+  set public = false, file_size_limit = 20971520, allowed_mime_types = array['application/json'];
+
+create policy class_backups_teacher_select on storage.objects for select to authenticated
+  using (bucket_id = 'class-backups' and private.is_teacher()
+         and (storage.foldername(name))[1] = (select private.my_class_id())::text);
+create policy class_backups_teacher_insert on storage.objects for insert to authenticated
+  with check (bucket_id = 'class-backups' and private.is_teacher()
+              and (storage.foldername(name))[1] = (select private.my_class_id())::text);
+create policy class_backups_teacher_delete on storage.objects for delete to authenticated
+  using (bucket_id = 'class-backups' and private.is_teacher()
+         and (storage.foldername(name))[1] = (select private.my_class_id())::text);
 
 revoke execute on function public.export_class_backup(uuid) from public, anon;
 revoke execute on function public.restore_class_backup(jsonb) from public, anon;

@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { toVietnameseMessage } from '@/lib/errors'
-import { MAX_BACKUP_BYTES, type BackupSummary } from '@/lib/backup/format'
+import { BACKUP_BUCKET, MAX_BACKUP_BYTES, type BackupSummary } from '@/lib/backup/format'
 import { validateBackup } from '@/lib/backup/validate'
 import type { ArchivedClass } from '@/lib/backup/queries'
+import { createBrowserSupabase } from '@/lib/supabase/client'
 import { restoreBackup } from './data-actions'
 
 const card =
@@ -25,7 +26,7 @@ function isRedirect(e: unknown) {
   return typeof (e as { digest?: unknown })?.digest === 'string' && (e as { digest: string }).digest.startsWith('NEXT_REDIRECT')
 }
 
-export function DataSection({ archived }: { archived: ArchivedClass[] }) {
+export function DataSection({ archived, classId }: { archived: ArchivedClass[]; classId: string }) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<Preview | null>(null)
@@ -56,11 +57,18 @@ export function DataSection({ archived }: { archived: ArchivedClass[] }) {
 
   function restore() {
     if (!preview) return
-    const form = new FormData()
-    form.set('file', preview.file)
+    const { file } = preview
     startTransition(async () => {
       try {
-        const res = await restoreBackup(form)
+        // Tải thẳng lên Storage (không qua thân Server Action), rồi chỉ gửi đường dẫn.
+        const path = `${classId}/${crypto.randomUUID()}.json`
+        const up = await createBrowserSupabase().storage.from(BACKUP_BUCKET).upload(path, new Blob([file], { type: 'application/json' }), { contentType: 'application/json' })
+        if (up.error) {
+          setPreview(null)
+          setError(toVietnameseMessage('unknown'))
+          return
+        }
+        const res = await restoreBackup(path)
         if (res?.error) {
           setPreview(null)
           setError(res.error)

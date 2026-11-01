@@ -25,6 +25,8 @@ export const BACKUP_TABLES = [
 /** Bảng duy nhất không có cột id (khóa chính là class_id). */
 export const BACKUP_TABLES_WITHOUT_ID: readonly string[] = ['class_settings']
 
+export const BACKUP_BUCKET = 'class-backups'
+
 /** Giới hạn dung lượng file khôi phục. */
 export const MAX_BACKUP_BYTES = 20 * 1024 * 1024
 

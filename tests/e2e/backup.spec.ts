@@ -21,20 +21,15 @@ async function expectClassUnchanged(page: Page) {
   expect(error).toBeNull()
   expect(data?.class_id).toBe(CLASS_ID)
   const { count } = await db.from('classes').select('id', { count: 'exact', head: true })
-  expect(count).toBe(await classCount.get())
+  expect(count).toBe(classCount)
   await expect(page.getByRole('dialog')).toHaveCount(0)
 }
 
-const classCount = {
-  value: -1,
-  async get() {
-    return this.value
-  },
-}
+let classCount = -1
 
 test.beforeAll(async () => {
   const { count } = await admin().from('classes').select('id', { count: 'exact', head: true })
-  classCount.value = count ?? -1
+  classCount = count ?? -1
 })
 
 test('"Sao lưu dữ liệu" tải được file JSON có format', async ({ page }) => {
@@ -106,4 +101,22 @@ test('file hợp lệ: xem trước tên lớp, năm học, số học sinh và 
   await expect(dialog.getByRole('button', { name: 'Khôi phục' })).toBeEnabled()
   await dialog.getByRole('button', { name: 'Hủy' }).click()
   await expectClassUnchanged(page)
+})
+
+test('file đúng hình dạng nhưng cơ sở dữ liệu từ chối: báo lỗi, lớp vẫn như cũ, file tạm bị xóa', async ({ page }) => {
+  await open(page)
+  const waiting = page.waitForEvent('download')
+  await page.getByRole('link', { name: /Sao lưu dữ liệu/ }).click()
+  const json = JSON.parse(readFileSync((await (await waiting).path())!, 'utf8'))
+  // Học sinh đầu tiên trỏ tới một avatar không có: qua kiểm hình dạng ở trình duyệt, vướng khóa ngoại trong DB.
+  json.tables.students[0].avatar_id = '00000000-0000-0000-0000-00000000dead'
+
+  await page.getByTestId('restore-file').setInputFiles({ name: 'chet.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(json)) })
+  const dialog = page.getByRole('dialog', { name: 'Khôi phục từ bản sao lưu' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('button', { name: 'Khôi phục' }).click()
+  await expect(page.getByRole('alert').filter({ hasText: INVALID })).toBeVisible()
+  await expectClassUnchanged(page)
+  const { data } = await admin().storage.from('class-backups').list(CLASS_ID)
+  expect((data ?? []).filter((f) => !f.name.startsWith('export-'))).toHaveLength(0)
 })

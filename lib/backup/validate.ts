@@ -20,6 +20,8 @@ export function validateBackup(json: unknown): BackupCheck {
   for (const t of BACKUP_TABLES) {
     const rows = json.tables[t]
     if (!Array.isArray(rows)) return { ok: false }
+    // Cài đặt lớp: đúng một dòng.
+    if (t === 'class_settings' && rows.length !== 1) return { ok: false }
     for (const row of rows) {
       if (!isObject(row)) return { ok: false }
       if (!BACKUP_TABLES_WITHOUT_ID.includes(t) && (typeof row.id !== 'string' || !GUID.test(row.id))) return { ok: false }
