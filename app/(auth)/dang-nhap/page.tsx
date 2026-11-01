@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { schoolLabel } from '@/lib/classes/brand'
 import Image from 'next/image'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { toVietnameseMessage } from '@/lib/errors'
@@ -90,7 +91,7 @@ export default async function LoginPage({
           </div>
         </div>
         <div className="font-display text-[22px] font-extrabold tracking-[0.06em]">
-          {`TRƯỜNG ${school}`.toLocaleUpperCase('vi-VN')}
+          {schoolLabel(school).toLocaleUpperCase('vi-VN')}
         </div>
         <div className="text-sm font-extrabold tracking-[0.18em] text-[#FFE08A]">
           {[className && `LỚP ${className}`, teacher && `TEAM ${teacher}`].filter(Boolean).join(' · ').toLocaleUpperCase('vi-VN')}

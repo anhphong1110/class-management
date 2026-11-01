@@ -17,8 +17,8 @@ export function brandSentence(cls: { class_name: string }): string {
   return accent ? `Trạm không gian Năm ${accent.slice(4)}` : 'Trạm không gian'
 }
 
-/** Dòng tên trường cho thanh bên/trình chiếu: "Trường <tên>", trống thì "Trường học". */
+/** Dòng tên trường: "Trường <tên>", trống thì "Trường học". Cô có gõ sẵn chữ "Trường" thì không lặp lại. */
 export function schoolLabel(schoolName: string | null | undefined): string {
-  const n = (schoolName ?? '').trim()
+  const n = (schoolName ?? '').trim().replace(/^trường\s+/iu, '')
   return n ? `Trường ${n}` : 'Trường học'
 }

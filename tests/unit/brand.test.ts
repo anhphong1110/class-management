@@ -31,3 +31,12 @@ describe('schoolLabel', () => {
     expect(schoolLabel(null)).toBe('Trường học')
   })
 })
+
+describe('schoolLabel', () => {
+  it('thêm chữ Trường', () => expect(schoolLabel('Tiểu học Chính Nghĩa')).toBe('Trường Tiểu học Chính Nghĩa'))
+  it('không lặp chữ Trường', () => {
+    expect(schoolLabel('Trường Tiểu học Chính Nghĩa')).toBe('Trường Tiểu học Chính Nghĩa')
+    expect(schoolLabel('  TRƯỜNG Tiểu học A')).toBe('Trường Tiểu học A')
+  })
+  it('trống thì Trường học', () => expect(schoolLabel('')).toBe('Trường học'))
+})
