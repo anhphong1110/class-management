@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
@@ -81,6 +82,7 @@ function toInfo(c: SettingsClass): InfoValues {
 }
 
 export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
+  const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [msg, setMsg] = useState<Msg | null>(null)
   const [vals, setVals] = useState<InfoValues>(() => toInfo(cls))
@@ -95,9 +97,19 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
   const ok = () => setMsg({ tone: 'success', text: SAVED })
   const fail = (text: string) => setMsg({ tone: 'error', text })
 
+  /** Gọi Server Action; nếu ném lỗi (mất mạng...) thì hoàn lại giao diện và báo lỗi chung. */
+  async function call(fn: () => Promise<{ error?: string }>, revert?: () => void): Promise<{ error?: string }> {
+    try {
+      return await fn()
+    } catch {
+      revert?.()
+      return { error: toVietnameseMessage('unknown') }
+    }
+  }
+
   function saveInfo() {
     startTransition(async () => {
-      const res = await saveClassInfo(infoPayload(vals))
+      const res = await call(() => saveClassInfo(infoPayload(vals)))
       if (res.error) fail(res.error)
       else ok()
     })
@@ -108,7 +120,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
     const before = theme
     setTheme(key)
     startTransition(async () => {
-      const res = await saveClassInfo({ theme: key })
+      const res = await call(() => saveClassInfo({ theme: key }), () => setTheme(before))
       if (res.error) {
         setTheme(before)
         fail(res.error)
@@ -119,7 +131,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
   function flip(key: FlagKey, next: boolean) {
     setS((p) => ({ ...p, [key]: next }))
     startTransition(async () => {
-      const res = await saveClassSettings({ [key]: next })
+      const res = await call(() => saveClassSettings({ [key]: next }), () => setS((p) => ({ ...p, [key]: !next })))
       if (res.error) {
         setS((p) => ({ ...p, [key]: !next }))
         fail(res.error)
@@ -136,7 +148,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
       return
     }
     startTransition(async () => {
-      const res = await saveClassSettings({ weekly_redeem_limit: n })
+      const res = await call(() => saveClassSettings({ weekly_redeem_limit: n }))
       if (res.error) {
         setLimit(String(s.weekly_redeem_limit))
         fail(res.error)
@@ -151,7 +163,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
     const before = s.star_steps
     setS((p) => ({ ...p, star_steps: next }))
     startTransition(async () => {
-      const res = await saveClassSettings({ star_steps: next })
+      const res = await call(() => saveClassSettings({ star_steps: next }), () => setS((p) => ({ ...p, star_steps: before })))
       if (res.error) {
         setS((p) => ({ ...p, star_steps: before }))
         fail(res.error)
@@ -176,10 +188,13 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
 
   function saturday(next: boolean, clear: boolean) {
     startTransition(async () => {
-      const res = await setSaturday(next, clear)
+      const res = await call(() => setSaturday(next, clear))
       setAskSaturday(false)
-      if (res.error) fail(res.error)
-      else {
+      if (res.error) {
+        fail(res.error)
+        // Số tiết thứ Bảy đã đổi từ nơi khác: lấy lại số mới để lần bấm sau mở hộp hỏi đúng số.
+        if (res.error === toVietnameseMessage('saturday_has_slots')) router.refresh()
+      } else {
         setS((p) => ({ ...p, timetable_saturday: next }))
         ok()
       }
@@ -210,7 +225,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
           const form = new FormData()
           form.set('kind', kind)
           form.set('file', small)
-          const res = await uploadBranding(form)
+          const res = await call(() => uploadBranding(form))
           if (res.error) fail(res.error)
           else ok()
         }

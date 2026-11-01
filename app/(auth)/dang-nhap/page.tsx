@@ -17,7 +17,8 @@ async function loadClass() {
     .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle()
-  // Trang đăng nhập chưa có phiên, nên ký đường dẫn bằng khóa dịch vụ (chỉ hai ảnh thương hiệu của lớp).
+  // Ngoại lệ có chủ ý: trang đăng nhập chưa có phiên (không gọi được requireTeacher), nên dùng khóa dịch vụ
+  // chỉ để ký hai đường dẫn logo của lớp. Hàm save_class_info đã bảo đảm các đường dẫn này nằm trong <lớp>/branding/.
   const sign = async (path: string | null | undefined) => {
     if (!path) return null
     const { data: signed } = await admin.storage.from('class-media').createSignedUrl(path, 3600)

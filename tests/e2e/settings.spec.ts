@@ -147,6 +147,10 @@ test('tắt thứ Bảy khi còn tiết: hỏi trước; "Hủy" giữ nguyên, 
   await dialog.getByRole('button', { name: 'Hủy' }).click()
   await expect(dialog).toHaveCount(0)
   await expect(sw).toHaveAttribute('aria-checked', 'true')
+  const kept = await admin().from('timetable_slots').select('id', { count: 'exact', head: true }).eq('class_id', CLASS_ID).eq('weekday', 6)
+  expect(kept.count).toBe(1)
+  const flag = await admin().from('class_settings').select('timetable_saturday').eq('class_id', CLASS_ID).single()
+  expect(flag.data?.timetable_saturday).toBe(true)
 
   await sw.click()
   await page.getByRole('dialog').getByRole('button', { name: 'Xóa và tắt' }).click()

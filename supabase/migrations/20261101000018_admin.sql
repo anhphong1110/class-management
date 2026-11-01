@@ -342,7 +342,7 @@ begin
     elsif k in ('logo_path', 'class_logo_path', 'cover_path') then
       -- Ảnh thương hiệu phải nằm trong <class_id>/branding/ của chính lớp này; null để bỏ ảnh.
       if jsonb_typeof(v) = 'string' then
-        if (v #>> '{}') !~ ('^' || v_class::text || '/branding/[A-Za-z0-9._-]+$') or (v #>> '{}') like '%..%' then
+        if (v #>> '{}') !~ ('^' || v_class::text || '/branding/[A-Za-z0-9_-][A-Za-z0-9._-]*$') or (v #>> '{}') like '%..%' then
           raise exception 'invalid_input';
         end if;
       elsif jsonb_typeof(v) <> 'null' then
