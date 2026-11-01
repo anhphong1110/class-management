@@ -28,7 +28,7 @@ export default async function StudentHome() {
   const now = new Date()
   return (
     <div className="flex flex-col gap-5">
-      {ctx.preview && <Notice tone="success">Đây là bản xem thử giao diện học sinh.</Notice>}
+      {ctx.preview && <Notice tone="info">Đây là bản xem thử giao diện học sinh.</Notice>}
       <section className="relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-[28px] bg-[linear-gradient(120deg,#33378F,#5C4FD8_55%,#9A66E6)] px-[34px] py-[30px] text-white max-sm:px-5">
         <div className="flex flex-[1_1_300px] flex-col gap-2">
           <div className="text-[13px] font-extrabold tracking-[.12em] text-[#FFE08A]">CÙNG HỌC – CÙNG CHƠI – CÙNG TỎA SÁNG</div>

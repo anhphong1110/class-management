@@ -12,7 +12,7 @@ export default async function GiftsPage() {
   const available = profile?.availableStars ?? 0
   return (
     <div className="flex flex-col gap-5">
-      {ctx.preview && <Notice tone="success">Đây là bản xem thử giao diện học sinh, nút đổi quà đang tắt.</Notice>}
+      {ctx.preview && <Notice tone="info">Đây là bản xem thử giao diện học sinh, nút đổi quà đang tắt.</Notice>}
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2.5 rounded-3xl bg-[linear-gradient(120deg,#33378F,#7A58E0)] px-6 py-[18px] text-white">
         <div className="font-display text-2xl font-extrabold">Em có {available} sao khả dụng</div>
         <div className="text-[14.5px] text-[#E9EBFF]">{giftsHeroHint(requireApproval)}</div>
