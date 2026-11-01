@@ -151,3 +151,81 @@ Kết quả: 557 test cơ sở dữ liệu, 265 unit test, 415/417 test trình d
     - gom tên "TRẠM KHÔNG GIAN NĂM 8" vào một chỗ để đổi được theo lớp;
     - thứ tự xóa khi "Xóa dữ liệu demo";
     - quyết định cờ `student_can_view_profile`.
+
+## Đợt 6: Cài đặt, Báo cáo, Tài khoản, Sao lưu, Năm học mới, chuẩn bị chạy thật (xong, đã merge vào `main`)
+
+Kết quả: 1021 test cơ sở dữ liệu, 386 unit test, 538 test trình duyệt (375/768/1280px), kịch bản đua 12/12; lint, kiểm kiểu, build sạch.
+
+**Đợt này dừng ở "sẵn sàng triển khai".** Chưa chạy migration lên Supabase thật, chưa tạo project Vercel, chưa đặt mật khẩu giáo viên. Cô làm theo `docs/DEPLOY-NOTES.md`.
+
+### Kế hoạch
+75. **Tôi tự duyệt plan đợt 6, theo lời bạn dặn.** Plan nằm ở `docs/superpowers/plans/2026-11-01-dot-6-quan-tri-va-chay-that.md`, gồm 10 task.
+76. **Nút "Tạo dữ liệu mẫu" cho production chưa làm** (spec §5 có nhắc). Production bắt đầu trống, còn dữ liệu demo chỉ có ở máy dev. *Nếu sai:* muốn có nút này thì làm thêm một hàm SQL tạo dữ liệu mẫu.
+
+### Cài đặt
+77. **Thêm vào mục "Thông tin lớp" (thiết kế chưa có):**
+    - 4 ô ngày học kỳ, kèm lời nhắc cập nhật mỗi năm;
+    - công tắc "Lớp học thứ Bảy".
+
+    Tắt thứ Bảy khi còn tiết thì hỏi trước: "Xóa và tắt" hoặc "Hủy".
+78. **Lưu theo hai cách.** Các công tắc lưu ngay khi bấm. Ô chữ lưu khi bấm "Lưu thông tin". Lưu lỗi thì công tắc tự trở về như cũ.
+79. **Số lượt đổi quà mỗi tuần từ 1 đến 20.** Mức sao gợi ý: 1–50, không trùng, tối đa 8 mức. "+ Thêm mức" mở ô nhập số, thay vì tự cộng 1 như thiết kế.
+80. **Thêm câu giải thích dưới "Giữ trước sao" và "Chỉ cho đổi khi đủ sao":** khi giữ trước bật thì học sinh luôn phải đủ sao mới gửi được yêu cầu.
+81. **Một số cột chỉ đổi được qua hàm của cơ sở dữ liệu, cô không sửa thẳng được:** lưu trữ học sinh, chủ lớp, ngày lưu trữ lớp, thứ Bảy, tồn kho quà. Nhờ vậy mọi thay đổi đều được kiểm tra và có nhật ký.
+82. **Học sinh của năm học đã lưu trữ không đọc được gì nữa.** Đăng nhập lại thì thấy "Năm học của em đã kết thúc.".
+82a. **Công tắc "Hồ sơ của mình" quyết định 3 ô số ở Trang chủ học sinh.** Đó là các ô sao thi đua, sao khả dụng và thứ hạng. Trước đây công tắc này không có tác dụng gì; nay tắt nó thì 3 ô đó ẩn đi.
+
+### Màu chủ đạo, tên trạm
+83. **Màu chủ đạo áp cho mọi nút, mục đang chọn và hộp thoại.** Màu đậm của 4 chủ đề: indigo `#4F5BD5`, hồng `#C2407A`, mint `#12796B`, vàng `#8F5A00`; chữ trắng trên các màu này đều đủ độ tương phản 4.5. Thiết kế chỉ có màu indigo, nên các sắc nhạt/đậm của hồng, mint, vàng là tôi tự đặt. Nút "Cộng sao" vẫn màu cam như thiết kế.
+84. **Tên "TRẠM KHÔNG GIAN NĂM N" lấy từ tên lớp** ("Năm 8 (5/8)" → "NĂM 8"), không viết cứng nữa. Tên tab trình duyệt: "Trạm không gian Năm 8".
+85. **Mọi công tắc dùng chung một kiểu như thiết kế Cài đặt:** nhãn bên trái, nút gạt bên phải. Công tắc ở Gọi tên vì thế cao hơn một chút.
+
+### Tài khoản học sinh
+86. **Tên đăng nhập theo dạng `hs.<tên đệm + tên>` không dấu.** Ví dụ "Võ Hà My" → `hs.hamy`. Trùng thì thêm số: `hs.hamy2`.
+87. **Mật khẩu tạm có 10 ký tự, bỏ các chữ dễ nhầm, chỉ hiện một lần.** Chỉ đóng được bảng mật khẩu bằng nút "Đóng", và sẽ được hỏi lại "Cô đã in hoặc ghi lại mật khẩu tạm chưa?". Spec ghi mật khẩu hiện một lần, nên tôi không dùng câu "Đã gửi mật khẩu tạm…" của thiết kế.
+88. **Khóa tài khoản có tác dụng ngay.** Học sinh đang đăng nhập bị đưa ra ở lần mở trang kế tiếp, với câu "Tài khoản này đang bị khóa. Em hỏi cô giáo nhé.".
+89. **Đăng nhập quá nhiều lần thì báo câu riêng**, không báo "sai mật khẩu". Khi chạy thật nhớ tăng giới hạn đăng nhập trong Supabase: cả lớp đăng nhập cùng lúc qua máy chủ Vercel. Xem bước 3 của DEPLOY-NOTES.
+90. **Tạo hàng loạt mà một bạn lỗi thì các bạn khác vẫn được tạo.** Bạn lỗi có tên trong mục "Chưa tạo được:". Không để lại tài khoản thiếu hồ sơ.
+
+### Báo cáo
+91. **Học kỳ và Cả năm cần ngày học kỳ.** Chưa đặt thì báo "Cô chưa đặt ngày học kỳ trong Cài đặt.".
+92. **Cách tính các con số:**
+    - Sao cộng/trừ không tính lần đã hoàn tác.
+    - Chuyên cần = có mặt + đi trễ.
+    - "Học sinh tiến bộ" đếm mọi bạn có sao tăng so với kỳ trước; danh sách hiện 5 bạn đầu.
+    - Phần trăm chuyên cần được làm tròn sao cho cộng lại đúng 100.
+93. **Số trong file CSV/Excel không có dấu +, −, %.** Lý do: Excel dễ hiểu nhầm chúng là công thức. Khoảng ngày tự chọn dài nhất 400 ngày; nhãn ngày có kèm dd/mm.
+
+### Sao lưu, khôi phục, năm học mới
+94. **File sao lưu đi qua kho file riêng `class-backups`, không qua máy chủ.** Lý do: Vercel giới hạn mỗi lần gửi/nhận 4,5 MB. Kho này chỉ chứa file JSON tối đa 20 MB, và chỉ cô đọc được, cho lớp của mình.
+95. **Khôi phục tạo một năm học mới từ file, rồi lưu trữ năm hiện tại.** Không ghi đè, không xóa gì.
+    - Trước khi khôi phục, kiểm tra không có bạn nào sao khả dụng âm và quà không bị giữ quá số tồn. File bị sửa tay thì báo "File sao lưu không hợp lệ.".
+    - Ảnh chỉ được chép khi file là của lớp do chính cô sở hữu.
+    - Học sinh khôi phục chưa có tài khoản; cô tạo lại bằng "Tạo tài khoản hàng loạt".
+96. **Mở năm học mới:**
+    - Cô chọn những gì chép sang: môn, thời khóa biểu, tiêu chí, quà, avatar, cài đặt, nhiệm vụ. Mặc định chọn hết trừ thời khóa biểu.
+    - Không chép học sinh và sao, nên năm mới bắt đầu từ 0.
+    - Yêu cầu đổi quà đang chờ của năm cũ bị từ chối và trả lại sao.
+    - Học sinh năm cũ không đăng nhập được nữa.
+97. **Bấm hai lần không mở hai năm học.** Lần bấm thứ hai báo "Năm học vừa thay đổi, cô tải lại trang nhé.".
+98. **Mục danh mục chép sang năm mới giữ nguyên dấu "mẫu".** Nên nếu mở năm mới trước khi xóa dữ liệu demo, quà/môn mẫu vẫn xóa được ở năm mới.
+99. **"Xóa dữ liệu demo":**
+    - Xóa 10 học sinh mẫu, mọi dữ liệu của các bạn đó, và tài khoản đăng nhập của các bạn đó.
+    - Giữ lại quà/môn/tổ mẫu nào mà dữ liệu thật còn dùng, và báo số mục giữ lại.
+    - Sổ sao bình thường không xóa được. Chỉ hàm này xóa được, và chỉ dòng của học sinh mẫu.
+
+### Việc nhỏ chuyển tiếp
+100. **Đã đóng các mục chuyển tiếp của đợt 1–5:** thông báo, điểm danh, thời khóa biểu, nút "Hoàn tác" cho từng lượt hoàn thành nhiệm vụ, câu báo hoàn tác khi sao đang được giữ cho yêu cầu đổi quà, câu lỗi riêng cho học sinh, xóa ảnh mồ côi. Ảnh tối đa 2 MB sau khi nén, ảnh gốc tối đa 5 MB.
+
+### Chạy thật
+101. **`pnpm bootstrap:prod` tạo lớp, 12 avatar, tài khoản cô và chủ lớp.** Mật khẩu lấy từ file `.env.bootstrap.local` (đã gitignore) và không bao giờ in ra. Chạy lần hai thì dừng, không tạo trùng. File này cố ý không đặt tên `.env.production.local`: Next.js tự đọc tên đó khi build ở máy, có thể làm bản build ở máy nối nhầm vào Supabase thật.
+102. **`.mcp.json` và `.env.bootstrap.local` được thêm vào `.gitignore`.** File `.mcp.json` của bạn tôi không đụng tới.
+102a. **Sao lưu tối đa 50 MB.** Một năm học đông giao dịch có thể vượt 20 MB. Lỗi khi tạo bản sao lưu thì hiện câu "Không tạo được bản sao lưu. Cô thử lại sau nhé.", không báo lỗi trang.
+102b. **Tên trường nhập có hay không có chữ "Trường" đều được.** Ứng dụng tự thêm chữ này và không lặp lại.
+103. **Các bước cô tự làm nằm trong `docs/DEPLOY-NOTES.md`:**
+     - chạy migration;
+     - cấu hình Auth, gồm tắt tự đăng ký và tăng giới hạn đăng nhập;
+     - không mở schema `private`;
+     - Vercel và tên miền;
+     - bảng kiểm tra sau khi chạy thật.
+104. Việc còn lại sau khi chạy thật (không chặn việc triển khai) có trong `docs/superpowers/plans/2026-11-01-dot-6-viec-chuyen-tiep.md`.
