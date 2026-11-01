@@ -5,7 +5,7 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
 ## Trước khi bắt đầu
 
 - Có project Supabase (hosted) và tài khoản Vercel.
-- Máy có `pnpm`, `supabase` CLI, và repo này đã `pnpm install`.
+- Máy có `pnpm` và repo này đã `pnpm install` (Supabase CLI đi kèm repo, gọi bằng `pnpm supabase`).
 - Danh sách migration kết thúc ở `20261101000020_backup_year.sql` (20 file). Nếu `supabase/migrations` có file sau số 0020 thì đọc lại trước khi đẩy.
 
 ## Các bước
@@ -14,8 +14,8 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
 
 2. **Đẩy migration (bạn tự chạy).**
    ```
-   supabase link --project-ref <project-ref>
-   supabase db push
+   pnpm supabase link --project-ref <project-ref>
+   pnpm supabase db push
    ```
    Lệnh này chạy 20 migration (0001 đến 0020) lên project thật. Đừng chạy `supabase db reset` và đừng nạp `seed.sql`: production không có dữ liệu demo.
 
@@ -25,6 +25,8 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
    - Email provider: tắt "Confirm email".
    - **Rate Limits** (Authentication → Rate Limits): tăng giới hạn `sign_in_sign_ups`. Mặc định là 30 lần mỗi 5 phút mỗi IP. Ứng dụng gọi `signInWithPassword` từ phía server trên Vercel nên mọi lượt đăng nhập đi qua cùng một vài IP của Vercel. 40 học sinh cùng đăng nhập sẽ vượt mức mặc định và bị báo lỗi 429. Đặt cao hơn, ví dụ 200 mỗi 5 phút.
    - URL Configuration: đặt Site URL là tên miền Vercel (ví dụ `https://ten-du-an.vercel.app`, sau này đổi sang tên miền riêng) và thêm cùng địa chỉ đó (kèm `/**`) vào Redirect URLs.
+
+   - Data API (Project Settings → Data API): chỉ để schema `public` (và `graphql_public` nếu có) trong "Exposed schemas". **Không bao giờ** thêm schema `private`: các hàm trong đó không dành cho gọi trực tiếp.
 
 4. **Kiểm Storage.** Dashboard → Storage. Migration đã tạo hai bucket riêng tư: `class-media` (0004, ảnh tối đa 5 MB) và `class-backups` (0020, file JSON tối đa 20 MB). Nếu thiếu bucket nào thì migration chưa chạy đủ; quay lại bước 2.
 
