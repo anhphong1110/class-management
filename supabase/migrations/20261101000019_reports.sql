@@ -1,6 +1,8 @@
 -- Thống kê – Báo cáo: một lần gọi trả mọi khối số liệu của trang /bao-cao.
 -- Ngày tính theo giờ Việt Nam, gồm cả hai đầu. Học sinh đã lưu trữ không tính.
--- Sao cộng/trừ bỏ các dòng đã bị hoàn tác (có dòng reversal trỏ tới qua reverses_id), dù hoàn tác xảy ra sau kỳ.
+-- Sao cộng/trừ, mốc và tiêu chí cùng dùng một CTE `tx`: bỏ các dòng đã bị hoàn tác (có dòng reversal trỏ tới qua
+-- reverses_id), dù hoàn tác xảy ra sau kỳ. Riêng `improved`/`progress` tính sao thi đua như bảng xếp hạng
+-- (award + penalty + reversal), nên dòng hoàn tác được tính vào ngày nó được tạo.
 
 create function public.report_summary(p_from date, p_to date, p_bucket text) returns jsonb
 language plpgsql
@@ -15,8 +17,6 @@ declare
   v_to_ts timestamptz;
   v_prev_ts timestamptz;
   v_last int;
-  v_added int;
-  v_deducted int;
   v_present int;
   v_late int;
   v_excused int;
@@ -66,16 +66,6 @@ begin
     ) x;
   end if;
 
-  -- Sao thi đua cộng/trừ, đã bỏ các dòng bị hoàn tác.
-  select coalesce(sum(t.delta) filter (where t.kind = 'award'), 0)::int,
-         coalesce(-sum(t.delta) filter (where t.kind = 'penalty'), 0)::int
-    into v_added, v_deducted
-    from public.star_transactions t
-    join public.students s on s.class_id = t.class_id and s.id = t.student_id and s.archived_at is null
-   where t.class_id = v_class and t.kind in ('award', 'penalty')
-     and t.created_at >= v_from_ts and t.created_at < v_to_ts
-     and not exists (select 1 from public.star_transactions r where r.class_id = t.class_id and r.reverses_id = t.id);
-
   with st as (
     select s.id, s.full_name, s.avatar_id, s.roll_no
       from public.students s where s.class_id = v_class and s.archived_at is null
@@ -98,7 +88,9 @@ begin
   series as (
     select i,
            case p_bucket
+             -- Khoảng quá 7 ngày (chọn ngày) lặp lại thứ, nên thêm dd/mm cho khỏi nhầm.
              when 'day' then (array['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'])[extract(isodow from p_from + i)::int]
+                             || case when v_days > 7 then ' ' || to_char(p_from + i, 'DD/MM') else '' end
              when 'week' then 'Tuần ' || (i + 1)
              else 'T' || extract(month from date_trunc('month', p_from) + make_interval(months => i))::int
            end as label
@@ -133,8 +125,8 @@ begin
   )
   select jsonb_build_object(
     'kpis', jsonb_build_object(
-      'added', v_added,
-      'deducted', v_deducted,
+      'added', (select coalesce(sum(delta) filter (where kind = 'award'), 0)::int from tx),
+      'deducted', (select coalesce(-sum(delta) filter (where kind = 'penalty'), 0)::int from tx),
       'attendancePct', case when v_total = 0 then 0 else round((v_present + v_late) * 100.0 / v_total)::int end,
       'redeemed', (select coalesce(sum(n), 0)::int from gift),
       'improved', (select count(*)::int from per where cur > prev)),

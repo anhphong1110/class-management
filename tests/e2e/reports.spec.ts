@@ -100,7 +100,11 @@ test('Chọn ngày: hộp thoại hai ô ngày, "Xem báo cáo" mở khoảng đ
   await dialog.getByLabel('Từ ngày').fill('2026-03-10')
   await dialog.getByLabel('Đến ngày').fill('2026-03-05')
   await dialog.getByRole('button', { name: 'Xem báo cáo' }).click()
-  await expect(dialog.getByRole('alert')).toHaveText('Khoảng ngày chưa hợp lệ.')
+  await expect(dialog.getByRole('alert')).toContainText('Khoảng ngày chưa hợp lệ')
+  await dialog.getByLabel('Từ ngày').fill('2026-01-01')
+  await dialog.getByLabel('Đến ngày').fill('2027-02-05')
+  await dialog.getByRole('button', { name: 'Xem báo cáo' }).click()
+  await expect(dialog.getByRole('alert')).toContainText('tối đa 400 ngày')
   await dialog.getByLabel('Từ ngày').fill('2026-03-01')
   await dialog.getByLabel('Đến ngày').fill('2026-03-05')
   await dialog.getByRole('button', { name: 'Xem báo cáo' }).click()
@@ -128,17 +132,17 @@ test('khoảng ngày không có dữ liệu: mọi KPI là 0, không có NaN, v�
   const csvWait = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Xuất CSV' }).click()
   const csv = await csvWait
-  expect(csv.suggestedFilename()).toBe('bao-cao-tu-01-01-2020-den-07-01-2020-2020-01-01-2020-01-07.csv')
+  expect(csv.suggestedFilename()).toBe('bao-cao-chon-ngay-2020-01-01-2020-01-07.csv')
   expect(readFileSync(await csv.path(), 'utf8')).not.toMatch(/NaN|Infinity/)
 
   const xlsxWait = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Xuất Excel' }).click()
-  expect((await xlsxWait).suggestedFilename()).toBe('bao-cao-tu-01-01-2020-den-07-01-2020-2020-01-01-2020-01-07.xlsx')
+  expect((await xlsxWait).suggestedFilename()).toBe('bao-cao-chon-ngay-2020-01-01-2020-01-07.xlsx')
 })
 
 test('khoảng ngày sai trên địa chỉ: báo lỗi, không có số liệu, không xuất được', async ({ page }) => {
   await open(page, '?ky=custom&tu=2026-03-10&den=2026-03-05')
-  await expect(page.getByRole('alert').filter({ hasText: 'Khoảng ngày chưa hợp lệ.' })).toBeVisible()
+  await expect(page.getByRole('alert').filter({ hasText: 'Khoảng ngày chưa hợp lệ' })).toBeVisible()
   await expect(page.getByTestId('kpi')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Xuất CSV' })).toBeDisabled()
 })

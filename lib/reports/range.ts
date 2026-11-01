@@ -7,9 +7,14 @@ export type ReportPeriod = 'week' | 'month' | 'term' | 'year' | 'custom'
 export type ReportRange = { from: string; to: string; bucket: Bucket; name: string }
 
 export const TERMS_NOT_SET = 'Cô chưa đặt ngày học kỳ trong Cài đặt.'
-export const BAD_RANGE = 'Khoảng ngày chưa hợp lệ.'
+export const BAD_RANGE = 'Khoảng ngày chưa hợp lệ: ngày bắt đầu không được sau ngày kết thúc, tối đa 400 ngày.'
 const MAX_DAYS = 400
 const DAY_MS = 86_400_000
+
+/** Hai ngày có thật, từ <= đến và dài tối đa 400 ngày (cùng luật với `report_summary`). */
+export function isValidCustomRange(from: string | null | undefined, to: string | null | undefined): boolean {
+  return isValidIsoDate(from) && isValidIsoDate(to) && from <= to && dayCount(from, to) <= MAX_DAYS
+}
 
 const dayCount = (from: string, to: string) =>
   Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS) + 1
@@ -30,13 +35,13 @@ export function resolveReportRange(
 ): ReportRange {
   if (period === 'custom') {
     const { from, to } = custom ?? {}
-    if (!isValidIsoDate(from) || !isValidIsoDate(to) || from > to || dayCount(from, to) > MAX_DAYS) throw new Error(BAD_RANGE)
-    const days = dayCount(from, to)
+    if (!isValidCustomRange(from, to)) throw new Error(BAD_RANGE)
+    const days = dayCount(from!, to!)
     return {
-      from,
-      to,
+      from: from!,
+      to: to!,
       bucket: days <= 14 ? 'day' : days <= 92 ? 'week' : 'month',
-      name: `Từ ${viDate(from)} đến ${viDate(to)}`,
+      name: `Từ ${viDate(from!)} đến ${viDate(to!)}`,
     }
   }
 

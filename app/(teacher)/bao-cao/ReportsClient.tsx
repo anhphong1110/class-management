@@ -7,10 +7,9 @@ import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
-import { isValidIsoDate } from '@/lib/domain/date'
 import { PERIOD_LABELS, type Period } from '@/lib/domain/period'
 import { kpiCards, unitLabel } from '@/lib/reports/format'
-import { BAD_RANGE, type ReportPeriod } from '@/lib/reports/range'
+import { BAD_RANGE, isValidCustomRange, type ReportPeriod } from '@/lib/reports/range'
 import type { ReportData } from '@/lib/reports/types'
 import { exportReport } from './actions'
 
@@ -58,7 +57,7 @@ export function ReportsClient({
   const [dialogError, setDialogError] = useState('')
 
   function submitDates() {
-    if (!isValidIsoDate(from) || !isValidIsoDate(to) || from > to) {
+    if (!isValidCustomRange(from, to)) {
       setDialogError(BAD_RANGE)
       return
     }
@@ -211,8 +210,8 @@ export function ReportsClient({
               </div>
               <div className="mt-1 text-[14.5px] font-extrabold text-[#4A476E]">Cần quan tâm (vắng nhiều nhất)</div>
               {data.lowAttendance.length === 0 && <Empty>Chưa có bạn nào vắng trong kỳ này.</Empty>}
-              {data.lowAttendance.map((l) => (
-                <div key={l.name} className="flex justify-between rounded-xl bg-[#F6F4FF] px-3 py-2 text-[14.5px] font-bold">
+              {data.lowAttendance.map((l, i) => (
+                <div key={`${i}-${l.name}`} className="flex justify-between rounded-xl bg-[#F6F4FF] px-3 py-2 text-[14.5px] font-bold">
                   <span>{l.name}</span>
                   <span className="text-[#8E1B3B]">{l.days} buổi vắng</span>
                 </div>
@@ -253,8 +252,8 @@ export function ReportsClient({
             <div className={`${CARD} flex min-w-0 flex-[1_1_360px] flex-col gap-3`}>
               <h2 className={H2}>Phần thưởng đã đổi</h2>
               {data.gifts.length === 0 && <Empty>Chưa có lượt đổi quà nào trong kỳ này.</Empty>}
-              {data.gifts.map((g) => (
-                <div key={g.label} className="flex flex-col gap-[3px]">
+              {data.gifts.map((g, i) => (
+                <div key={`${i}-${g.label}`} className="flex flex-col gap-[3px]">
                   <div className="flex justify-between text-[14.5px] font-bold">
                     <span>{g.label}</span>
                     <span className="text-[#5E35B1]">{g.n} lượt</span>

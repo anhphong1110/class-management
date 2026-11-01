@@ -77,7 +77,7 @@ describe('resolveReportRange', () => {
       })
     })
     it('thiếu ngày, ngày không có thật, từ sau đến, hoặc quá 400 ngày thì báo lỗi', () => {
-      const bad = 'Khoảng ngày chưa hợp lệ.'
+      const bad = 'Khoảng ngày chưa hợp lệ: ngày bắt đầu không được sau ngày kết thúc, tối đa 400 ngày.'
       expect(() => resolveReportRange('custom', now, T)).toThrow(bad)
       expect(() => custom('2026-02-31', '2026-03-05')).toThrow(bad)
       expect(() => custom('2026-03-06', '2026-03-05')).toThrow(bad)

@@ -1,5 +1,5 @@
 begin;
-select plan(50);
+select plan(52);
 
 create function pg_temp.as_user(u uuid) returns void language sql
 as $$ select set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true) $$;
@@ -108,6 +108,10 @@ select is((select jsonb_agg((b->>'added')::int) from jsonb_array_elements(pg_tem
   '[5,0,3,0,0,0,4]'::jsonb, 'added theo ngày (23:59:59 thuộc Chủ Nhật, 00:00 thuộc thứ Hai)');
 select is((select jsonb_agg((b->>'deducted')::int) from jsonb_array_elements(pg_temp.rep()->'buckets') b),
   '[0,2,0,0,0,0,0]'::jsonb, 'deducted theo ngày');
+
+-- khoảng quá 7 ngày: nhãn ngày có dd/mm
+select is((public.report_summary('2026-03-02', '2026-03-09', 'day')->'buckets'->0->>'label'), 'Thứ 2 02/03', 'nhãn ngày kèm dd/mm khi quá 7 ngày');
+select is((public.report_summary('2026-03-02', '2026-03-09', 'day')->'buckets'->7->>'label'), 'Thứ 2 09/03', 'nhãn mốc cuối kèm dd/mm');
 
 -- ===== buckets theo tuần và tháng =====
 select is((select jsonb_agg(b->>'label') from jsonb_array_elements(public.report_summary('2026-02-23', '2026-03-08', 'week')->'buckets') b),

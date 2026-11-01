@@ -26,7 +26,7 @@ export async function exportReport(raw: z.input<typeof input>): Promise<ExportRe
   const loaded = await loadReport(user.classId, period, { from, to })
   if (loaded.error !== undefined) return { error: loaded.error }
   const { range, data } = loaded
-  const fileName = reportFileName(range.name, range.from, range.to, format)
+  const fileName = reportFileName(period === 'custom' ? 'Chọn ngày' : range.name, range.from, range.to, format)
   if (format === 'csv') {
     return { fileName, mime: CSV_MIME, base64: Buffer.from(buildReportCsv(data, range.name), 'utf8').toString('base64') }
   }

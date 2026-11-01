@@ -68,9 +68,7 @@ describe('reportFileName', () => {
   it('bao-cao-<slug tên kỳ>-<from>-<to>', () => {
     expect(reportFileName('Tuần này', '2026-03-02', '2026-03-08', 'csv')).toBe('bao-cao-tuan-nay-2026-03-02-2026-03-08.csv')
     expect(reportFileName('Học kỳ', '2026-09-05', '2027-01-15', 'xlsx')).toBe('bao-cao-hoc-ky-2026-09-05-2027-01-15.xlsx')
-    expect(reportFileName('Từ 05/03/2026 đến 06/03/2026', '2026-03-05', '2026-03-06', 'csv')).toBe(
-      'bao-cao-tu-05-03-2026-den-06-03-2026-2026-03-05-2026-03-06.csv',
-    )
+    expect(reportFileName('Chọn ngày', '2026-03-05', '2026-03-06', 'csv')).toBe('bao-cao-chon-ngay-2026-03-05-2026-03-06.csv')
   })
 })
 
