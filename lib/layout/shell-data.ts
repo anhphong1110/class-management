@@ -7,6 +7,7 @@ import { resolveAvatar } from '@/lib/avatars/resolve'
 export type ShellClass = {
   school_name: string
   class_name: string
+  brand_title: string | null
   school_year: string
   teacher_name: string
   slogan: string
@@ -21,7 +22,7 @@ export const getShellData = cache(async () => {
   const supabase = await createServerSupabase()
   const { data: cls } = await supabase
     .from('classes')
-    .select('school_name, class_name, school_year, teacher_name, slogan, class_logo_path, logo_path, theme')
+    .select('school_name, class_name, brand_title, school_year, teacher_name, slogan, class_logo_path, logo_path, theme')
     .eq('id', user.classId)
     .maybeSingle()
   if (!cls) return null

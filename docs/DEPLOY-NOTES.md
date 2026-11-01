@@ -6,7 +6,7 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
 
 - Có project Supabase (hosted) và tài khoản Vercel.
 - Máy có `pnpm` và repo này đã `pnpm install` (Supabase CLI đi kèm repo, gọi bằng `pnpm supabase`).
-- Danh sách migration kết thúc ở `20261101000020_backup_year.sql` (20 file). Nếu `supabase/migrations` có file sau số 0020 thì đọc lại trước khi đẩy.
+- Danh sách migration kết thúc ở `20261101000021_feedback_khach.sql` (21 file). Nếu `supabase/migrations` có file sau số 0021 thì đọc lại trước khi đẩy.
 
 ## Các bước
 
@@ -17,7 +17,7 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
    pnpm supabase link --project-ref <project-ref>
    pnpm supabase db push
    ```
-   Lệnh này chạy 20 migration (0001 đến 0020) lên project thật. Đừng chạy `supabase db reset` và đừng nạp `seed.sql`: production không có dữ liệu demo.
+   Lệnh này chạy 21 migration (0001 đến 0021) lên project thật. Đừng chạy `supabase db reset` và đừng nạp `seed.sql`: production không có dữ liệu demo.
 
 3. **Cấu hình Auth.** Dashboard → Authentication:
    - Sign In / Providers: bật Email provider.
@@ -77,3 +77,29 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
     - [ ] Cộng sao cho học sinh.
     - [ ] Học sinh đổi quà.
     - [ ] Cô duyệt yêu cầu đổi quà.
+
+## Triển khai lại (project đã chạy thật, cập nhật lên bản có migration 0021)
+
+Áp dụng khi production đã chạy bản trước (đến migration 0020). Thứ tự quan trọng: **migration trước, code sau**, vì code mới đọc cột `classes.brand_title`; còn code cũ vẫn chạy bình thường trên schema mới.
+
+1. **Sao lưu trước.** Đăng nhập bằng tài khoản giáo viên, vào Cài đặt → Sao lưu và tải bản sao lưu của năm học hiện tại. Migration 0021 không xóa dữ liệu, nhưng nút "Xóa học sinh" mới xóa không hoàn tác được.
+2. **Xem trước migration sẽ chạy** (bạn tự chạy):
+   ```
+   pnpm supabase link --project-ref <project-ref>
+   pnpm supabase db push --dry-run
+   ```
+   Chỉ được thấy đúng một file: `20261101000021_feedback_khach.sql`. Thấy file khác thì dừng lại và kiểm tra.
+3. **Đẩy migration:**
+   ```
+   pnpm supabase db push
+   ```
+   Không chạy `supabase db reset`, không nạp `seed.sql`.
+4. **Merge PR vào `main`.** Vercel tự build và deploy bản Production từ `main`. Không cần đổi biến môi trường.
+5. **Kiểm tra sau khi deploy:**
+   - [ ] Cô đăng nhập được, thanh bên vẫn hiện "TRẠM KHÔNG GIAN NĂM 8" (hoặc năm hiện tại).
+   - [ ] Cài đặt → ô "Tên trạm (chủ đề của lớp)": để trống thì tên vẫn như cũ; điền thử rồi xóa trống để trả lại.
+   - [ ] Thêm một học sinh thử rồi dùng "Xóa học sinh" (không thử trên học sinh thật).
+   - [ ] Thêm một phần thưởng thử rồi "Xóa"; quà đã có người đổi thì báo không xóa được.
+   - [ ] Hồ sơ và avatar: "Gỡ avatar" và nút × trên ảnh tải lên hoạt động.
+   - [ ] Cài đặt: nút "Gỡ" logo và ảnh bìa chỉ hiện khi đang có ảnh.
+6. **Nếu phải quay lại:** Vercel → Deployments → "Promote to Production" bản trước. Migration 0021 chỉ thêm cột và hàm nên giữ nguyên được, code cũ vẫn chạy; không cần gỡ.

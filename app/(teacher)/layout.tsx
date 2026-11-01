@@ -22,6 +22,7 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
           classLogoUrl={data?.classLogoUrl ?? null}
           schoolLogoUrl={data?.schoolLogoUrl ?? null}
           className={data?.cls.class_name ?? ''}
+          brandName={data?.cls.brand_title}
           schoolName={data?.cls.school_name}
         />
       </div>

@@ -85,6 +85,39 @@ test('thêm, sửa, ẩn phần thưởng', async ({ page }) => {
   await expect(card(page, 'Bút chì màu')).toHaveClass(/opacity-60/)
 })
 
+test('xóa hẳn phần thưởng chưa ai đổi', async ({ page }) => {
+  await open(page)
+  await page.getByRole('button', { name: '+ Thêm phần thưởng' }).click()
+  await editor(page).getByLabel('Tên quà').fill('Quà thử xóa')
+  await editor(page).getByLabel('Giá (sao)').fill('3')
+  await editor(page).getByLabel('Số lượng trong kho').fill('2')
+  await editor(page).getByRole('button', { name: 'Xong' }).click()
+  await expect(editor(page)).toHaveCount(0)
+  await expect(page.getByTestId('reward-card')).toHaveCount(6)
+
+  await card(page, 'Quà thử xóa').getByRole('button', { name: 'Xóa' }).click()
+  const confirm = page.getByRole('dialog', { name: 'Xóa phần thưởng?' })
+  await expect(confirm).toContainText('Quà thử xóa')
+  await confirm.getByRole('button', { name: 'Xóa vĩnh viễn' }).click()
+  await expect(confirm).toHaveCount(0)
+  await expect(page.getByTestId('reward-card')).toHaveCount(5)
+  await expect(card(page, 'Quà thử xóa')).toHaveCount(0)
+  const { data } = await admin().from('rewards').select('id').eq('name', 'Quà thử xóa')
+  expect(data).toHaveLength(0)
+})
+
+test('quà đã có lịch sử đổi không xóa được, gợi ý dùng Ẩn', async ({ page }) => {
+  seedStars(5, 100)
+  await studentRequest('hs.hamy', REWARD(1))
+  await open(page)
+  await card(page, 'Sticker vũ trụ').getByRole('button', { name: 'Xóa' }).click()
+  const confirm = page.getByRole('dialog', { name: 'Xóa phần thưởng?' })
+  await confirm.getByRole('button', { name: 'Xóa vĩnh viễn' }).click()
+  await expect(confirm).toContainText('Quà này đã có lịch sử đổi nên không xóa được')
+  await confirm.getByRole('button', { name: 'Hủy' }).click()
+  await expect(card(page, 'Sticker vũ trụ')).toBeVisible()
+})
+
 test('duyệt, trao quà và tồn kho giảm', async ({ page }) => {
   seedStars(5, 100)
   const r = await studentRequest('hs.hamy', REWARD(1))

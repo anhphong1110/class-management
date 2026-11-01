@@ -94,6 +94,18 @@ export async function setRewardStock(id: string, stock: number): Promise<Result>
   return {}
 }
 
+/** Xóa hẳn quà chưa từng có yêu cầu đổi (RPC); xong thì xóa ảnh của quà trong storage. */
+export async function deleteReward(id: string): Promise<Result> {
+  await requireTeacher()
+  if (!uuid.safeParse(id).success) return invalid()
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase.rpc('delete_reward', { p_reward_id: id })
+  if (error) return { error: toVietnameseMessage(error.message) }
+  await removeImage(supabase, typeof data === 'string' ? data : null)
+  refresh()
+  return { message: 'Đã xóa phần thưởng.' }
+}
+
 export async function uploadRewardImage(form: FormData): Promise<Result> {
   const user = await requireTeacher()
   const id = uuid.safeParse(form.get('id'))
