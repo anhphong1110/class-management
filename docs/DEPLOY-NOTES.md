@@ -23,15 +23,16 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
    - Sign In / Providers: bật Email provider.
    - Sign In / Providers (mục User Signups): tắt "Allow new users to sign up".
    - Email provider: tắt "Confirm email".
+   - Password requirements: giữ mặc định (không bắt buộc chữ hoa hoặc ký tự đặc biệt). Mật khẩu tạm gồm 10 chữ thường và chữ số, sẽ bị từ chối nếu đặt quy tắc chặt hơn.
    - **Rate Limits** (Authentication → Rate Limits): tăng giới hạn `sign_in_sign_ups`. Mặc định là 30 lần mỗi 5 phút mỗi IP. Ứng dụng gọi `signInWithPassword` từ phía server trên Vercel nên mọi lượt đăng nhập đi qua cùng một vài IP của Vercel. 40 học sinh cùng đăng nhập sẽ vượt mức mặc định và bị báo lỗi 429. Đặt cao hơn, ví dụ 200 mỗi 5 phút.
    - URL Configuration: đặt Site URL là tên miền Vercel (ví dụ `https://ten-du-an.vercel.app`, sau này đổi sang tên miền riêng) và thêm cùng địa chỉ đó (kèm `/**`) vào Redirect URLs.
 
    - Data API (Project Settings → Data API): chỉ để schema `public` (và `graphql_public` nếu có) trong "Exposed schemas". **Không bao giờ** thêm schema `private`: các hàm trong đó không dành cho gọi trực tiếp.
 
-4. **Kiểm Storage.** Dashboard → Storage. Migration đã tạo hai bucket riêng tư: `class-media` (0004, ảnh tối đa 5 MB) và `class-backups` (0020, file JSON tối đa 20 MB). Nếu thiếu bucket nào thì migration chưa chạy đủ; quay lại bước 2.
+4. **Kiểm Storage.** Dashboard → Storage. Migration đã tạo hai bucket riêng tư: `class-media` (0004, ảnh tối đa 5 MB) và `class-backups` (0020, file JSON tối đa 50 MB, trần chung của gói Free). Nếu thiếu bucket nào thì migration chưa chạy đủ; quay lại bước 2.
 
 5. **Tạo lớp và tài khoản giáo viên.**
-   - Sao `.env.production.example` thành `.env.production.local`, điền giá trị thật (URL, anon key, service role key lấy ở Project Settings → API).
+   - Sao `.env.bootstrap.example` thành `.env.bootstrap.local`, điền giá trị thật (URL, anon key, service role key lấy ở Project Settings → API).
    - `AUTH_EMAIL_DOMAIN` ở đây phải giống hệt giá trị sẽ đặt trên Vercel ở bước 6. Sai khác thì giáo viên và học sinh không đăng nhập được.
    - Điền `SCHOOL_NAME`, `CLASS_NAME`, `SCHOOL_YEAR`, `TEACHER_NAME`, `TEACHER_USERNAME`, `TEACHER_PASSWORD` (tối thiểu 8 ký tự). Ngày học kỳ `TERM1_START`, `TERM1_END`, `TERM2_START`, `TERM2_END` (dạng `YYYY-MM-DD`) là tùy chọn; bỏ trống thì đặt sau trong Cài đặt.
    - Chạy:
@@ -40,7 +41,7 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
      ```
    - Script tạo lớp (giao diện màu indigo), 12 avatar preset, tài khoản giáo viên và đặt chủ sở hữu lớp. Mật khẩu không bao giờ được in ra.
    - Chạy lại khi lớp cùng tên và năm học đã có: script dừng và báo, không tạo trùng.
-   - Xong thì xóa dòng `TEACHER_PASSWORD` khỏi `.env.production.local`. File này đã nằm trong `.gitignore`, không commit.
+   - Xong thì xóa dòng `TEACHER_PASSWORD` khỏi `.env.bootstrap.local`. File này đã nằm trong `.gitignore`, không commit.
 
 6. **Vercel.** Tạo project từ repo. Đặt đúng 4 biến môi trường (Settings → Environment Variables):
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -48,9 +49,13 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `AUTH_EMAIL_DOMAIN` (giống hệt giá trị lúc chạy bootstrap)
 
+   Với mỗi biến, tick cả **Production** lẫn **Preview**. Thiếu Preview thì bản preview ở bước 7 không chạy được.
+
+   Tạo tài khoản hàng loạt gọi Auth nhiều lần (khoảng 10–20 giây cho 40 học sinh), nên trang Cài đặt đặt `maxDuration = 60`. Bật Fluid compute cho project Vercel (Settings → Functions) để giới hạn này có hiệu lực trên gói Hobby; nếu không, tác vụ có thể bị cắt giữa chừng và mật khẩu tạm bị mất (vẫn đặt lại được từng học sinh).
+
    Các biến `SCHOOL_NAME`, `CLASS_NAME`, `TEACHER_*`, `TERM*` không đặt lên Vercel.
 
-7. **Duyệt bản preview, rồi gắn tên miền.** Mở bản preview, đi qua bảng kiểm tra bên dưới. Ổn thì gắn tên miền riêng ở Settings → Domains, sau đó cập nhật Site URL và Redirect URLs ở bước 3 cho khớp.
+7. **Duyệt bản preview, rồi gắn tên miền.** Mở bản preview, kiểm tra đăng nhập bằng tài khoản có đuôi `@<AUTH_EMAIL_DOMAIN>` (đảm bảo Auth chấp nhận tên miền đã chọn), rồi đi qua bảng kiểm tra bên dưới. Ổn thì gắn tên miền riêng ở Settings → Domains, sau đó cập nhật Site URL và Redirect URLs ở bước 3 cho khớp.
 
 8. **Sau khi chạy thật.** Đăng nhập bằng tài khoản giáo viên, vào Cài đặt:
    - Không cần "Xóa dữ liệu demo" vì production không nạp dữ liệu demo.
@@ -61,7 +66,7 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
    - Advisor của Supabase sẽ cảnh báo `security_definer_view` cho các view `v_*`. Đây là cố ý, bỏ qua.
    - Vercel giới hạn request và response 4,5 MB. Vì vậy sao lưu đi qua Storage (bucket `class-backups`) chứ không qua body của request.
    - Mỗi năm học cập nhật ngày học kỳ trong Cài đặt.
-   - Sao lưu định kỳ (Cài đặt → Sao lưu), nhất là trước khi mở năm học mới.
+   - Sao lưu định kỳ (Cài đặt → Sao lưu), nhất là trước khi mở năm học mới. Một năm học nặng có thể cho file sao lưu hàng chục MB (khoảng 380 byte mỗi dòng sổ sao, điểm danh, yêu cầu); xuất thử một lần giữa năm và xem dung lượng file tải về. Vượt 50 MB thì xuất sẽ báo lỗi.
    - Nếu học sinh cùng đăng nhập mà gặp lỗi 429: tăng giới hạn ở bước 3 (Authentication → Rate Limits).
 
 10. **Bảng kiểm tra sau triển khai.**

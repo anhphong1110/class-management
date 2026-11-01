@@ -48,6 +48,14 @@ describe('parseBootstrapEnv', () => {
     const r = parseBootstrapEnv({ ...full, TERM1_START: '05/09/2026' })
     expect(r.ok).toBe(false)
   })
+  it('từ chối ngày học kỳ sai thứ tự', () => {
+    const t = (o: Record<string, string>) => parseBootstrapEnv({ ...full, ...o }).ok
+    expect(t({ TERM1_START: '2026-12-01', TERM1_END: '2026-09-05' })).toBe(false)
+    expect(t({ TERM1_END: '2027-01-10', TERM2_START: '2027-01-10' })).toBe(false)
+    expect(t({ TERM2_START: '2027-02-01', TERM2_END: '2027-01-15' })).toBe(false)
+    expect(t({ TERM1_START: '2026-09-05', TERM1_END: '2027-01-10', TERM2_START: '2027-01-11', TERM2_END: '2027-05-31' })).toBe(true)
+    expect(t({ TERM1_START: '2026-09-05', TERM1_END: '2026-09-05' })).toBe(true)
+  })
   it('chuẩn hóa tên đăng nhập và nhận ngày tùy chọn', () => {
     const r = parseBootstrapEnv({ ...full, TEACHER_USERNAME: ' Co.Khanh ', TERM1_START: '2026-09-05' })
     expect(r.ok).toBe(true)

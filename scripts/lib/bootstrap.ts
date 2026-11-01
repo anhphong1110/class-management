@@ -84,6 +84,18 @@ export function parseBootstrapEnv(
     dates[k] = d.value
   }
 
+  // Thứ tự: học kỳ 1 bắt đầu <= kết thúc < học kỳ 2 bắt đầu <= kết thúc (bỏ qua ngày để trống).
+  const present = ['TERM1_START', 'TERM1_END', 'TERM2_START', 'TERM2_END'].filter((k) => dates[k])
+  const inOrder = present.every((k, i) => {
+    if (i === 0) return true
+    const prev = present[i - 1]
+    // Chỉ TERM1_END -> TERM2_START phải nghiêm ngặt (<); còn lại cho phép bằng nhau.
+    return prev === 'TERM1_END' && k === 'TERM2_START' ? dates[prev]! < dates[k]! : dates[prev]! <= dates[k]!
+  })
+  if (!inOrder) {
+    return { ok: false, error: 'Ngày học kỳ phải theo thứ tự: TERM1_START ≤ TERM1_END < TERM2_START ≤ TERM2_END.' }
+  }
+
   return {
     ok: true,
     value: {
