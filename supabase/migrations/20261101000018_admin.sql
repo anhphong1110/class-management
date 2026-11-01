@@ -25,7 +25,8 @@ as $$
      and (select count(distinct x) from unnest(p_steps) x) = cardinality(p_steps)
 $$;
 revoke execute on function private.valid_star_steps(int[]) from public, anon;
-grant execute on function private.valid_star_steps(int[]) to authenticated;
+-- Hàm thuần dùng trong CHECK: mọi vai ghi vào class_settings (kể cả service_role của script/admin) đều cần quyền gọi.
+grant execute on function private.valid_star_steps(int[]) to authenticated, service_role;
 
 alter table public.class_settings
   add constraint class_settings_weekly_redeem_limit_check check (weekly_redeem_limit between 1 and 20),
