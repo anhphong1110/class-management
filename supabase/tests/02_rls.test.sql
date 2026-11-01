@@ -7,7 +7,7 @@ insert into public.classes (id, class_name) values
   ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id) values
   ('00000000-0000-0000-0000-0000000000c1'),
-  ('00000000-0000-0000-0000-0000000000c2');
+  ('00000000-0000-0000-0000-0000000000c2') on conflict do nothing;
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000d1', 't@test.local'),
   ('00000000-0000-0000-0000-0000000000d2', 'a@test.local'),

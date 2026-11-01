@@ -2,7 +2,7 @@ begin;
 select plan(11);
 
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A');
-insert into public.class_settings (class_id) values ('00000000-0000-0000-0000-0000000000c1');
+insert into public.class_settings (class_id) values ('00000000-0000-0000-0000-0000000000c1') on conflict do nothing;
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000d2', 'a@test.local'),
   ('00000000-0000-0000-0000-0000000000d3', 'b@test.local');

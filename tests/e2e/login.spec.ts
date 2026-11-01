@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
+import { sql } from './helpers/ledger'
 
 process.loadEnvFile('.env.local')
 
@@ -92,22 +93,21 @@ test('tài khoản Auth không có profiles', async ({ page }) => {
   }
 })
 
+// archived_at chỉ sửa được khi có cờ app.archive_student (như archive_student), nên test bật cờ trong giao dịch.
+const setArchived = (value: string) =>
+  sql(`begin; select set_config('app.archive_student', 'on', true); update public.students set archived_at = ${value} where code = 'HS05'; commit;`)
+
 test('học sinh đã lưu trữ không bị lặp chuyển hướng', async ({ page }) => {
-  const a = admin()
   await page.goto('/dang-nhap')
   await fill(page, 'Học sinh', 'hs.hamy', pw('hs.hamy'))
   await expect(page).toHaveURL(/\/em$/)
   try {
-    const { error } = await a
-      .from('students')
-      .update({ archived_at: new Date().toISOString() })
-      .eq('code', 'HS05')
-    expect(error).toBeNull()
+    setArchived('now()')
     await page.goto('/em')
     await expect(page).toHaveURL(/\/dang-nhap\?error=no_profile$/)
     await expect(page.getByText(NO_PROFILE)).toBeVisible()
   } finally {
-    await a.from('students').update({ archived_at: null }).eq('code', 'HS05')
+    setArchived('null')
   }
 })
 

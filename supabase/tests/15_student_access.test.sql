@@ -3,7 +3,8 @@ select plan(52);
 
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A'), ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id, feature_rewards, student_can_view_rewards, student_can_view_news, student_can_view_rank)
-values ('00000000-0000-0000-0000-0000000000c1', true, true, true, true), ('00000000-0000-0000-0000-0000000000c2', true, true, true, true);
+values ('00000000-0000-0000-0000-0000000000c1', true, true, true, true), ('00000000-0000-0000-0000-0000000000c2', true, true, true, true)
+on conflict (class_id) do update set feature_rewards = excluded.feature_rewards, student_can_view_rewards = excluded.student_can_view_rewards, student_can_view_news = excluded.student_can_view_news, student_can_view_rank = excluded.student_can_view_rank;
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000d1', 't@test.local'), ('00000000-0000-0000-0000-0000000000d3', 'a1@test.local'),
   ('00000000-0000-0000-0000-0000000000d4', 'a2@test.local'), ('00000000-0000-0000-0000-0000000000d5', 'b1@test.local');

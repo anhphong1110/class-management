@@ -79,6 +79,7 @@ export function resetGroups() {
   ]
   sql(`
     begin;
+    select set_config('app.archive_student', 'on', true);
     update public.students set archived_at = null where class_id = '${CLASS_ID}' and is_demo = true;
     delete from public.group_members where class_id = '${CLASS_ID}';
     delete from public.groups where class_id = '${CLASS_ID}' and id not in (${[1, 2, 3, 4].map((n) => `'${g(n)}'`).join(',')});

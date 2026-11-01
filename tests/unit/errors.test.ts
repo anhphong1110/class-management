@@ -39,6 +39,14 @@ describe('toVietnameseMessage', () => {
     ['subject_not_found', 'Môn này không còn trong danh sách.'],
     ['saturday_off', 'Lớp chưa bật học thứ Bảy.'],
     ['announcement_required', 'Cô hãy nhập tiêu đề và nội dung.'],
+    ['invalid_term_dates', 'Ngày học kỳ chưa hợp lý. Cô kiểm tra lại thứ tự các ngày nhé.'],
+    ['invalid_redeem_limit', 'Số lượt đổi quà mỗi tuần phải từ 1 đến 20.'],
+    ['invalid_star_steps', 'Mức sao phải là số từ 1 đến 50, không trùng, tối đa 8 mức.'],
+    ['saturday_has_slots', 'Thời khóa biểu còn tiết thứ Bảy.'],
+    ['use_set_saturday', 'Không đổi được học thứ Bảy theo cách này.'],
+    ['use_archive_student', 'Cô lưu trữ học sinh bằng nút "Lưu trữ" nhé.'],
+    ['completion_not_found', 'Không tìm thấy lượt hoàn thành này.'],
+    ['before_school_year', 'Ngày này trước khi năm học bắt đầu.'],
     ['khong_biet', 'Có lỗi xảy ra, vui lòng thử lại.'],
   ]
   it.each(cases)('%s', (key, msg) => {

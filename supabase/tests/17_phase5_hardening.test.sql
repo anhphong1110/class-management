@@ -4,7 +4,8 @@ select plan(50);
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A'), ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id, feature_rewards, student_can_view_rewards, student_can_view_rank, student_can_view_history, feature_missions)
 values ('00000000-0000-0000-0000-0000000000c1', true, true, true, true, true),
-       ('00000000-0000-0000-0000-0000000000c2', true, true, true, true, true);
+       ('00000000-0000-0000-0000-0000000000c2', true, true, true, true, true)
+on conflict (class_id) do update set feature_rewards = excluded.feature_rewards, student_can_view_rewards = excluded.student_can_view_rewards, student_can_view_rank = excluded.student_can_view_rank, student_can_view_history = excluded.student_can_view_history, feature_missions = excluded.feature_missions;
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000d1', 't@test.local'), ('00000000-0000-0000-0000-0000000000d2', 't2@test.local'),
   ('00000000-0000-0000-0000-0000000000d3', 'a1@test.local'), ('00000000-0000-0000-0000-0000000000d4', 'a2@test.local');
@@ -41,7 +42,9 @@ select is((select count(*)::int from public.v_my_star_history), 1, 'A2 còn họ
 select is((select count(*)::int from public.students), 1, 'A2 còn học: đọc được dòng students của mình');
 
 reset role;
+select set_config('app.archive_student', 'on', true);
 update public.students set archived_at = now() where id = '00000000-0000-0000-0000-0000000000a2';
+select set_config('app.archive_student', 'off', true);
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d4', 'role', 'authenticated')::text, true);
 select is((select count(*)::int from public.leaderboard_for_period('year')), 0, 'A2 đã lưu trữ: leaderboard_for_period 0 dòng');
@@ -54,7 +57,9 @@ select is((select count(*)::int from public.my_reward_requests()), 0, 'A2 đã l
 select throws_ok($$select public.request_reward('00000000-0000-0000-0000-0000000000f1')$$, 'P0001', 'not_allowed', 'A2 đã lưu trữ: request_reward not_allowed');
 
 reset role;
+select set_config('app.archive_student', 'on', true);
 update public.students set archived_at = null where id = '00000000-0000-0000-0000-0000000000a2';
+select set_config('app.archive_student', 'off', true);
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d4', 'role', 'authenticated')::text, true);
 select is((select count(*)::int from public.leaderboard_for_period('year')), 2, 'bỏ lưu trữ: bảng xếp hạng trở lại');

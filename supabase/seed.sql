@@ -4,7 +4,7 @@ insert into public.classes (id, school_name, class_name, school_year, teacher_na
   ('00000000-0000-0000-0000-000000000058', 'Tiểu học Chính Nghĩa', 'Năm 8 (5/8)', '2026 – 2027', 'Cô Khanh', 'Cùng học – Cùng chơi – Cùng tỏa sáng',
    '2026-09-05', '2027-01-15', '2027-01-18', '2027-05-31');
 
-insert into public.class_settings (class_id) values ('00000000-0000-0000-0000-000000000058');
+insert into public.class_settings (class_id) values ('00000000-0000-0000-0000-000000000058') on conflict do nothing;
 
 insert into public.avatar_library (id, class_id, kind, preset, label, is_demo) values
   ('00000000-0000-0000-0000-0000000a0001', '00000000-0000-0000-0000-000000000058', 'preset', '{"hair":"b","hairColor":"#6B3F2A","skin":"#FFD9B8","bg":"#FFD6E8"}', 'Phi hành gia 1', false),

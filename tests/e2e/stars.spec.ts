@@ -141,13 +141,13 @@ test('lịch sử vẫn hiện tên học sinh đã lưu trữ', async ({ page }
   await page.getByTestId('criteria-picker').getByRole('button', { name: /Hoàn thành tốt nhiệm vụ/ }).click()
   await page.getByRole('button', { name: 'Xác nhận cộng sao' }).click()
   await expect(history(page).getByTestId('history-row')).toHaveCount(1)
-  sql(`update public.students set archived_at = now() where id = '${sid(2)}' and class_id = '${CLASS_ID}'`)
+  sql(`begin; select set_config('app.archive_student', 'on', true); update public.students set archived_at = now() where id = '${sid(2)}' and class_id = '${CLASS_ID}'; commit;`)
   try {
     await page.reload()
     const row = history(page).getByTestId('history-row').first()
     await expect(row).toContainText('Nguyễn Minh Anh, Trần Gia Bảo')
   } finally {
-    sql(`update public.students set archived_at = null where id = '${sid(2)}'`)
+    sql(`begin; select set_config('app.archive_student', 'on', true); update public.students set archived_at = null where id = '${sid(2)}'; commit;`)
   }
 })
 

@@ -3,7 +3,7 @@ select plan(89);
 
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A'), ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id, weekly_redeem_limit) values
-  ('00000000-0000-0000-0000-0000000000c1', 99), ('00000000-0000-0000-0000-0000000000c2', 99);
+  ('00000000-0000-0000-0000-0000000000c1', 20), ('00000000-0000-0000-0000-0000000000c2', 20) on conflict (class_id) do update set weekly_redeem_limit = excluded.weekly_redeem_limit;
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000d1', 't@test.local'), ('00000000-0000-0000-0000-0000000000d2', 't2@test.local'),
   ('00000000-0000-0000-0000-0000000000d3', 'a1@test.local'), ('00000000-0000-0000-0000-0000000000d4', 'a2@test.local'),
@@ -120,7 +120,7 @@ select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-
 insert into reqs select 'r5', public.request_reward('00000000-0000-0000-0000-0000000000f5');
 select is((select status::text from public.reward_requests where id = (select v from reqs where k = 'r5')), 'pending', 'yêu cầu bị từ chối không tính vào giới hạn');
 reset role;
-update public.class_settings set weekly_redeem_limit = 99 where class_id = '00000000-0000-0000-0000-0000000000c1';
+update public.class_settings set weekly_redeem_limit = 20 where class_id = '00000000-0000-0000-0000-0000000000c1';
 set local role authenticated;
 
 -- ===== require_approval tắt =====
