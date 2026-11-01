@@ -11,3 +11,15 @@ export async function getArchivedClasses(): Promise<ArchivedClass[]> {
   const rows = (data ?? []) as { id: string; class_name: string; school_year: string; archived_at: string }[]
   return rows.map((c) => ({ id: c.id, className: c.class_name, schoolYear: c.school_year, archivedAt: c.archived_at }))
 }
+
+/** Số học sinh demo của lớp (kể cả đã lưu trữ), để khóa nút "Xóa dữ liệu demo" khi không còn. */
+export async function getDemoStudentCount(classId: string): Promise<number> {
+  const supabase = await createServerSupabase()
+  const { count, error } = await supabase
+    .from('students')
+    .select('id', { count: 'exact', head: true })
+    .eq('class_id', classId)
+    .eq('is_demo', true)
+  if (error) throw new Error(error.message)
+  return count ?? 0
+}

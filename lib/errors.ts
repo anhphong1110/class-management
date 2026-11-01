@@ -64,6 +64,7 @@ const MESSAGES: Record<string, string> = {
   completion_not_found: 'Không tìm thấy lượt hoàn thành này.',
   invalid_range: 'Khoảng ngày chưa hợp lệ: ngày bắt đầu không được sau ngày kết thúc, tối đa 400 ngày.',
   invalid_backup: 'File sao lưu không hợp lệ.',
+  demo_accounts_left: 'Đã xóa dữ liệu demo nhưng chưa xóa hết tài khoản đăng nhập của các bạn mẫu. Cô báo người quản trị hệ thống nhé.',
   before_school_year: 'Ngày này trước khi năm học bắt đầu.',
 }
 

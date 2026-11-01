@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { requireTeacher } from '@/lib/auth/session'
@@ -10,6 +11,8 @@ import { toVietnameseMessage } from '@/lib/errors'
 import { BACKUP_BUCKET, MAX_BACKUP_BYTES } from '@/lib/backup/format'
 import { restorePathSchema } from '@/lib/backup/storage'
 import { validateBackup } from '@/lib/backup/validate'
+import { COPY_KEYS } from '@/lib/backup/year'
+import { FLASH_COOKIE } from '@/lib/flash/cookie'
 
 const BUCKET = 'class-media'
 const guid = z.guid()
@@ -93,5 +96,89 @@ export async function restoreBackup(path: string): Promise<{ error: string }> {
   } finally {
     const { error } = await createAdminSupabase().storage.from(BACKUP_BUCKET).remove([path])
     if (error) console.error('restore: không xóa được file tạm:', error.message)
-  }  redirect('/tong-quan')
+  }
+  redirect('/tong-quan')
+}
+
+const newYearInput = z.object({
+  school_year: z.string().trim().min(1).max(100),
+  class_name: z.string().trim().min(1).max(100),
+  teacher_name: z.string().trim().max(100).optional(),
+  copy: z.array(z.enum(COPY_KEYS)).max(COPY_KEYS.length),
+})
+
+/** Sau khi mở năm mới: chép ảnh (avatar, quà, logo, bìa) từ lớp cũ sang thư mục lớp mới; không chép được thì bỏ đường dẫn. */
+async function copyNewYearImages(userId: string, oldClassId: string, classId: string) {
+  const admin = createAdminSupabase()
+  const [avatars, rewards, cls] = await Promise.all([
+    admin.from('avatar_library').select('image_path').eq('class_id', classId).not('image_path', 'is', null),
+    admin.from('rewards').select('image_path').eq('class_id', classId).not('image_path', 'is', null),
+    admin.from('classes').select('logo_path, class_logo_path, cover_path').eq('id', classId).single(),
+  ])
+  for (const r of [avatars, rewards, cls]) if (r.error) console.error('new-year: không đọc được đường dẫn ảnh:', r.error.message)
+  const found = [
+    ...(avatars.data ?? []).map((r) => r.image_path),
+    ...(rewards.data ?? []).map((r) => r.image_path),
+    cls.data?.logo_path,
+    cls.data?.class_logo_path,
+    cls.data?.cover_path,
+  ].filter((p): p is string => typeof p === 'string' && p.startsWith(`${classId}/`))
+  const paths = [...new Set(found)].map((to) => ({ from: `${oldClassId}/${to.slice(classId.length + 1)}`, to }))
+  await copyImages(userId, oldClassId, classId, paths)
+}
+
+/**
+ * Mở năm học mới: lưu trữ lớp hiện tại, tạo lớp mới (chép các mục đã chọn) và chuyển giáo viên sang lớp mới.
+ * Thành công thì để lại tin trong cookie rồi chuyển về Tổng quan.
+ */
+export async function openNewYear(input: unknown): Promise<{ error: string }> {
+  const user = await requireTeacher()
+  const parsed = newYearInput.safeParse(input)
+  if (!parsed.success) return { error: toVietnameseMessage('invalid_input') }
+  const { school_year, class_name, teacher_name, copy } = parsed.data
+
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase.rpc('start_new_school_year', {
+    p: { school_year, class_name, ...(teacher_name ? { teacher_name } : {}), copy },
+  })
+  if (error) return { error: toVietnameseMessage(error.message) }
+  const classId = guid.parse(data)
+
+  await copyNewYearImages(user.userId, user.classId, classId)
+
+  ;(await cookies()).set(FLASH_COOKIE, `Đã mở năm học ${school_year}.`, { path: '/', maxAge: 60, sameSite: 'lax' })
+  revalidatePath('/', 'layout')
+  redirect('/tong-quan')
+}
+
+const deleteResult = z.object({
+  deletedStudents: z.number().int(),
+  keptCatalog: z.number().int(),
+  authUserIds: z.array(guid),
+})
+
+/**
+ * Xóa dữ liệu demo của lớp hiện tại (RPC), rồi xóa các tài khoản Auth của học sinh demo bằng client admin.
+ * Không xóa được tài khoản Auth nào thì báo lỗi nhưng dữ liệu lớp đã xóa (tài khoản đó không còn hồ sơ nên không vào được).
+ */
+export async function deleteDemoData(): Promise<{ error: string } | { message: string }> {
+  await requireTeacher()
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase.rpc('delete_demo_data')
+  if (error) return { error: toVietnameseMessage(error.message) }
+  const result = deleteResult.parse(data)
+
+  const admin = createAdminSupabase()
+  let failed = 0
+  for (const id of result.authUserIds) {
+    const { error: deleteError } = await admin.auth.admin.deleteUser(id)
+    if (deleteError) {
+      failed += 1
+      console.error('delete-demo: không xóa được tài khoản Auth:', id, deleteError.message)
+    }
+  }
+  revalidatePath('/', 'layout')
+  if (failed > 0) return { error: toVietnameseMessage('demo_accounts_left') }
+  const kept = result.keptCatalog > 0 ? ` Giữ lại ${result.keptCatalog} mục vì dữ liệu thật còn dùng.` : ''
+  return { message: `Đã xóa dữ liệu demo.${kept}` }
 }

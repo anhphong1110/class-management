@@ -4,6 +4,7 @@ import { getShellData } from '@/lib/layout/shell-data'
 import { ThemeBodyVars } from '@/components/layout/ThemeBodyVars'
 import { themeVars } from '@/lib/domain/theme'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { FlashNotice } from '@/components/layout/FlashNotice'
 
 export default async function TeacherLayout({ children }: { children: ReactNode }) {
   await requireTeacher()
@@ -23,7 +24,10 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
           className={data?.cls.class_name ?? ''}
         />
       </div>
-      <main className="flex min-w-0 basis-full lg:flex-[999_1_560px] flex-col gap-5">{children}</main>
+      <main className="flex min-w-0 basis-full lg:flex-[999_1_560px] flex-col gap-5">
+        <FlashNotice />
+        {children}
+      </main>
     </div>
   )
 }

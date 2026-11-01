@@ -385,3 +385,255 @@ revoke execute on function public.my_archived_classes() from public, anon;
 grant execute on function public.export_class_backup(uuid) to authenticated;
 grant execute on function public.restore_class_backup(jsonb) to authenticated;
 grant execute on function public.my_archived_classes() to authenticated;
+
+-- ===================================================================================================
+-- Đợt 6, Task 7: mở năm học mới và xóa dữ liệu demo.
+-- ===================================================================================================
+
+-- 11) Mở năm học mới: tạo lớp mới (owner_id = giáo viên), chép danh mục đã chọn với id mới, đóng lớp cũ bằng
+--     private.close_class (từ chối yêu cầu pending, trả sao giữ, đặt archived_at), chuyển giáo viên sang lớp mới.
+--     Không chép học sinh, sổ sao, điểm danh, thông báo; bản sao danh mục luôn is_demo = false.
+--     Khóa: close_class khóa students (FOR NO KEY UPDATE) -> rewards -> reward_requests của lớp cũ; phần chép chỉ
+--     chạm dòng của lớp mới nên không đảo thứ tự khóa.
+create function public.start_new_school_year(p jsonb) returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user uuid := (select auth.uid());
+  v_old uuid;
+  o public.classes;
+  v_new uuid := gen_random_uuid();
+  v_copy text[] := array[]::text[];
+  v_allowed constant text[] := array['subjects', 'timetable', 'criteria', 'rewards', 'avatars', 'settings', 'missions'];
+  v_year text;
+  v_name text;
+  v_theme text;
+  v_avatar uuid;
+  v_cols text;
+  k text;
+begin
+  if not private.is_teacher() then raise exception 'not_allowed'; end if;
+  if jsonb_typeof(p) is distinct from 'object' then raise exception 'invalid_input'; end if;
+
+  -- Bắt buộc: năm học, tên lớp. Tùy chọn: school_name, teacher_name, slogan, theme (chuỗi hoặc null).
+  foreach k in array array['school_year', 'class_name', 'school_name', 'teacher_name', 'slogan', 'theme'] loop
+    if jsonb_typeof(p -> k) not in ('string', 'null') and (p -> k) is not null then raise exception 'invalid_input'; end if;
+    if char_length(coalesce(p ->> k, '')) > 200 then raise exception 'invalid_input'; end if;
+  end loop;
+  v_year := btrim(coalesce(p ->> 'school_year', ''));
+  v_name := btrim(coalesce(p ->> 'class_name', ''));
+  if v_year = '' or v_name = '' then raise exception 'invalid_input'; end if;
+  v_theme := nullif(btrim(coalesce(p ->> 'theme', '')), '');
+  if v_theme is not null and v_theme not in ('indigo', 'pink', 'mint', 'gold') then raise exception 'invalid_input'; end if;
+
+  if (p -> 'copy') is not null and jsonb_typeof(p -> 'copy') <> 'null' then
+    if jsonb_typeof(p -> 'copy') <> 'array'
+       or exists (select 1 from jsonb_array_elements(p -> 'copy') e
+                   where jsonb_typeof(e) <> 'string' or (e #>> '{}') <> all (v_allowed)) then
+      raise exception 'invalid_input';
+    end if;
+    select coalesce(array_agg(distinct e #>> '{}'), array[]::text[]) into v_copy from jsonb_array_elements(p -> 'copy') e;
+  end if;
+  -- Thời khóa biểu trỏ vào môn học, nên chép thời khóa biểu thì phải chép cả môn.
+  if 'timetable' = any (v_copy) and not 'subjects' = any (v_copy) then raise exception 'invalid_input'; end if;
+
+  -- Một giáo viên mở năm học một lần tại một thời điểm.
+  perform 1 from public.profiles pr where pr.id = v_user for update;
+  v_old := private.my_class_id();
+  if v_old is null then raise exception 'not_allowed'; end if;
+  select * into o from public.classes c where c.id = v_old and c.archived_at is null;
+  if not found then raise exception 'not_allowed'; end if;
+
+  -- 1) Lớp mới. Trigger classes_create_settings tạo dòng class_settings mặc định.
+  insert into public.classes (id, school_name, class_name, school_year, teacher_name, slogan, theme,
+                              logo_path, class_logo_path, cover_path, owner_id)
+  values (v_new,
+          coalesce(nullif(btrim(coalesce(p ->> 'school_name', '')), ''), o.school_name),
+          v_name, v_year,
+          coalesce(nullif(btrim(coalesce(p ->> 'teacher_name', '')), ''), o.teacher_name),
+          coalesce(nullif(btrim(coalesce(p ->> 'slogan', '')), ''), o.slogan),
+          coalesce(v_theme, o.theme),
+          private.backup_remap_path(to_jsonb(o.logo_path), v_old, v_new),
+          private.backup_remap_path(to_jsonb(o.class_logo_path), v_old, v_new),
+          private.backup_remap_path(to_jsonb(o.cover_path), v_old, v_new),
+          v_user);
+
+  -- Quà chèn khi mở năm mới không ghi reward_created từng dòng (đã có một dòng school_year_opened).
+  perform set_config('app.restoring', 'on', true);
+
+  if 'avatars' = any (v_copy) then
+    insert into public.avatar_library (id, class_id, kind, preset, image_path, label, hidden)
+    select private.backup_new_id(v_new, a.id::text), v_new, a.kind, a.preset,
+           private.backup_remap_path(to_jsonb(a.image_path), v_old, v_new), a.label, a.hidden
+      from public.avatar_library a where a.class_id = v_old;
+  end if;
+  if 'subjects' = any (v_copy) then
+    insert into public.subjects (id, class_id, name, color, sort_order)
+    select private.backup_new_id(v_new, s.id::text), v_new, s.name, s.color, s.sort_order
+      from public.subjects s where s.class_id = v_old;
+  end if;
+  if 'timetable' = any (v_copy) then
+    insert into public.timetable_slots (class_id, weekday, session, period, subject_id)
+    select v_new, t.weekday, t.session, t.period,
+           case when t.subject_id is null then null else private.backup_new_id(v_new, t.subject_id::text) end
+      from public.timetable_slots t where t.class_id = v_old;
+  end if;
+  if 'criteria' = any (v_copy) then
+    insert into public.star_criteria (id, class_id, label, kind, default_points, sort_order, archived_at)
+    select private.backup_new_id(v_new, c.id::text), v_new, c.label, c.kind, c.default_points, c.sort_order, c.archived_at
+      from public.star_criteria c where c.class_id = v_old;
+  end if;
+  if 'rewards' = any (v_copy) then
+    insert into public.rewards (id, class_id, name, cost, description, image_path, icon, stock, hidden)
+    select private.backup_new_id(v_new, w.id::text), v_new, w.name, w.cost, w.description,
+           private.backup_remap_path(to_jsonb(w.image_path), v_old, v_new), w.icon, w.stock, w.hidden
+      from public.rewards w where w.class_id = v_old;
+  end if;
+  if 'missions' = any (v_copy) then
+    insert into public.missions (id, class_id, name, period, condition, reward_stars, active)
+    select private.backup_new_id(v_new, m.id::text), v_new, m.name, m.period, m.condition, m.reward_stars, m.active
+      from public.missions m where m.class_id = v_old;
+    insert into public.badges (id, class_id, name, icon, gradient)
+    select private.backup_new_id(v_new, b.id::text), v_new, b.name, b.icon, b.gradient
+      from public.badges b where b.class_id = v_old;
+  end if;
+  if 'settings' = any (v_copy) then
+    -- Mọi cờ cài đặt của lớp cũ, trừ khóa lớp, mốc tạo và cờ demo.
+    select string_agg(format('%I', c.column_name), ', ' order by c.ordinal_position) into v_cols
+      from information_schema.columns c
+     where c.table_schema = 'public' and c.table_name = 'class_settings'
+       and c.column_name not in ('class_id', 'created_at', 'is_demo');
+    execute format('update public.class_settings n set (%1$s) = (select %1$s from public.class_settings s where s.class_id = $1) where n.class_id = $2', v_cols)
+      using v_old, v_new;
+  end if;
+  perform set_config('app.restoring', 'off', true);
+
+  -- Avatar của giáo viên: dùng bản sao ở lớp mới nếu có, không thì bỏ (khóa ngoại gắn avatar với lớp).
+  select a.id into v_avatar
+    from public.profiles pr
+    join public.avatar_library a on a.class_id = v_new and a.id = private.backup_new_id(v_new, pr.avatar_id::text)
+   where pr.id = v_user and pr.avatar_id is not null;
+
+  -- 2) Đóng lớp cũ.
+  perform private.close_class(v_old);
+
+  -- 3) Giáo viên sang lớp mới.
+  update public.profiles set class_id = v_new, avatar_id = v_avatar where id = v_user;
+
+  -- 4) Nhật ký.
+  insert into public.audit_logs (class_id, actor_id, action, entity, entity_id, payload)
+  values (v_new, v_user, 'school_year_opened', 'class', v_new,
+          jsonb_build_object('from_class_id', v_old, 'school_year', v_year, 'copy', to_jsonb(v_copy)));
+  return v_new;
+end;
+$$;
+
+-- 12) Sổ sao chỉ được xóa khi xóa dữ liệu demo: cờ giao dịch app.demo_purge = 'on' (chỉ delete_demo_data đặt),
+--     vai gọi không phải vai API (authenticated/anon/service_role; hàm definer chạy bằng vai chủ sở hữu, nên
+--     người dùng đặt GUC từ SQL không qua được), và dòng thuộc học sinh demo. UPDATE luôn bị chặn.
+create or replace function private.star_ledger_immutable() returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if tg_op = 'DELETE'
+     and coalesce(current_setting('app.demo_purge', true), '') = 'on'
+     and current_user not in ('authenticated', 'anon', 'service_role')
+     and exists (select 1 from public.students s where s.id = old.student_id and s.is_demo) then
+    return old;
+  end if;
+  raise exception 'ledger_immutable';
+end;
+$$;
+
+-- 13) Xóa dữ liệu demo của lớp hiện tại. Trả { deletedStudents, keptCatalog, authUserIds }; Server Action xóa tiếp
+--     các tài khoản Auth. Dòng danh mục demo mà dữ liệu thật còn tham chiếu được giữ lại (khóa ngoại SET NULL
+--     sẽ làm mất liên kết của dữ liệu thật nếu xóa).
+--     Khóa: students demo (FOR NO KEY UPDATE) -> rewards demo -> reward_requests của học sinh demo.
+create function public.delete_demo_data() returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_class uuid;
+  v_students uuid[];
+  v_auth uuid[];
+  v_deleted int;
+  v_kept int;
+begin
+  if not private.is_teacher() then raise exception 'not_allowed'; end if;
+  v_class := private.my_class_id();
+  if v_class is null then raise exception 'not_allowed'; end if;
+
+  select coalesce(array_agg(l.id order by l.id), array[]::uuid[]) into v_students
+    from (select s.id from public.students s where s.class_id = v_class and s.is_demo order by s.id for no key update) l;
+  perform 1 from (select w.id from public.rewards w where w.class_id = v_class and w.is_demo order by w.id for update) l;
+  perform 1 from (select rr.id from public.reward_requests rr
+                   where rr.class_id = v_class and (rr.student_id = any (v_students) or rr.is_demo)
+                   order by rr.id for update) l;
+
+  perform set_config('app.demo_purge', 'on', true);
+
+  -- 1) Dữ liệu gắn với học sinh.
+  delete from public.mission_completions where class_id = v_class and (student_id = any (v_students) or is_demo);
+  delete from public.student_badges where class_id = v_class and (student_id = any (v_students) or is_demo);
+  delete from public.star_transactions where class_id = v_class and student_id = any (v_students);
+  delete from public.reward_requests rr
+   where rr.class_id = v_class
+     and (rr.student_id = any (v_students)
+          or (rr.is_demo and not exists (select 1 from public.star_transactions t
+                                          where t.class_id = rr.class_id and t.reward_request_id = rr.id)));
+  delete from public.attendance where class_id = v_class and (student_id = any (v_students) or is_demo);
+  delete from public.group_members where class_id = v_class and (student_id = any (v_students) or is_demo);
+
+  perform set_config('app.demo_purge', 'off', true);
+
+  -- 2) Hồ sơ đăng nhập rồi học sinh.
+  with d as (delete from public.profiles where class_id = v_class and role = 'student' and student_id = any (v_students) returning id)
+  select coalesce(array_agg(d.id order by d.id), array[]::uuid[]) into v_auth from d;
+  delete from public.students where class_id = v_class and id = any (v_students);
+  get diagnostics v_deleted = row_count;
+
+  -- 3) Danh mục demo không còn ai dùng: thời khóa biểu trước môn học.
+  delete from public.timetable_slots where class_id = v_class and is_demo;
+  delete from public.subjects x where x.class_id = v_class and x.is_demo
+     and not exists (select 1 from public.timetable_slots t where t.class_id = x.class_id and t.subject_id = x.id);
+  delete from public.missions x where x.class_id = v_class and x.is_demo
+     and not exists (select 1 from public.mission_completions c where c.class_id = x.class_id and c.mission_id = x.id);
+  delete from public.badges x where x.class_id = v_class and x.is_demo
+     and not exists (select 1 from public.student_badges c where c.class_id = x.class_id and c.badge_id = x.id);
+  delete from public.rewards x where x.class_id = v_class and x.is_demo
+     and not exists (select 1 from public.reward_requests c where c.class_id = x.class_id and c.reward_id = x.id);
+  delete from public.star_criteria x where x.class_id = v_class and x.is_demo
+     and not exists (select 1 from public.star_transactions c where c.class_id = x.class_id and c.criterion_id = x.id);
+  delete from public.announcements where class_id = v_class and is_demo;
+  delete from public.groups x where x.class_id = v_class and x.is_demo
+     and not exists (select 1 from public.group_members c where c.class_id = x.class_id and c.group_id = x.id);
+  delete from public.avatar_library x where x.class_id = v_class and x.is_demo
+     and not exists (select 1 from public.students c where c.class_id = x.class_id and c.avatar_id = x.id)
+     and not exists (select 1 from public.profiles c where c.class_id = x.class_id and c.avatar_id = x.id);
+
+  select (select count(*) from public.subjects where class_id = v_class and is_demo)
+       + (select count(*) from public.missions where class_id = v_class and is_demo)
+       + (select count(*) from public.badges where class_id = v_class and is_demo)
+       + (select count(*) from public.rewards where class_id = v_class and is_demo)
+       + (select count(*) from public.star_criteria where class_id = v_class and is_demo)
+       + (select count(*) from public.groups where class_id = v_class and is_demo)
+       + (select count(*) from public.avatar_library where class_id = v_class and is_demo)
+    into v_kept;
+
+  insert into public.audit_logs (class_id, actor_id, action, entity, entity_id, payload)
+  values (v_class, (select auth.uid()), 'demo_data_deleted', 'class', v_class,
+          jsonb_build_object('deleted_students', v_deleted, 'kept_catalog', v_kept));
+
+  return jsonb_build_object('deletedStudents', v_deleted, 'keptCatalog', v_kept, 'authUserIds', to_jsonb(v_auth));
+end;
+$$;
+
+revoke execute on function public.start_new_school_year(jsonb) from public, anon;
+revoke execute on function public.delete_demo_data() from public, anon;
+grant execute on function public.start_new_school_year(jsonb) to authenticated;
+grant execute on function public.delete_demo_data() to authenticated;
