@@ -33,7 +33,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
   return (
     <form action={action} className="flex flex-col gap-[18px]">
       <input type="hidden" name="next" value={next ?? ''} />
-      <div role="tablist" className="flex gap-1.5 rounded-2xl bg-[#F1EFFC] p-[5px]">
+      <div role="tablist" aria-label="Loại tài khoản" className="flex gap-1.5 rounded-2xl bg-[#F1EFFC] p-[5px]">
         {TABS.map((x) => {
           const on = x.key === tab
           return (
@@ -41,7 +41,17 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
               key={x.key}
               type="button"
               role="tab"
+              id={`tab-${x.key}`}
               aria-selected={on}
+              aria-controls="login-panel"
+              tabIndex={on ? 0 : -1}
+              onKeyDown={(e) => {
+                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+                e.preventDefault()
+                const next = TABS[(TABS.findIndex((y) => y.key === x.key) + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length]
+                setTab(next.key)
+                document.getElementById(`tab-${next.key}`)?.focus()
+              }}
               onClick={() => setTab(x.key)}
               className={`min-h-[46px] flex-1 cursor-pointer rounded-xl border-0 text-[15px] font-extrabold ${
                 on ? 'bg-primary-strong text-white' : 'bg-transparent text-[#3A3769]'
@@ -52,6 +62,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
           )
         })}
       </div>
+      <div id="login-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-[18px]">
       <label className="flex flex-col gap-1.5 text-[14.5px] font-extrabold text-[#4A476E]">
         {t.userLabel}
         <input
@@ -75,6 +86,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
           className={INPUT}
         />
       </label>
+      </div>
       <div role="alert" aria-live="polite">
         {state.error && (
           <p className="m-0 rounded-xl bg-[#FFE9F1] px-3 py-2.5 text-sm font-bold text-[#B3235F]">
@@ -87,7 +99,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
         disabled={pending}
         className="flex min-h-[56px] cursor-pointer items-center justify-center rounded-2xl border-0 bg-gradient-to-r from-primary-strong to-[#7A58E0] text-lg font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {pending ? 'Đang cất cánh…' : 'Cất cánh'}
+        Cất cánh
       </button>
       <div className="rounded-xl bg-bg px-3 py-2.5 text-[13px] leading-normal text-muted">{t.note}</div>
     </form>

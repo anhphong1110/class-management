@@ -154,7 +154,7 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
       ref={regionRef}
       role="region"
       aria-label="Sửa phần thưởng"
-      className="flex flex-wrap gap-5 rounded-[28px] border-2 border-primary-strong bg-[#EEF0FF] px-6 py-[22px]"
+      className="flex flex-wrap gap-5 rounded-[28px] border-2 border-primary-strong bg-primary-soft px-6 py-[22px]"
     >
       <div className="flex flex-none flex-col items-center gap-2.5">
         {shownImage ? (
@@ -165,7 +165,7 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="min-h-12 w-[200px] cursor-pointer rounded-[14px] border-2 border-dashed border-primary-strong bg-white text-sm font-extrabold text-[#3441B5]"
+          className="min-h-12 w-[200px] cursor-pointer rounded-[14px] border-2 border-dashed border-primary-strong bg-white text-sm font-extrabold text-primary-ink"
         >
           Tải ảnh quà lên
         </button>
@@ -239,7 +239,7 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
             type="button"
             disabled={busy}
             onClick={onClose}
-            className="min-h-12 cursor-pointer rounded-[14px] border-2 border-primary-strong bg-white px-[22px] text-[15px] font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-12 cursor-pointer rounded-[14px] border-2 border-primary-strong bg-white px-[22px] text-[15px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
           >
             Hủy
           </button>

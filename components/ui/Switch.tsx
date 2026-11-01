@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 
-export function Toggle({
+export function Switch({
   checked,
   onChange,
   label,
@@ -42,11 +42,12 @@ export function Toggle({
       </span>
       <span
         aria-hidden="true"
-        className="relative h-[28px] w-[48px] shrink-0 rounded-full transition-colors"
-        style={{ background: checked ? "#4F5BD5" : "#B9B5E8" }}
+        className={`relative h-[27px] w-[46px] shrink-0 rounded-[14px] transition-colors ${
+          checked ? "bg-primary-strong" : "bg-[#B9B5E8]"
+        }`}
       >
         <span
-          className="absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow transition-[left]"
+          className="absolute top-[3px] size-[21px] rounded-full bg-white transition-[left]"
           style={{ left: checked ? 22 : 3 }}
         />
       </span>

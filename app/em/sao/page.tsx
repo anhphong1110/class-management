@@ -8,7 +8,7 @@ export default async function StarsPage() {
   const { history, badges } = await getStarsData(ctx)
   const stats = profile
     ? [
-        { label: 'Sao thi đua tích lũy', value: String(profile.competitionStars), sub: 'dùng để xếp hạng', color: '#2C37A8' },
+        { label: 'Sao thi đua tích lũy', value: String(profile.competitionStars), sub: 'dùng để xếp hạng', color: 'var(--primary-deep)' },
         { label: 'Sao khả dụng', value: String(profile.availableStars), sub: 'dùng để đổi quà', color: '#7A4E00' },
         ...(profile.rankYear !== null
           ? [{ label: 'Thứ hạng của em', value: `#${profile.rankYear}`, sub: `trong ${profile.classSize} bạn`, color: '#5E35B1' }]

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
+import { Switch } from '@/components/ui/Switch'
 import { buildPool, pickNext } from '@/lib/random/pick'
 import { rewardRandom } from './actions'
 
@@ -182,7 +183,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
                     setScope(id)
                     clearStage()
                   }}
-                  className={`${chip} ${on ? 'border-[#4F5BD5] bg-[#4F5BD5] text-white' : 'border-[#D9D5F2] bg-white text-[#3A3769]'}`}
+                  className={`${chip} ${on ? 'border-primary-strong bg-primary-strong text-white' : 'border-[#D9D5F2] bg-white text-[#3A3769]'}`}
                 >
                   {label}
                 </button>
@@ -192,24 +193,9 @@ export function RandomClient({ today, students, groups }: { today: string; stude
         </div>
         <div className="flex flex-wrap gap-2.5">
           {toggles.map((t) => (
-            <button
-              key={t.label}
-              type="button"
-              role="switch"
-              aria-checked={t.on}
-              onClick={t.flip}
-              disabled={spinning}
-              className="flex min-h-[48px] cursor-pointer items-center gap-2.5 disabled:cursor-not-allowed disabled:opacity-60 rounded-[14px] border-2 border-[#D9D5F2] bg-white py-0 pl-2.5 pr-4 text-[14.5px] font-bold text-ink"
-            >
-              <span
-                aria-hidden="true"
-                className="relative h-[26px] w-[44px] shrink-0 rounded-[13px]"
-                style={{ background: t.on ? '#4F5BD5' : '#B9B5E8' }}
-              >
-                <span className="absolute top-[3px] h-5 w-5 rounded-full bg-white" style={{ left: t.on ? 21 : 3 }} />
-              </span>
-              {t.label}
-            </button>
+            <div key={t.label} className="rounded-[14px] border-2 border-[#D9D5F2] bg-white px-4">
+              <Switch checked={t.on} onChange={t.flip} label={t.label} disabled={spinning} />
+            </div>
           ))}
         </div>
       </div>
@@ -280,7 +266,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
           <button
             type="button"
             onClick={resetRound}
-            className="min-h-[44px] cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-[#3441B5]"
+            className="min-h-[44px] cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-primary-ink"
           >
             Bắt đầu vòng mới
           </button>

@@ -49,7 +49,7 @@ export function GiftsClient({
         <div
           role="alertdialog"
           aria-label="Xác nhận đổi quà"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border-2 border-[#4F5BD5] bg-[#EEF0FF] px-[18px] py-4"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border-2 border-primary-strong bg-primary-soft px-[18px] py-4"
         >
           <div className="text-base font-bold">
             Em muốn đổi &quot;{asking.name}&quot; với {asking.cost} sao?
@@ -67,7 +67,7 @@ export function GiftsClient({
               type="button"
               disabled={pending}
               onClick={confirm}
-              className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-[#4F5BD5] px-[22px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
+              className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-[22px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
               Gửi yêu cầu
             </button>
@@ -95,7 +95,7 @@ export function GiftsClient({
                   setAsking(g)
                 }}
                 className={`min-h-12 rounded-[14px] border-0 text-[15px] font-extrabold ${
-                  btn.disabled ? 'cursor-not-allowed bg-[#E4E0F7] text-[#4A476E]' : 'cursor-pointer bg-[#4F5BD5] text-white'
+                  btn.disabled ? 'cursor-not-allowed bg-[#E4E0F7] text-[#4A476E]' : 'cursor-pointer bg-primary-strong text-white'
                 } ${preview && !btn.disabled ? 'cursor-not-allowed opacity-60' : ''}`}
               >
                 {btn.label}

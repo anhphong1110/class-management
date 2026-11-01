@@ -2,14 +2,21 @@
 
 :root {
   --primary: #6675e8;
+  --primary-strong: #4f5bd5;
+  --primary-soft: #eef0ff;
+  --primary-ink: #3441b5;
+  --primary-deep: #2c37a8;
 }
 
 @theme inline {
   --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-deep: var(--primary-deep);
 }
 
 @theme {
-  --color-primary-strong: #4f5bd5;
   --color-lavender: #b9a7f8;
   --color-pink: #f46fa5;
   --color-star: #ffc857;

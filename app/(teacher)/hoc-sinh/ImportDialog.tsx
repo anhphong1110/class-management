@@ -73,7 +73,7 @@ function Body({ existingCodes, onClose, onDone }: { existingCodes: Set<string>; 
     <div className="flex flex-col gap-3.5">
       <p className="text-[14.5px] font-semibold text-[#4A476E]">
         Chọn file Excel (.xlsx, .xls) hoặc CSV gồm các cột Số thứ tự, Họ và tên, Mã học sinh. Để trống mã thì hệ thống tự sinh.{' '}
-        <a href="/mau/mau-danh-sach-hoc-sinh.xlsx" download className="font-extrabold text-[#3441B5] underline">
+        <a href="/mau/mau-danh-sach-hoc-sinh.xlsx" download className="font-extrabold text-primary-ink underline">
           Tải file mẫu
         </a>
       </p>

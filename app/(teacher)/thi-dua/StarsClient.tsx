@@ -231,7 +231,7 @@ export function StarsClient({
 
   const goBg = isAdd ? 'bg-[#FFC857] text-[#4A3300]' : 'bg-[#C0314E] text-white'
   const pill = (on: boolean) =>
-    on ? 'border-primary-strong bg-[#EEF0FF] text-[#2C37A8]' : 'border-[#D9D5F2] bg-white text-[#3A3769]'
+    on ? 'border-primary-strong bg-primary-soft text-primary-deep' : 'border-[#D9D5F2] bg-white text-[#3A3769]'
   const manageList = [...criteria.filter((c) => c.kind === 'award'), ...criteria.filter((c) => c.kind === 'penalty')]
 
   return (
@@ -249,7 +249,7 @@ export function StarsClient({
                 setSel(new Set(students.map((s) => s.id)))
                 setErr('')
               }}
-              className="min-h-11 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-[#3441B5]"
+              className="min-h-11 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-primary-ink"
             >
               Chọn cả lớp
             </button>
@@ -293,7 +293,7 @@ export function StarsClient({
                 aria-pressed={on}
                 onClick={() => toggleStudent(s.id)}
                 className={`flex min-h-16 cursor-pointer items-center gap-2.5 rounded-[18px] border-2 px-3 py-2.5 text-left text-ink ${
-                  on ? 'border-primary-strong bg-[#EEF0FF]' : 'border-[#E4E0F7] bg-white'
+                  on ? 'border-primary-strong bg-primary-soft' : 'border-[#E4E0F7] bg-white'
                 }`}
               >
                 <AvatarImage avatar={s.avatar} size={46} />
@@ -464,7 +464,7 @@ export function StarsClient({
                   type="button"
                   disabled={done || pending}
                   onClick={() => setUndoing(b)}
-                  className="min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3 text-[13px] font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3 text-[13px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isReversal ? 'Đã ghi' : b.reversed ? 'Đã hoàn tác' : 'Hoàn tác'}
                 </button>
@@ -501,7 +501,7 @@ export function StarsClient({
                 type="button"
                 aria-label={`Sửa tiêu chí ${c.label}`}
                 onClick={() => openEditor(c)}
-                className="flex size-11 cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-[#3441B5]"
+                className="flex size-11 cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-primary-ink"
               >
                 <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />

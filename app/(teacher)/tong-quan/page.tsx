@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { requireTeacher } from '@/lib/auth/session'
+import { brandSentence } from '@/lib/classes/brand'
 import { getClassHeaderInfo } from '@/lib/classes/queries'
 import { Header } from '@/components/layout/Header'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
@@ -43,7 +44,7 @@ const DELTA_STYLE = {
   request: { tint: '#F0E8FF', ink: '#5E35B1' },
 } as const
 
-function Hero({ greeting, coverUrl }: { greeting: string; coverUrl: string | null }) {
+function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl: string | null; brand: string }) {
   return (
     <div
       className="relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-[28px] px-9 py-8 text-white"
@@ -60,7 +61,7 @@ function Hero({ greeting, coverUrl }: { greeting: string; coverUrl: string | nul
         <div className="text-[13px] font-extrabold tracking-[.12em] text-[#FFE08A]">CÙNG HỌC – CÙNG CHƠI – CÙNG TỎA SÁNG</div>
         <h2 className="m-0 font-display text-[44px] font-extrabold leading-[1.1]">Xin chào, {greeting}!</h2>
         <p className="m-0 max-w-[460px] text-lg leading-normal text-[#EEF0FF]">
-          Chào mừng cô trở lại Trạm không gian Năm 8. Hôm nay cả phi hành đoàn đã sẵn sàng cất cánh.
+          Chào mừng cô trở lại {brand}. Hôm nay cả phi hành đoàn đã sẵn sàng cất cánh.
         </p>
         <div className="mt-2 flex flex-wrap gap-3">
           <Link href="/diem-danh" className="inline-flex min-h-11 items-center rounded-full bg-[#FFC857] px-[22px] py-3 font-extrabold text-[#3B2A00]">
@@ -124,7 +125,7 @@ export default async function Page() {
     <>
       <Header title="Tổng quan" subtitle={`Trạm chỉ huy của lớp ${info.short}`} />
       <div className="flex flex-col gap-5">
-        <Hero greeting={teacherGreetingName(data.teacherName)} coverUrl={data.coverUrl} />
+        <Hero greeting={teacherGreetingName(data.teacherName)} coverUrl={data.coverUrl} brand={brandSentence({ class_name: info.className })} />
 
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))' }}>
           {data.stats.map((st, i) => (
@@ -149,7 +150,7 @@ export default async function Page() {
               <h2 className="m-0 font-display text-[26px] font-extrabold">Top 3 phi hành gia xuất sắc</h2>
               <div className="text-sm text-[#5B5890]">Xếp theo sao thi đua tích lũy, không bị trừ khi đổi quà</div>
             </div>
-            <Link href="/xep-hang" className="inline-flex min-h-11 items-center rounded-full bg-[#4F5BD5] px-[22px] py-[11px] font-extrabold text-white">
+            <Link href="/xep-hang" className="inline-flex min-h-11 items-center rounded-full bg-primary-strong px-[22px] py-[11px] font-extrabold text-white">
               Xem bảng xếp hạng
             </Link>
           </div>
@@ -223,7 +224,7 @@ export default async function Page() {
           <section data-testid="news" className={`flex min-w-0 flex-[1_1_340px] flex-col gap-3.5 rounded-[26px] bg-white p-6 ${CARD}`}>
             <div className="flex items-center justify-between">
               <h2 className="m-0 font-display text-[22px] font-extrabold">Tín hiệu từ trạm chỉ huy</h2>
-              <Link href="/thong-bao" className="inline-flex min-h-11 items-center text-sm font-bold text-[#4F5BD5]">
+              <Link href="/thong-bao" className="inline-flex min-h-11 items-center text-sm font-bold text-primary-strong">
                 Xem tất cả
               </Link>
             </div>

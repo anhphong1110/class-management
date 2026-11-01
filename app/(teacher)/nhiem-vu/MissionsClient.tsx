@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
-import { Toggle } from '@/components/ui/Toggle'
+import { Switch } from '@/components/ui/Switch'
 import { toVietnameseMessage } from '@/lib/errors'
 import { MISSION_PERIODS, MISSION_PERIOD_LABELS, type MissionPeriod } from '@/lib/missions/period'
 import type { MissionsData } from '@/lib/missions/queries'
@@ -19,7 +19,7 @@ const label = 'flex flex-col gap-1 text-sm font-extrabold text-[#4A476E]'
 const field =
   'min-h-12 box-border rounded-xl border-2 border-[#D9D5F2] bg-white px-3.5 text-base font-bold text-ink disabled:cursor-not-allowed disabled:opacity-50'
 const ghost =
-  'cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-50'
+  'cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50'
 
 export function MissionsClient({ data, students }: { data: MissionsData; students: Student[] }) {
   const [name, setName] = useState('')
@@ -148,7 +148,7 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
     <div className="flex flex-col gap-5">
       <div className={`${card} flex flex-wrap items-center justify-between gap-3 !py-4`}>
         <div className="min-w-0 flex-1 basis-72">
-          <Toggle
+          <Switch
             checked={data.featureOn}
             onChange={toggleFeature}
             disabled={busy}
@@ -231,7 +231,7 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
             type="button"
             onClick={add}
             disabled={busy}
-            className="min-h-[52px] cursor-pointer rounded-[14px] border-0 bg-[#4F5BD5] px-[26px] text-base font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-[52px] cursor-pointer rounded-[14px] border-0 bg-primary-strong px-[26px] text-base font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             + Thêm nhiệm vụ
           </button>

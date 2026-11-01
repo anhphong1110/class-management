@@ -3,15 +3,18 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
+import { brandLines } from '@/lib/classes/brand'
 import { TEACHER_NAV } from './nav'
 
 type Props = {
   active?: string
   teacher: { displayName: string; avatar: AvatarValue }
   classLogoUrl: string | null
+  className: string
 }
 
-export function Sidebar({ active, teacher, classLogoUrl }: Props) {
+export function Sidebar({ active, teacher, classLogoUrl, className }: Props) {
+  const brand = brandLines({ class_name: className })
   const pathname = usePathname()
   const activeId =
     active ??
@@ -41,9 +44,13 @@ export function Sidebar({ active, teacher, classLogoUrl }: Props) {
           className="size-11 flex-none rounded-full bg-white object-cover"
         />
         <div className="font-display text-[17px] font-extrabold leading-[1.05] tracking-[.02em]">
-          TRẠM KHÔNG GIAN
-          <br />
-          <span className="text-[#FFD36B]">NĂM 8</span>
+          {brand.top}
+          {brand.accent && (
+            <>
+              <br />
+              <span className="text-[#FFD36B]">{brand.accent}</span>
+            </>
+          )}
         </div>
       </div>
       <nav aria-label="Menu chính" className="min-w-0">

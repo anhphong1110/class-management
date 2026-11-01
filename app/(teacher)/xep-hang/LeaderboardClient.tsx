@@ -38,7 +38,7 @@ export function LeaderboardClient({ rows, period, showAll }: { rows: RankRow[]; 
               replace
               scroll={false}
               className="flex min-h-12 flex-[1_1_120px] items-center justify-center rounded-2xl text-[15.5px] font-extrabold"
-              style={{ background: on ? '#4F5BD5' : '#F6F4FF', color: on ? '#fff' : '#3A3769' }}
+              style={{ background: on ? 'var(--primary-strong)' : '#F6F4FF', color: on ? '#fff' : '#3A3769' }}
             >
               {PERIOD_LABELS[k]}
             </Link>
@@ -98,7 +98,7 @@ export function LeaderboardClient({ rows, period, showAll }: { rows: RankRow[]; 
             href={href(period, !showAll)}
             replace
             scroll={false}
-            className="flex min-h-11 items-center rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-5 text-[14.5px] font-extrabold text-[#3441B5]"
+            className="flex min-h-11 items-center rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-5 text-[14.5px] font-extrabold text-primary-ink"
           >
             {showAll ? 'Chỉ xem Top 5' : 'Xem toàn bộ bảng'}
           </Link>

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
+import { connection } from "next/server";
+import { createAdminSupabase } from "@/lib/supabase/admin";
+import { brandSentence } from "@/lib/classes/brand";
 import "./globals.css";
 
 const baloo = Baloo_2({
@@ -14,9 +17,23 @@ const nunito = Nunito({
   weight: ["400", "600", "700", "800"],
 });
 
-export const metadata: Metadata = {
-  title: "Trạm không gian Năm 8",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await connection();
+  let title = "Trạm không gian";
+  try {
+    const { data } = await createAdminSupabase()
+      .from("classes")
+      .select("class_name")
+      .is("archived_at", null)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (data) title = brandSentence(data);
+  } catch {
+    // Không đọc được lớp thì dùng tên chung.
+  }
+  return { title };
+}
 
 export default function RootLayout({
   children,

@@ -12,7 +12,7 @@ export default defineConfig({
   projects: [
     {
       name: "mobile",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 } },
+      use: { ...devices["Desktop Chrome"], userAgent: devices["Pixel 7"].userAgent, viewport: { width: 375, height: 812 } },
     },
     {
       name: "tablet",

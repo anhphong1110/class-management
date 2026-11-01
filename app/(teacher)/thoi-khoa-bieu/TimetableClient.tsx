@@ -11,7 +11,7 @@ type Edit = { weekday: number; session: Session; period: number }
 
 const CARD = 'rounded-[28px] bg-white p-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]'
 const GHOST_BTN =
-  'min-h-12 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-[14.5px] font-extrabold text-[#3441B5]'
+  'min-h-12 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-[14.5px] font-extrabold text-primary-ink'
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 export function TimetableClient({
@@ -93,7 +93,7 @@ export function TimetableClient({
                 aria-pressed={on}
                 onClick={() => setView(k)}
                 className="min-h-12 cursor-pointer rounded-[14px] border-2 px-[22px] text-[15px] font-extrabold"
-                style={{ background: on ? '#4F5BD5' : '#fff', color: on ? '#fff' : '#3A3769', borderColor: on ? '#4F5BD5' : '#D9D5F2' }}
+                style={{ background: on ? 'var(--primary-strong)' : '#fff', color: on ? '#fff' : '#3A3769', borderColor: on ? 'var(--primary-strong)' : '#D9D5F2' }}
               >
                 {text}
               </button>
@@ -127,7 +127,7 @@ export function TimetableClient({
                 aria-pressed={on}
                 onClick={() => setDay(d)}
                 className="min-h-11 cursor-pointer rounded-full border-2 px-[18px] text-[14.5px] font-extrabold"
-                style={{ background: on ? '#EEF0FF' : '#fff', color: on ? '#2C37A8' : '#3A3769', borderColor: on ? '#4F5BD5' : '#D9D5F2' }}
+                style={{ background: on ? 'var(--primary-soft)' : '#fff', color: on ? 'var(--primary-deep)' : '#3A3769', borderColor: on ? 'var(--primary-strong)' : '#D9D5F2' }}
               >
                 {WEEKDAY_LABELS[d]}
               </button>
@@ -140,7 +140,7 @@ export function TimetableClient({
         <div
           role="region"
           aria-label="Sửa tiết học"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border-2 print:hidden border-[#4F5BD5] bg-[#EEF0FF] px-[18px] py-3.5"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border-2 print:hidden border-primary-strong bg-primary-soft px-[18px] py-3.5"
         >
           <div className="text-[15.5px] font-extrabold">Đang sửa: {label(edit)}</div>
           {slotMsg && (
@@ -174,7 +174,7 @@ export function TimetableClient({
                 setEdit(null)
                 setSlotMsg('')
               }}
-              className="min-h-11 cursor-pointer rounded-xl border-0 bg-[#4F5BD5] px-[18px] font-extrabold text-white"
+              className="min-h-11 cursor-pointer rounded-xl border-0 bg-primary-strong px-[18px] font-extrabold text-white"
             >
               Xong
             </button>
@@ -195,7 +195,7 @@ export function TimetableClient({
                     data-testid="day-head"
                     data-today={isToday}
                     className="rounded-[14px] px-1.5 py-2.5 text-center font-display text-base font-extrabold"
-                    style={{ background: isToday ? '#4F5BD5' : '#EEF0FF', color: isToday ? '#fff' : '#2C37A8' }}
+                    style={{ background: isToday ? 'var(--primary-strong)' : 'var(--primary-soft)', color: isToday ? '#fff' : 'var(--primary-deep)' }}
                   >
                     {WEEKDAY_LABELS[d]}
                   </div>
@@ -205,7 +205,7 @@ export function TimetableClient({
             {PERIODS.map(({ session, period }, i) => (
               <div key={`${session}-${period}`} className="flex flex-col gap-2">
                 {(i === 0 || i === 5) && (
-                  <div className="rounded-xl bg-[#EEF0FF] p-1.5 text-center text-[13px] font-extrabold tracking-[.1em] text-[#3441B5]">
+                  <div className="rounded-xl bg-primary-soft p-1.5 text-center text-[13px] font-extrabold tracking-[.1em] text-primary-ink">
                     {i === 0 ? 'BUỔI SÁNG · 5 TIẾT' : 'BUỔI CHIỀU'}
                   </div>
                 )}
@@ -220,7 +220,7 @@ export function TimetableClient({
                     const style: CSSProperties = {
                       background: pal?.bg ?? '#F6F4FF',
                       color: pal?.ink ?? '#B9B5E8',
-                      borderColor: on ? '#4F5BD5' : 'transparent',
+                      borderColor: on ? 'var(--primary-strong)' : 'transparent',
                     }
                     return (
                       <button
@@ -327,7 +327,7 @@ export function TimetableClient({
             type="button"
             disabled={pending}
             onClick={() => run(() => addSubject(newName), { onOk: () => setNewName('') })}
-            className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-[#4F5BD5] px-[22px] text-[15px] font-extrabold text-white"
+            className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-[22px] text-[15px] font-extrabold text-white"
           >
             + Thêm môn
           </button>

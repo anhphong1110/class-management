@@ -70,13 +70,13 @@ export function MonthCalendar({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={href(shiftMonth(month, -1))}
-            className="inline-flex min-h-11 items-center rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-sm font-extrabold text-[#3441B5]"
+            className="inline-flex min-h-11 items-center rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-sm font-extrabold text-primary-ink"
           >
             Tháng trước
           </Link>
           <Link
             href={href(shiftMonth(month, 1))}
-            className="inline-flex min-h-11 items-center rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-sm font-extrabold text-[#3441B5]"
+            className="inline-flex min-h-11 items-center rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-sm font-extrabold text-primary-ink"
           >
             Tháng sau
           </Link>
@@ -84,7 +84,7 @@ export function MonthCalendar({
             type="button"
             onClick={exportCsv}
             disabled={pending}
-            className="min-h-11 cursor-pointer rounded-[14px] border-0 bg-[#4F5BD5] px-5 text-sm font-extrabold text-white disabled:opacity-60"
+            className="min-h-11 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-5 text-sm font-extrabold text-white disabled:opacity-60"
           >
             Xuất CSV
           </button>
@@ -113,7 +113,7 @@ export function MonthCalendar({
               </>
             )
             const base = `flex min-h-14 flex-col items-center justify-center rounded-[12px] ${
-              d === selected ? 'border-2 border-[#4F5BD5]' : 'border-2 border-transparent'
+              d === selected ? 'border-2 border-primary-strong' : 'border-2 border-transparent'
             } ${marked ? 'bg-[#EAF8F1]' : 'bg-bg'}`
             if (d > today) return <div key={d} className={`${base} opacity-40`}>{body}</div>
             return (

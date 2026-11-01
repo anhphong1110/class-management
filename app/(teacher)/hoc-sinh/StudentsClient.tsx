@@ -40,12 +40,12 @@ const VIEWS: [View, string][] = [
 const ROLE_LABEL = { leader: 'Tổ trưởng', deputy: 'Tổ phó', member: '' } as const
 const pill = (on: boolean, h: number) => ({
   minHeight: h,
-  background: on ? '#4F5BD5' : '#fff',
+  background: on ? 'var(--primary-strong)' : '#fff',
   color: on ? '#fff' : '#3A3769',
-  border: `2px solid ${on ? '#4F5BD5' : '#D9D5F2'}`,
+  border: `2px solid ${on ? 'var(--primary-strong)' : '#D9D5F2'}`,
 })
 const ghostBtn =
-  'min-h-12 rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-[14.5px] font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-60'
+  'min-h-12 rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-[14.5px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-60'
 
 function groupLabel(s: StudentCard): string {
   if (!s.groupName) return 'Chưa có tổ'
@@ -167,7 +167,7 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
             <button
               type="button"
               onClick={() => setForm({ open: true, student: null })}
-              className="min-h-12 rounded-[14px] bg-[#4F5BD5] px-5 text-[15px] font-extrabold text-white"
+              className="min-h-12 rounded-[14px] bg-primary-strong px-5 text-[15px] font-extrabold text-white"
             >
               + Thêm học sinh
             </button>
@@ -254,7 +254,7 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
                 data-testid="student-card"
                 onClick={() => setSelId(s.id)}
                 className="flex cursor-pointer flex-col items-center gap-1.5 rounded-[26px] bg-white px-3.5 pb-4 pt-5 text-center text-ink shadow-[0_6px_20px_rgba(102,117,232,.10)] transition hover:-translate-y-[3px] hover:shadow-[0_14px_28px_rgba(79,91,213,.20)]"
-                style={{ border: `2px solid ${selId === s.id ? '#4F5BD5' : 'transparent'}` }}
+                style={{ border: `2px solid ${selId === s.id ? 'var(--primary-strong)' : 'transparent'}` }}
               >
                 <AvatarImage avatar={s.avatar} size={92} />
                 <div className="font-display text-lg font-extrabold leading-[1.2]">{s.fullName}</div>

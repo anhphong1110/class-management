@@ -2,9 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { brandLines } from '@/lib/classes/brand'
 import { STUDENT_NAV, type StudentPageId } from '@/lib/student/flags'
 
-export function StudentNav({ pages, classLogoUrl }: { pages: StudentPageId[]; classLogoUrl: string | null }) {
+export function StudentNav({ pages, classLogoUrl, className }: { pages: StudentPageId[]; classLogoUrl: string | null; className: string }) {
+  const brand = brandLines({ class_name: className })
   const pathname = usePathname()
   const items = STUDENT_NAV.filter((n) => pages.includes(n.id))
   const activeId = items.find((n) => (n.href === '/em' ? pathname === '/em' : pathname === n.href || pathname.startsWith(n.href + '/')))?.id
@@ -29,9 +31,13 @@ export function StudentNav({ pages, classLogoUrl }: { pages: StudentPageId[]; cl
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={classLogoUrl ?? '/brand/logo-lop.jpg'} alt="Logo lớp" className="size-11 flex-none rounded-full bg-white object-cover" />
         <div className="font-display text-[17px] font-extrabold leading-[1.05] tracking-[.02em]">
-          TRẠM KHÔNG GIAN
-          <br />
-          <span className="text-[#FFD36B]">NĂM 8</span>
+          {brand.top}
+          {brand.accent && (
+            <>
+              <br />
+              <span className="text-[#FFD36B]">{brand.accent}</span>
+            </>
+          )}
         </div>
       </div>
       <nav aria-label="Menu học sinh" className="min-w-0">

@@ -71,7 +71,7 @@ export function AvatarPicker({
                 disabled={pending}
                 onClick={() => setPicked(a.id)}
                 className={`flex cursor-pointer items-center justify-center rounded-2xl border-2 bg-white p-1.5 disabled:cursor-not-allowed disabled:opacity-60 ${
-                  picked === a.id ? 'border-[#4F5BD5] bg-[#EEF0FF]' : 'border-transparent'
+                  picked === a.id ? 'border-primary-strong bg-primary-soft' : 'border-transparent'
                 }`}
               >
                 <AvatarImage avatar={a.avatar} size={56} />

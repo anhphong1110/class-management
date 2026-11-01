@@ -124,7 +124,7 @@ export function RewardsClient({
                 <button
                   type="button"
                   onClick={() => open({ kind: 'edit', id: w.id })}
-                  className={`min-h-11 flex-1 cursor-pointer rounded-xl border-2 bg-white text-sm font-extrabold text-[#3441B5] ${editingThis ? 'border-primary-strong' : 'border-[#D9D5F2]'}`}
+                  className={`min-h-11 flex-1 cursor-pointer rounded-xl border-2 bg-white text-sm font-extrabold text-primary-ink ${editingThis ? 'border-primary-strong' : 'border-[#D9D5F2]'}`}
                 >
                   Sửa
                 </button>
@@ -145,7 +145,7 @@ export function RewardsClient({
       <section className="flex flex-col gap-3 rounded-[28px] bg-white p-6 shadow-[0_6px_20px_rgba(102,117,232,0.10)]">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="m-0 font-display text-2xl font-extrabold">Yêu cầu và lịch sử đổi quà</h2>
-          <span className="rounded-full bg-[#EEF0FF] px-3.5 py-1.5 text-sm font-extrabold text-[#3441B5]">
+          <span className="rounded-full bg-primary-soft px-3.5 py-1.5 text-sm font-extrabold text-primary-ink">
             {pendingCount} yêu cầu chờ duyệt
           </span>
         </div>

@@ -29,7 +29,7 @@ export default async function TimetablePage() {
                   role="columnheader"
                   data-today={on}
                   className="rounded-[14px] px-1.5 py-2.5 text-center font-display text-base font-extrabold"
-                  style={{ background: on ? '#4F5BD5' : '#EEF0FF', color: on ? '#fff' : '#2C37A8' }}
+                  style={{ background: on ? 'var(--primary-strong)' : 'var(--primary-soft)', color: on ? '#fff' : 'var(--primary-deep)' }}
                 >
                   {WEEKDAY_LABELS[d]}
                 </div>
@@ -38,7 +38,7 @@ export default async function TimetablePage() {
           </div>
           {sessions.map(({ session, title }) => (
             <div key={session} className="flex flex-col gap-2">
-              <div className="rounded-xl bg-[#EEF0FF] p-1.5 text-center text-[13px] font-extrabold tracking-[.1em] text-[#3441B5]">{title}</div>
+              <div className="rounded-xl bg-primary-soft p-1.5 text-center text-[13px] font-extrabold tracking-[.1em] text-primary-ink">{title}</div>
               {PERIODS.filter((p) => p.session === session).map((p) => (
                 <div key={p.period} className="grid gap-2" style={{ gridTemplateColumns: cols }} role="row">
                   <div className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-bg text-sm font-extrabold">Tiết {p.period}</div>

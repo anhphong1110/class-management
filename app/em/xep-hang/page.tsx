@@ -17,7 +17,7 @@ export default async function RankPage() {
           key={r.studentId}
           data-testid="rank-row"
           className="flex items-center gap-3.5 rounded-[20px] border-2 px-4 py-2.5"
-          style={{ background: r.me ? '#EEF0FF' : '#F6F4FF', borderColor: r.me ? '#4F5BD5' : 'transparent' }}
+          style={{ background: r.me ? 'var(--primary-soft)' : '#F6F4FF', borderColor: r.me ? 'var(--primary-strong)' : 'transparent' }}
         >
           <div
             className="flex size-[42px] flex-none items-center justify-center rounded-full font-display text-xl font-extrabold text-[#3A2A00]"
@@ -28,7 +28,7 @@ export default async function RankPage() {
           <AvatarImage avatar={r.avatar} size={52} />
           <div className="min-w-0 flex-1 text-[16.5px] font-extrabold">
             {r.name}
-            {r.me && <span className="whitespace-pre text-[12.5px] font-extrabold text-[#3441B5]">{'  (em)'}</span>}
+            {r.me && <span className="whitespace-pre text-[12.5px] font-extrabold text-primary-ink">{'  (em)'}</span>}
           </div>
           <div className="text-[19px] font-extrabold text-[#7A4E00]">{r.stars} sao</div>
         </div>

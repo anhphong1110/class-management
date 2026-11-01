@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getDisplayData } from '@/lib/display/queries'
+import { brandLines } from '@/lib/classes/brand'
 import { classShortName } from '@/lib/classes/short-name'
 import { DisplayClient } from './DisplayClient'
 
@@ -29,6 +30,7 @@ export default async function Page() {
   return (
     <DisplayClient
       data={{ ...data, cls: { ...data.cls, className: classShortName(data.cls.className) } }}
+      brand={brandLines({ class_name: data.cls.className })}
     />
   )
 }

@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { StudentNav } from '@/components/layout/StudentNav'
 import { StudentHeader } from '@/components/layout/StudentHeader'
 import { getShellData } from '@/lib/layout/shell-data'
-import { THEMES } from '@/lib/domain/theme'
+import { themeVars } from '@/lib/domain/theme'
 import { formatVietnameseDate } from '@/lib/domain/date'
 import { visibleStudentPages } from '@/lib/student/flags'
 import { getStudentContext, getStudentProfile } from '@/lib/student/queries'
@@ -10,17 +10,16 @@ import { getStudentContext, getStudentProfile } from '@/lib/student/queries'
 export default async function StudentLayout({ children }: { children: ReactNode }) {
   const ctx = await getStudentContext()
   const [data, profile] = await Promise.all([getShellData(), getStudentProfile()])
-  const theme = data?.cls.theme && THEMES[data.cls.theme] ? data.cls.theme : 'indigo'
   const pages = visibleStudentPages(ctx.settings)
   const subtitle = `Lớp ${data?.cls.class_name ?? ''} · ${formatVietnameseDate(new Date())}`
   return (
     <div
       data-testid="student-shell"
-      style={{ '--primary': THEMES[theme].primary } as CSSProperties}
+      style={themeVars(data?.cls.theme) as CSSProperties}
       className="box-border flex min-h-screen flex-wrap content-start gap-5 bg-bg p-4 text-ink"
     >
       <div className="min-w-0 max-w-none basis-full lg:max-w-[272px] lg:flex-[1_1_248px]">
-        <StudentNav pages={[...pages]} classLogoUrl={data?.classLogoUrl ?? null} />
+        <StudentNav pages={[...pages]} classLogoUrl={data?.classLogoUrl ?? null} className={data?.cls.class_name ?? ''} />
       </div>
       <div className="flex min-w-0 basis-full flex-col gap-5 lg:flex-[999_1_560px]">
         <StudentHeader

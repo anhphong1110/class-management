@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from 'react'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Button } from '@/components/ui/Button'
 import { Notice } from '@/components/ui/Notice'
-import { Toggle } from '@/components/ui/Toggle'
+import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
 import { validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
@@ -108,7 +108,7 @@ export function ProfileClient({
               aria-pressed={on}
               onClick={() => pickPerson(i)}
               className={`flex min-h-[60px] cursor-pointer items-center gap-3 rounded-[18px] border-2 px-3 py-1.5 text-left text-ink ${
-                on ? 'border-primary-strong bg-[#EEF0FF]' : 'border-[#E4E0F7] bg-white'
+                on ? 'border-primary-strong bg-primary-soft' : 'border-[#E4E0F7] bg-white'
               }`}
             >
               <AvatarImage avatar={av} size={46} />
@@ -128,7 +128,7 @@ export function ProfileClient({
         >
           <AvatarImage avatar={current?.avatar ?? null} size={150} />
           <div className="flex flex-[1_1_220px] flex-col gap-1.5">
-            <div className="text-[13px] font-extrabold tracking-[0.1em] text-[#3441B5]">{person.role.toUpperCase()}</div>
+            <div className="text-[13px] font-extrabold tracking-[0.1em] text-primary-ink">{person.role.toUpperCase()}</div>
             <div className="font-display text-[30px] font-extrabold leading-[1.1]">{person.name}</div>
             <div className="text-[14.5px] font-bold text-muted">
               Avatar hiện tại: {current?.label || 'Chưa chọn'}
@@ -157,7 +157,7 @@ export function ProfileClient({
                     setMsg(null)
                   }}
                   className={`flex cursor-pointer flex-col items-center gap-1 rounded-[20px] border-2 px-1.5 py-2.5 text-ink ${
-                    on ? 'border-primary-strong bg-[#EEF0FF]' : 'border-[#E4E0F7] bg-white'
+                    on ? 'border-primary-strong bg-primary-soft' : 'border-[#E4E0F7] bg-white'
                   }`}
                 >
                   <AvatarImage avatar={a.avatar} size={76} />
@@ -169,7 +169,7 @@ export function ProfileClient({
               type="button"
               disabled={busy}
               onClick={() => fileRef.current?.click()}
-              className="flex min-h-[118px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-[#8E86D8] bg-bg px-1.5 py-2.5 text-center text-[13px] font-extrabold text-[#3441B5] disabled:opacity-50"
+              className="flex min-h-[118px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-[#8E86D8] bg-bg px-1.5 py-2.5 text-center text-[13px] font-extrabold text-primary-ink disabled:opacity-50"
             >
               <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
@@ -199,7 +199,7 @@ export function ProfileClient({
         </div>
 
         <div className="rounded-[24px] bg-white px-6 py-5 shadow-[0_6px_20px_rgba(102,117,232,0.10)]">
-          <Toggle
+          <Switch
             checked={allow}
             onChange={flipAllow}
             disabled={busy}

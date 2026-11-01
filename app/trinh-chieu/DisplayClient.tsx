@@ -14,7 +14,7 @@ const STAGE_W = 1600
 const BADGE = ['#FFC857', '#DDE2F0', '#F3BC97', '#E4E0F7', '#E4E0F7']
 const PANEL = 'bg-white/10 rounded-[30px]'
 
-export function DisplayClient({ data }: { data: DisplayData }) {
+export function DisplayClient({ data, brand }: { data: DisplayData; brand: { top: string; accent: string } }) {
   const router = useRouter()
   const [auto, setAuto] = useState(false)
   const [index, setIndex] = useState(0)
@@ -92,7 +92,13 @@ export function DisplayClient({ data }: { data: DisplayData }) {
             </div>
             <div>
               <h1 className="m-0 font-display text-[40px] font-extrabold leading-[1.05]">
-                TRẠM KHÔNG GIAN <span className="text-[#FFD36B]">NĂM 8</span>
+                {brand.top}
+                {brand.accent && (
+                  <>
+                    {' '}
+                    <span className="text-[#FFD36B]">{brand.accent}</span>
+                  </>
+                )}
               </h1>
               <div className="text-lg font-bold text-[#E4E7FF]">
                 Lớp {data.cls.className} · {data.cls.slogan}

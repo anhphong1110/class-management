@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Notice } from "@/components/ui/Notice";
-import { Toggle } from "@/components/ui/Toggle";
+import { Switch } from "@/components/ui/Switch";
 
 afterEach(cleanup);
 
@@ -14,10 +14,10 @@ describe("Button", () => {
   });
 });
 
-describe("Toggle", () => {
+describe("Switch", () => {
   it("calls onChange with the negated value", () => {
     const onChange = vi.fn();
-    render(<Toggle checked={false} onChange={onChange} label="Cho phép" />);
+    render(<Switch checked={false} onChange={onChange} label="Cho phép" />);
     const sw = screen.getByRole("switch");
     expect(sw.getAttribute("aria-checked")).toBe("false");
     fireEvent.click(sw);
@@ -25,10 +25,22 @@ describe("Toggle", () => {
   });
 });
 
-describe("Toggle disabled", () => {
+describe("Switch size and colours", () => {
+  it("track is 46x27, strong when on and lavender when off", () => {
+    const { rerender } = render(<Switch checked onChange={() => {}} label="A" />);
+    const track = () => screen.getByRole("switch").querySelector("[aria-hidden]") as HTMLElement;
+    expect(track().className).toContain("w-[46px]");
+    expect(track().className).toContain("h-[27px]");
+    expect(track().className).toContain("bg-primary-strong");
+    rerender(<Switch checked={false} onChange={() => {}} label="A" />);
+    expect(track().className).toContain("bg-[#B9B5E8]");
+  });
+});
+
+describe("Switch disabled", () => {
   it("does not call onChange when disabled", () => {
     const onChange = vi.fn();
-    render(<Toggle checked={false} onChange={onChange} label="Cho phép" disabled />);
+    render(<Switch checked={false} onChange={onChange} label="Cho phép" disabled />);
     const sw = screen.getByRole("switch") as HTMLButtonElement;
     expect(sw.disabled).toBe(true);
     expect(sw.getAttribute("aria-disabled")).toBe("true");
@@ -37,10 +49,10 @@ describe("Toggle disabled", () => {
   });
 });
 
-describe("Toggle row", () => {
+describe("Switch row", () => {
   it("clicking the label toggles, checked sets aria-checked, row is >= 44px", () => {
     const onChange = vi.fn();
-    render(<Toggle checked onChange={onChange} label="Cho phép" hint="Gợi ý" />);
+    render(<Switch checked onChange={onChange} label="Cho phép" hint="Gợi ý" />);
     const sw = screen.getByRole("switch");
     expect(sw.getAttribute("aria-checked")).toBe("true");
     expect(sw.className).toContain("min-h-[50px]");

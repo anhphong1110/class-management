@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { Notice } from '@/components/ui/Notice'
-import { Toggle } from '@/components/ui/Toggle'
+import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
 import { formatDayLabel } from '@/lib/domain/relative-time'
 import { validateImageFile } from '@/lib/domain/upload'
@@ -20,7 +20,7 @@ type Result = { error?: string; message?: string }
 
 const field = 'min-h-12 box-border rounded-xl border-2 border-[#D9D5F2] bg-white px-3.5 text-base font-bold text-ink'
 const ghost =
-  'min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3.5 text-[13.5px] font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-50'
+  'min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3.5 text-[13.5px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50'
 
 export function AnnouncementsClient({ items, now }: { items: AnnouncementView[]; now: string }) {
   const nowDate = new Date(now)
@@ -256,13 +256,13 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
               type="button"
               disabled={busy}
               onClick={() => fileRef.current?.click()}
-              className="min-h-12 cursor-pointer rounded-[14px] border-2 border-dashed border-[#8E86D8] bg-[#F6F4FF] px-4 text-sm font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-12 cursor-pointer rounded-[14px] border-2 border-dashed border-[#8E86D8] bg-[#F6F4FF] px-4 text-sm font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
             >
               Đính kèm hình ảnh
             </button>
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => onFile(e.target.files?.[0])} />
             <div className="flex items-center rounded-[14px] border-2 border-[#D9D5F2] bg-white px-4">
-              <Toggle checked={pinned} onChange={setPinned} label="Ghim lên đầu" disabled={busy} />
+              <Switch checked={pinned} onChange={setPinned} label="Ghim lên đầu" disabled={busy} />
             </div>
           </div>
           <div className="flex gap-2.5">

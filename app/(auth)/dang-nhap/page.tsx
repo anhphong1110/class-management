@@ -1,6 +1,9 @@
+import type { CSSProperties } from 'react'
 import Image from 'next/image'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { toVietnameseMessage } from '@/lib/errors'
+import { brandLines } from '@/lib/classes/brand'
+import { themeVars } from '@/lib/domain/theme'
 import LoginForm from './LoginForm'
 
 export const dynamic = 'force-dynamic'
@@ -8,7 +11,7 @@ export const dynamic = 'force-dynamic'
 async function loadClass() {
   const { data } = await createAdminSupabase()
     .from('classes')
-    .select('school_name, class_name, teacher_name, slogan')
+    .select('school_name, class_name, teacher_name, slogan, theme')
     .is('archived_at', null)
     .order('created_at', { ascending: true })
     .limit(1)
@@ -24,13 +27,14 @@ export default async function LoginPage({
   const sp = await searchParams
   const cls = await loadClass()
   const school = cls?.school_name || 'Tiểu học Chính Nghĩa'
-  const className = cls?.class_name || 'Năm 8 (5/8)'
-  const teacher = cls?.teacher_name || 'Cô Khanh'
+  const className = cls?.class_name ?? ''
+  const teacher = cls?.teacher_name ?? ''
+  const brand = brandLines({ class_name: className })
   const slogan = cls?.slogan || 'Cùng học – Cùng chơi – Cùng tỏa sáng'
   const initialError = sp.error === 'no_profile' ? toVietnameseMessage('no_profile') : undefined
 
   return (
-    <main className="relative box-border flex min-h-screen flex-wrap items-center justify-center gap-6 overflow-hidden bg-[radial-gradient(circle_at_20%_20%,#4B4FB5_0%,#2B2E7E_45%,#1E2160_100%)] p-6 font-body">
+    <main style={themeVars(cls?.theme) as CSSProperties} className="relative box-border flex min-h-screen flex-wrap items-center justify-center gap-6 overflow-hidden bg-[radial-gradient(circle_at_20%_20%,#4B4FB5_0%,#2B2E7E_45%,#1E2160_100%)] p-6 font-body">
       <svg
         viewBox="0 0 1000 600"
         preserveAspectRatio="xMidYMid slice"
@@ -65,7 +69,7 @@ export default async function LoginPage({
           <div className="relative h-[88px] w-[88px] flex-none overflow-hidden rounded-full bg-white">
             <Image
               src="/brand/logo-lop.jpg"
-              alt={`Logo lớp ${className}`}
+              alt={className ? `Logo lớp ${className}` : 'Logo lớp'}
               width={92}
               height={92}
               priority
@@ -77,7 +81,7 @@ export default async function LoginPage({
           {`TRƯỜNG ${school}`.toLocaleUpperCase('vi-VN')}
         </div>
         <div className="text-sm font-extrabold tracking-[0.18em] text-[#FFE08A]">
-          {`LỚP ${className} · TEAM ${teacher}`.toLocaleUpperCase('vi-VN')}
+          {[className && `LỚP ${className}`, teacher && `TEAM ${teacher}`].filter(Boolean).join(' · ').toLocaleUpperCase('vi-VN')}
         </div>
         <div className="w-full max-w-[520px]" style={{ animation: 'fl 5s ease-in-out infinite' }}>
           <Image
@@ -91,8 +95,12 @@ export default async function LoginPage({
         </div>
         <h1 className="m-0 font-display text-[46px] font-extrabold leading-[1.05]">
           Trạm không gian
-          <br />
-          Năm 8
+          {brand.accent && (
+            <>
+              <br />
+              {`Năm ${brand.accent.slice(4)}`}
+            </>
+          )}
         </h1>
         <p className="m-0 text-[17px] text-[#E4E7FF]">{slogan}</p>
       </section>

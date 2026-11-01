@@ -17,5 +17,5 @@ export async function getClassHeaderInfo(classId: string) {
     term2Start: data.term2_start,
     term2End: data.term2_end,
   })
-  return { short: classShortName(data.class_name), term: termRoman(term) }
+  return { className: data.class_name as string, short: classShortName(data.class_name), term: termRoman(term) }
 }

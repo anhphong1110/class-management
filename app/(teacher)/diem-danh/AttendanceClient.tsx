@@ -147,7 +147,7 @@ export function AttendanceClient({
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3.5 rounded-[26px] bg-white px-6 py-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
         <div className="flex items-center gap-3.5">
-          <div className="flex size-14 items-center justify-center rounded-[18px] bg-[#EEF0FF] text-[#3441B5]">
+          <div className="flex size-14 items-center justify-center rounded-[18px] bg-primary-soft text-primary-ink">
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4" />
             </svg>
@@ -171,7 +171,7 @@ export function AttendanceClient({
               />
             </label>
           )}
-          <button type="button" onClick={() => setPicking((p) => !p)} className={`${outline} text-[#3441B5]`}>
+          <button type="button" onClick={() => setPicking((p) => !p)} className={`${outline} text-primary-ink`}>
             Chọn ngày
           </button>
           <button
@@ -193,7 +193,7 @@ export function AttendanceClient({
             type="button"
             onClick={save}
             disabled={pending}
-            className="min-h-11 cursor-pointer rounded-[14px] border-0 bg-[#4F5BD5] px-[22px] text-[15px] font-extrabold text-white disabled:opacity-60"
+            className="min-h-11 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-[22px] text-[15px] font-extrabold text-white disabled:opacity-60"
           >
             Lưu điểm danh
           </button>
@@ -280,7 +280,7 @@ export function AttendanceClient({
                 <div className="text-[#7A5400]">{h.late} đi trễ</div>
                 <Link
                   href={`/diem-danh?ngay=${h.date}`}
-                  className="text-right text-[#4F5BD5]"
+                  className="text-right text-primary-strong"
                 >
                   Chỉnh sửa
                 </Link>

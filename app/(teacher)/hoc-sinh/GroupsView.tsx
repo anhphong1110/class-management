@@ -16,7 +16,7 @@ const ROLE_STYLE = {
 const ORDER = { leader: 0, deputy: 1, member: 2 } as const
 
 const roleBtn =
-  'min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3 text-[13px] font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-60'
+  'min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3 text-[13px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-60'
 
 export function GroupsView({ students, groups }: { students: StudentCard[]; groups: StarGroup[] }) {
   const [error, setError] = useState('')
@@ -181,7 +181,7 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
               className="min-h-12 rounded-[14px] border-2 border-[#D9D5F2] bg-white px-3 text-base font-semibold text-ink"
             />
           </label>
-          <button type="submit" disabled={pending} className="min-h-12 rounded-[14px] bg-[#4F5BD5] px-5 text-[15px] font-extrabold text-white disabled:opacity-60">
+          <button type="submit" disabled={pending} className="min-h-12 rounded-[14px] bg-primary-strong px-5 text-[15px] font-extrabold text-white disabled:opacity-60">
             Lưu tổ
           </button>
           <button type="button" onClick={() => setAdding(false)} className={`${roleBtn} min-h-12`}>
@@ -196,7 +196,7 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
               setNewName(`Tổ ${groups.length + 1}`)
               setAdding(true)
             }}
-            className="min-h-12 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-5 text-[15px] font-extrabold text-[#3441B5]"
+            className="min-h-12 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-5 text-[15px] font-extrabold text-primary-ink"
           >
             + Thêm tổ
           </button>

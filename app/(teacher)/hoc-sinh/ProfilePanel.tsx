@@ -40,7 +40,7 @@ export function ProfilePanel({
       <div className="flex flex-wrap items-center gap-[18px]">
         <AvatarImage avatar={student.avatar} size={124} crown={crown} />
         <div className="flex flex-[1_1_240px] flex-col gap-1.5">
-          <div className="text-[13px] font-extrabold tracking-[.1em] text-[#4F5BD5]">HỒ SƠ PHI HÀNH GIA</div>
+          <div className="text-[13px] font-extrabold tracking-[.1em] text-primary-strong">HỒ SƠ PHI HÀNH GIA</div>
           <div className="font-display text-[30px] font-extrabold leading-[1.1]">{student.fullName}</div>
           <div className="text-[14.5px] font-bold text-[#5B5890]">
             Mã {student.code} · Số thứ tự {student.rollNo} · Đang học
@@ -125,4 +125,4 @@ export function ProfilePanel({
 }
 
 const actionBtn =
-  'min-h-11 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-[#3441B5]'
+  'min-h-11 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-primary-ink'
