@@ -21,7 +21,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
     >
       <ThemeBodyVars vars={themeVars(data?.cls.theme)} />
       <div className="min-w-0 max-w-none basis-full lg:max-w-[272px] lg:flex-[1_1_248px]">
-        <StudentNav pages={[...pages]} classLogoUrl={data?.classLogoUrl ?? null} schoolLogoUrl={data?.schoolLogoUrl ?? null} className={data?.cls.class_name ?? ''} />
+        <StudentNav pages={[...pages]} classLogoUrl={data?.classLogoUrl ?? null} schoolLogoUrl={data?.schoolLogoUrl ?? null} className={data?.cls.class_name ?? ''} schoolName={data?.cls.school_name} />
       </div>
       <div className="flex min-w-0 basis-full flex-col gap-5 lg:flex-[999_1_560px]">
         <StudentHeader

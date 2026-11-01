@@ -8,7 +8,7 @@ const TABS = [
     key: 'teacher',
     label: 'Giáo viên',
     userLabel: 'Tên đăng nhập của cô',
-    userHint: 'Ví dụ: co.khanh',
+    userHint: 'Ví dụ: co.ten',
     note: 'Tài khoản giáo viên có toàn quyền quản trị lớp học.',
   },
   {

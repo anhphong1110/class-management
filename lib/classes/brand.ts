@@ -16,3 +16,9 @@ export function brandSentence(cls: { class_name: string }): string {
   const { accent } = brandLines(cls)
   return accent ? `Trạm không gian Năm ${accent.slice(4)}` : 'Trạm không gian'
 }
+
+/** Dòng tên trường cho thanh bên/trình chiếu: "Trường <tên>", trống thì "Trường học". */
+export function schoolLabel(schoolName: string | null | undefined): string {
+  const n = (schoolName ?? '').trim()
+  return n ? `Trường ${n}` : 'Trường học'
+}

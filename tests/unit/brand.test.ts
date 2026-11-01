@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { brandLines, brandSentence, brandTitle } from '@/lib/classes/brand'
+import { brandLines, brandSentence, brandTitle, schoolLabel } from '@/lib/classes/brand'
 
 describe('brandTitle', () => {
   it('Năm 8 (5/8)', () => expect(brandTitle({ class_name: 'Năm 8 (5/8)' })).toBe('TRẠM KHÔNG GIAN NĂM 8'))
@@ -21,5 +21,13 @@ describe('brandLines / brandSentence', () => {
   it('câu thường', () => {
     expect(brandSentence({ class_name: 'Năm 8 (5/8)' })).toBe('Trạm không gian Năm 8')
     expect(brandSentence({ class_name: 'Lớp Sao' })).toBe('Trạm không gian')
+  })
+})
+
+describe('schoolLabel', () => {
+  it('có tên thì thêm "Trường"', () => expect(schoolLabel(' Tiểu học Chính Nghĩa ')).toBe('Trường Tiểu học Chính Nghĩa'))
+  it('trống thì "Trường học"', () => {
+    expect(schoolLabel('')).toBe('Trường học')
+    expect(schoolLabel(null)).toBe('Trường học')
   })
 })

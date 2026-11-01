@@ -2,10 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { brandLines } from '@/lib/classes/brand'
+import { brandLines, schoolLabel } from '@/lib/classes/brand'
 import { STUDENT_NAV, type StudentPageId } from '@/lib/student/flags'
 
-export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className }: { pages: StudentPageId[]; classLogoUrl: string | null; schoolLogoUrl?: string | null; className: string }) {
+export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, schoolName }: { pages: StudentPageId[]; classLogoUrl: string | null; schoolLogoUrl?: string | null; className: string; schoolName?: string | null }) {
   const brand = brandLines({ class_name: className })
   const pathname = usePathname()
   const items = STUDENT_NAV.filter((n) => pages.includes(n.id))
@@ -17,14 +17,12 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className }: { 
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={schoolLogoUrl ?? '/brand/logo-truong.jpg'}
-            alt="Logo trường Tiểu học Chính Nghĩa"
+            alt={`Logo ${schoolLabel(schoolName).toLocaleLowerCase('vi-VN')}`}
             className="absolute -left-px -top-px size-[46px] max-w-none object-cover"
           />
         </div>
         <div className="font-display text-[13.5px] font-extrabold leading-[1.15] tracking-[.04em]">
-          TRƯỜNG TIỂU HỌC
-          <br />
-          CHÍNH NGHĨA
+          {schoolLabel(schoolName).toLocaleUpperCase('vi-VN')}
         </div>
       </div>
       <div className="flex items-center gap-2.5 px-1.5">

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
-import { brandLines } from '@/lib/classes/brand'
+import { brandLines, schoolLabel } from '@/lib/classes/brand'
 import { TEACHER_NAV } from './nav'
 
 type Props = {
@@ -12,9 +12,10 @@ type Props = {
   classLogoUrl: string | null
   schoolLogoUrl?: string | null
   className: string
+  schoolName?: string | null
 }
 
-export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, className }: Props) {
+export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, className, schoolName }: Props) {
   const brand = brandLines({ class_name: className })
   const pathname = usePathname()
   const activeId =
@@ -27,14 +28,12 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={schoolLogoUrl ?? '/brand/logo-truong.jpg'}
-            alt="Logo trường Tiểu học Chính Nghĩa"
+            alt={`Logo ${schoolLabel(schoolName).toLocaleLowerCase('vi-VN')}`}
             className="absolute -left-px -top-px size-[46px] max-w-none object-cover"
           />
         </div>
         <div className="font-display text-[13.5px] font-extrabold leading-[1.15] tracking-[.04em]">
-          TRƯỜNG TIỂU HỌC
-          <br />
-          CHÍNH NGHĨA
+          {schoolLabel(schoolName).toLocaleUpperCase('vi-VN')}
         </div>
       </div>
       <div className="flex items-center gap-2.5 px-1.5">

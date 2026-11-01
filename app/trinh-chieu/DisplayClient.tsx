@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
 import { announcementColors } from '@/lib/announcements/types'
+import { schoolLabel } from '@/lib/classes/brand'
 import { DISPLAY_BLOCKS, nextBlockIndex, type DisplayBlock } from '@/lib/display/logic'
 import type { DisplayData } from '@/lib/display/queries'
 
@@ -88,7 +89,7 @@ export function DisplayClient({ data, brand }: { data: DisplayData; brand: { top
           <div className="flex items-center gap-4">
             <div className="relative size-[72px] flex-none overflow-hidden rounded-full bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo-truong.jpg" alt="Logo trường Tiểu học Chính Nghĩa" className="absolute -left-0.5 -top-0.5 size-[76px] max-w-none object-cover" />
+              <img src={data.schoolLogoUrl ?? '/brand/logo-truong.jpg'} alt={`Logo ${schoolLabel(data.cls.schoolName).toLocaleLowerCase('vi-VN')}`} className="absolute -left-0.5 -top-0.5 size-[76px] max-w-none object-cover" />
             </div>
             <div>
               <h1 className="m-0 font-display text-[40px] font-extrabold leading-[1.05]">

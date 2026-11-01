@@ -17,7 +17,8 @@ export type DisplayWeekRow = { id: string; name: string; stars: number }
 export type { DisplayLesson }
 
 export type DisplayData = {
-  cls: { schoolYear: string; className: string; slogan: string }
+  cls: { schoolYear: string; className: string; slogan: string; schoolName: string }
+  schoolLogoUrl: string | null
   dateLabel: string
   top5: DisplayTop5Row[]
   weekTop3: DisplayWeekRow[]
@@ -33,7 +34,7 @@ export async function getDisplayData(classId: string, now: Date = new Date()): P
   const { from, to } = periodRange('week', now, NO_TERMS)
 
   const [clsRes, yearRes, weekRes, totalsRes, groups, timetable, announcements] = await Promise.all([
-    supabase.from('classes').select('school_year, class_name, slogan').eq('id', classId).single(),
+    supabase.from('classes').select('school_year, class_name, slogan, school_name, logo_path').eq('id', classId).single(),
     supabase.rpc('leaderboard_between', { p_from: null, p_to: null }),
     supabase.rpc('leaderboard_between', { p_from: from!, p_to: to! }),
     supabase.rpc('class_star_totals_between', { p_from: from!, p_to: to! }),
@@ -44,6 +45,10 @@ export async function getDisplayData(classId: string, now: Date = new Date()): P
   for (const r of [clsRes, yearRes, weekRes, totalsRes]) if (r.error) throw new Error(r.error.message)
   const cls = clsRes.data
   if (!cls) throw new Error('class_not_found')
+
+  const schoolLogoUrl = cls.logo_path
+    ? ((await supabase.storage.from('class-media').createSignedUrl(cls.logo_path, 3600)).data?.signedUrl ?? null)
+    : null
 
   const year = ((yearRes.data ?? []) as LbRow[]).slice(0, 5)
   const weekAll = (weekRes.data ?? []) as LbRow[]
@@ -77,7 +82,8 @@ export async function getDisplayData(classId: string, now: Date = new Date()): P
   const today = buildTodayLessons(timetable.slots, timetable.subjects, now, timetable.saturday)
 
   return {
-    cls: { schoolYear: cls.school_year, className: cls.class_name, slogan: cls.slogan },
+    cls: { schoolYear: cls.school_year, className: cls.class_name, slogan: cls.slogan, schoolName: cls.school_name },
+    schoolLogoUrl,
     dateLabel: formatVietnameseDate(now),
     top5,
     weekTop3,
