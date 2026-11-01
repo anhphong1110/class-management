@@ -1,5 +1,5 @@
 begin;
-select plan(89);
+select plan(90);
 
 insert into public.classes (id, class_name) values ('00000000-0000-0000-0000-0000000000c1', '5A'), ('00000000-0000-0000-0000-0000000000c2', '5B');
 insert into public.class_settings (class_id, weekly_redeem_limit) values
@@ -179,7 +179,11 @@ select throws_ok($$select public.set_reward_stock('00000000-0000-0000-0000-00000
 select lives_ok($$select public.set_reward_stock('00000000-0000-0000-0000-0000000000f2', 1)$$, 'stock 1 bằng số giữ');
 select is((select stock from public.rewards where id = '00000000-0000-0000-0000-0000000000f2'), 1, 'stock Q2 = 1');
 select throws_ok($$select public.set_reward_stock(gen_random_uuid(), 1)$$, 'P0001', 'reward_not_found', 'quà không tồn tại');
-select throws_ok($$update public.rewards set stock = 0 where id = '00000000-0000-0000-0000-0000000000f2'$$, 'P0001', 'stock_below_held', 'UPDATE trực tiếp dưới số pending bị chặn');
+select throws_ok($$update public.rewards set stock = 0 where id = '00000000-0000-0000-0000-0000000000f2'$$, '42501', null, 'giáo viên không UPDATE stock trực tiếp (quyền cột)');
+reset role;
+select throws_ok($$update public.rewards set stock = 0 where id = '00000000-0000-0000-0000-0000000000f2'$$, 'P0001', 'stock_below_held', 'UPDATE trực tiếp dưới số pending bị chặn (trigger)');
+set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d1', 'role', 'authenticated')::text, true);
 
 -- duyệt khi kho đã về 0 (bỏ qua trigger bằng quyền postgres)
 reset role;

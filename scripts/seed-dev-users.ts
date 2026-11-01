@@ -75,6 +75,11 @@ async function main() {
       await supabase.auth.admin.deleteUser(created.user.id)
       throw profErr
     }
+    if (u.role === 'teacher') {
+      const { error: ownerErr } = await supabase
+        .from('classes').update({ owner_id: created.user.id }).eq('id', CLASS_ID).is('owner_id', null)
+      if (ownerErr) throw ownerErr
+    }
     console.log(`đã tạo ${n.username}`)
   }
 }

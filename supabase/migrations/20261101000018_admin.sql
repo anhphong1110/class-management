@@ -52,14 +52,15 @@ create trigger classes_create_settings
   after insert on public.classes
   for each row execute function private.create_class_settings();
 
--- 4) archived_at của học sinh chỉ sửa qua archive_student (cờ app.archive_student đặt trong giao dịch).
+-- 4) archived_at của học sinh chỉ sửa qua archive_student: vai API (authenticated/anon) bị chặn, còn hàm
+--    security definer archive_student chạy bằng vai chủ sở hữu nên qua được.
 create function private.guard_student_archived_at() returns trigger
 language plpgsql
 set search_path = ''
 as $$
 begin
   if new.archived_at is distinct from old.archived_at
-     and coalesce(current_setting('app.archive_student', true), '') <> 'on' then
+     and current_user in ('authenticated', 'anon') then
     raise exception 'use_archive_student';
   end if;
   return new;
@@ -104,9 +105,7 @@ begin
   end loop;
 
   delete from public.group_members where class_id = v_class and student_id = p_student_id;
-  perform set_config('app.archive_student', 'on', true);
   update public.students set archived_at = now() where id = p_student_id;
-  perform set_config('app.archive_student', 'off', true);
 
   insert into public.audit_logs (class_id, actor_id, action, entity, entity_id, payload)
   values (v_class, (select auth.uid()), 'students.archive', 'student', p_student_id,
@@ -359,9 +358,14 @@ begin
   t1e := case when p ? 'term1_end' then (p ->> 'term1_end')::date else c.term1_end end;
   t2s := case when p ? 'term2_start' then (p ->> 'term2_start')::date else c.term2_start end;
   t2e := case when p ? 'term2_end' then (p ->> 'term2_end')::date else c.term2_end end;
-  if (t1s is not null and t1e is not null and t1s > t1e)
-     or (t1e is not null and t2s is not null and t1e >= t2s)
-     or (t2s is not null and t2e is not null and t2s > t2e) then
+  if (t1s is not null and not isfinite(t1s)) or (t1e is not null and not isfinite(t1e))
+     or (t2s is not null and not isfinite(t2s)) or (t2e is not null and not isfinite(t2e)) then
+    raise exception 'invalid_term_dates';
+  end if;
+  -- Mỗi ngày có giá trị phải đứng trước mọi ngày sau nó: t1s <= t1e < t2s <= t2e (so từng cặp).
+  if (t1s > t1e) or (t1s >= t2s) or (t1s >= t2e)
+     or (t1e >= t2s) or (t1e >= t2e)
+     or (t2s > t2e) then
     raise exception 'invalid_term_dates';
   end if;
 
@@ -508,3 +512,24 @@ grant execute on function
   public.save_class_info(jsonb), public.save_class_settings(jsonb),
   public.set_timetable_saturday(boolean, boolean), public.undo_mission_completion(uuid)
   to authenticated;
+
+-- 14) Quyền cột: giáo viên không sửa trực tiếp các cột chỉ đi qua hàm (owner_id, archived_at của lớp,
+--     timetable_saturday, stock của quà). Các cột còn lại vẫn sửa được qua RLS như cũ.
+do $$
+declare
+  r record;
+begin
+  for r in select * from (values
+    ('classes', array['id', 'owner_id', 'archived_at', 'created_at']),
+    ('class_settings', array['class_id', 'timetable_saturday', 'created_at', 'is_demo']),
+    ('rewards', array['id', 'class_id', 'stock', 'created_at', 'is_demo'])) v(tbl, excluded)
+  loop
+    execute format('revoke update on public.%I from authenticated', r.tbl);
+    execute format('grant update (%s) on public.%I to authenticated',
+      (select string_agg(quote_ident(a.attname), ', ' order by a.attnum)
+         from pg_attribute a
+        where a.attrelid = format('public.%I', r.tbl)::regclass and a.attnum > 0 and not a.attisdropped
+          and a.attname <> all (r.excluded)),
+      r.tbl);
+  end loop;
+end $$;

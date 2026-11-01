@@ -1,5 +1,5 @@
 begin;
-select plan(137);
+select plan(156);
 
 create function pg_temp.as_user(u uuid) returns void language sql
 as $$ select set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true) $$;
@@ -57,9 +57,17 @@ select throws_ok($$update public.profiles set username = 'ab' where id = '000000
 select throws_ok($$update public.profiles set username = 'Co.Khanh' where id = '00000000-0000-0000-0000-0000000000d1'$$, '23514', null, 'username có chữ hoa bị chặn');
 
 -- ===== archived_at chỉ sửa qua archive_student =====
+set local role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
 select throws_ok($$update public.students set archived_at = now() where id = '00000000-0000-0000-0000-0000000000a2'$$, 'P0001', 'use_archive_student', 'UPDATE archived_at trực tiếp bị chặn');
 select throws_ok($$update public.students set archived_at = null where id = '00000000-0000-0000-0000-0000000000a3'$$, 'P0001', 'use_archive_student', 'bỏ lưu trữ trực tiếp bị chặn');
+select set_config('app.archive_student', 'on', true);
+select throws_ok($$update public.students set archived_at = now() where id = '00000000-0000-0000-0000-0000000000a2'$$, 'P0001', 'use_archive_student', 'tự đặt set_config cũng không qua được');
+reset role;
+set local role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
 select lives_ok($$update public.students set full_name = 'A2 đổi tên' where id = '00000000-0000-0000-0000-0000000000a2'$$, 'sửa cột khác vẫn được');
+reset role;
 
 -- ===== duyệt yêu cầu của học sinh đã lưu trữ =====
 insert into public.reward_requests (id, class_id, student_id, reward_id, cost, status) values
@@ -82,12 +90,10 @@ select lives_ok($$select public.archive_student('00000000-0000-0000-0000-0000000
 select ok((select archived_at is not null from public.students where id = '00000000-0000-0000-0000-0000000000a2'), 'A2 đã có archived_at');
 select is((select coalesce(sum(delta), 0)::int from public.star_transactions where student_id = '00000000-0000-0000-0000-0000000000a2'), 4, 'archive_student trả sao đang giữ');
 select is((select status::text from public.reward_requests where id = '00000000-0000-0000-0000-0000000000e3'), 'rejected', 'yêu cầu đang chờ bị từ chối');
-reset role;
 select throws_ok($$update public.students set archived_at = null where id = '00000000-0000-0000-0000-0000000000a2'$$, 'P0001', 'use_archive_student', 'sau archive_student cũng không sửa tay được');
--- mở lại A2 cho các phần sau (cách duy nhất: bật cờ như hàm archive_student)
-select set_config('app.archive_student', 'on', true);
+reset role;
+-- vai postgres (SQL quản trị, e2e) vẫn mở lại được A2 cho các phần sau
 update public.students set archived_at = null where id = '00000000-0000-0000-0000-0000000000a2';
-select set_config('app.archive_student', 'off', true);
 
 -- ===== nhật ký rewards =====
 select is((select count(*)::int from public.audit_logs where action = 'reward_created' and entity_id = '00000000-0000-0000-0000-0000000000f5'), 1, 'thêm quà ghi reward_created');
@@ -145,6 +151,10 @@ select throws_ok($$select public.save_class_info(jsonb_build_object('class_name'
 select throws_ok($$select public.save_class_info(jsonb_build_object('slogan', repeat('a', 121)))$$, 'P0001', 'invalid_input', 'slogan 121 ký tự');
 select throws_ok($$select public.save_class_info('{"theme":"red"}')$$, 'P0001', 'invalid_input', 'theme sai');
 select throws_ok($$select public.save_class_info('{"term1_start":"không phải ngày"}')$$, 'P0001', 'invalid_input', 'ngày sai định dạng');
+select throws_ok($$select public.save_class_info('{"term1_start":"2027-02-01","term1_end":null,"term2_start":"2026-09-01","term2_end":null}')$$, 'P0001', 'invalid_term_dates', 'term1_start sau term2_start (không cần đủ bốn ngày)');
+select throws_ok($$select public.save_class_info('{"term1_start":"2026-09-05","term1_end":null,"term2_start":null,"term2_end":"2026-08-01"}')$$, 'P0001', 'invalid_term_dates', 'term2_end trước term1_start');
+select throws_ok($$select public.save_class_info('{"term1_end":"infinity"}')$$, 'P0001', 'invalid_term_dates', 'ngày infinity bị từ chối');
+select throws_ok($$select public.save_class_info('{"term2_start":"-infinity"}')$$, 'P0001', 'invalid_term_dates', 'ngày -infinity bị từ chối');
 select throws_ok($$select public.save_class_info('{"school_name":5}')$$, 'P0001', 'invalid_input', 'school_name không phải chuỗi');
 select is((select count(*)::int from public.audit_logs where action = 'class.info' and class_id = '00000000-0000-0000-0000-0000000000c1'), 2, 'audit class.info');
 
@@ -272,6 +282,38 @@ select lives_ok($$select public.save_attendance((now() at time zone 'Asia/Ho_Chi
   '[{"student_id":"00000000-0000-0000-0000-0000000000a1","status":"present"}]')$$, 'đúng ngày term1_start được ghi');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000d2');
 select lives_ok($$select public.save_attendance((now() at time zone 'Asia/Ho_Chi_Minh')::date - 31, '[]')$$, 'lớp chưa đặt term1_start thì không chặn');
+
+-- ===== undo khi sao đang được giữ cho yêu cầu đổi quà =====
+reset role;
+update public.classes set term1_start = null where id = '00000000-0000-0000-0000-0000000000c1';
+set local role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
+select lives_ok($$select public.complete_mission('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000a2')$$, 'ghi nhận nhiệm vụ 3 sao cho A2');
+create temp table hold (v uuid);
+grant all on hold to authenticated;
+insert into hold select id from public.mission_completions where student_id = '00000000-0000-0000-0000-0000000000a2' and mission_id = '00000000-0000-0000-0000-0000000000f1';
+reset role;
+insert into public.reward_requests (id, class_id, student_id, reward_id, cost, status) values
+  ('00000000-0000-0000-0000-0000000000e4', '00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a2', '00000000-0000-0000-0000-0000000000f5', 6, 'pending');
+insert into public.star_transactions (class_id, student_id, delta, kind, reward_request_id) values
+  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a2', -6, 'reserve', '00000000-0000-0000-0000-0000000000e4');
+set local role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
+select is((select available_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a2')::int, 1, 'A2 chỉ còn 1 sao khả dụng');
+select throws_ok($$select public.undo_mission_completion((select v from hold))$$, 'P0001', 'insufficient_stars', 'undo khi sao đang được giữ: insufficient_stars');
+select is((select count(*)::int from public.mission_completions where id = (select v from hold)), 1, 'dòng hoàn thành vẫn còn');
+select is((select available_stars from public.v_student_stars where student_id = '00000000-0000-0000-0000-0000000000a2')::int, 1, 'sao không đổi sau lỗi');
+
+-- ===== quyền cột =====
+select throws_ok($$update public.classes set owner_id = '00000000-0000-0000-0000-0000000000d2' where id = '00000000-0000-0000-0000-0000000000c1'$$, '42501', null, 'giáo viên không sửa classes.owner_id');
+select throws_ok($$update public.classes set archived_at = now() where id = '00000000-0000-0000-0000-0000000000c1'$$, '42501', null, 'giáo viên không sửa classes.archived_at');
+select lives_ok($$update public.classes set slogan = 'Khẩu hiệu' where id = '00000000-0000-0000-0000-0000000000c1'$$, 'giáo viên vẫn sửa các cột còn lại của classes');
+select throws_ok($$update public.class_settings set timetable_saturday = true where class_id = '00000000-0000-0000-0000-0000000000c1'$$, '42501', null, 'giáo viên không sửa timetable_saturday trực tiếp');
+select lives_ok($$update public.class_settings set only_enough = false where class_id = '00000000-0000-0000-0000-0000000000c1'$$, 'giáo viên vẫn sửa các cờ khác của class_settings');
+select throws_ok($$update public.rewards set stock = 99 where id = '00000000-0000-0000-0000-0000000000f5'$$, '42501', null, 'giáo viên không sửa stock trực tiếp');
+select lives_ok($$update public.rewards set hidden = true where id = '00000000-0000-0000-0000-0000000000f5'$$, 'giáo viên vẫn sửa các cột còn lại của rewards');
+select lives_ok($$select public.set_reward_stock('00000000-0000-0000-0000-0000000000f5', 5)$$, 'set_reward_stock vẫn đổi được stock');
+select lives_ok($$insert into public.rewards (class_id, name, cost, stock) values ('00000000-0000-0000-0000-0000000000c1', 'Quà mới', 3, 4)$$, 'giáo viên vẫn thêm quà kèm stock');
 
 -- ===== quyền hàm =====
 reset role;

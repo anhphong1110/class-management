@@ -93,9 +93,9 @@ test('tài khoản Auth không có profiles', async ({ page }) => {
   }
 })
 
-// archived_at chỉ sửa được khi có cờ app.archive_student (như archive_student), nên test bật cờ trong giao dịch.
+// Helper chạy bằng vai postgres nên sửa archived_at trực tiếp được (vai API thì bị trigger chặn).
 const setArchived = (value: string) =>
-  sql(`begin; select set_config('app.archive_student', 'on', true); update public.students set archived_at = ${value} where code = 'HS05'; commit;`)
+  sql(`update public.students set archived_at = ${value} where code = 'HS05'`)
 
 test('học sinh đã lưu trữ không bị lặp chuyển hướng', async ({ page }) => {
   await page.goto('/dang-nhap')
