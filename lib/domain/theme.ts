@@ -16,7 +16,7 @@ export const THEMES: Record<
 }
 
 export function themeVars(theme: string | null | undefined): Record<string, string> {
-  const t = THEMES[(theme as ThemeKey) ?? 'indigo'] ?? THEMES.indigo
+  const t = theme && Object.hasOwn(THEMES, theme) ? THEMES[theme as ThemeKey] : THEMES.indigo
   return {
     '--primary': t.primary,
     '--primary-strong': t.strong,

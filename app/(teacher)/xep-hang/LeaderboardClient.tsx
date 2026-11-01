@@ -132,7 +132,7 @@ export function LeaderboardClient({ rows, period, showAll }: { rows: RankRow[]; 
                     className="h-full rounded-md"
                     style={{
                       width: `${max > 0 ? Math.min(100, Math.max(0, Math.round((r.stars / max) * 100))) : 0}%`,
-                      background: 'linear-gradient(90deg,#6675E8,#F46FA5)',
+                      background: 'linear-gradient(90deg,var(--primary),#F46FA5)',
                     }}
                   />
                 </div>

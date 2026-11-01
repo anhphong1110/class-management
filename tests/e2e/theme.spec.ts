@@ -18,6 +18,12 @@ test('màu chủ đạo của lớp đổi màu nút chính "+ Thêm tiêu chí"
   const btn = page.getByRole('button', { name: '+ Thêm tiêu chí' }).first()
   await expect(btn).toHaveCSS('background-color', 'rgb(18, 121, 107)')
 
+  // Modal render qua portal vào body: vẫn phải theo màu chủ đạo.
+  await btn.click()
+  const save = page.getByRole('dialog').getByRole('button', { name: 'Lưu tiêu chí' })
+  await expect(save).toHaveCSS('background-color', 'rgb(18, 121, 107)')
+  await page.keyboard.press('Escape')
+
   await setTheme('indigo')
   await page.reload()
   await expect(page.getByRole('button', { name: '+ Thêm tiêu chí' }).first()).toHaveCSS('background-color', 'rgb(79, 91, 213)')
