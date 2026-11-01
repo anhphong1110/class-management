@@ -13,20 +13,20 @@ async function loadClass() {
   const admin = createAdminSupabase()
   const { data } = await admin
     .from('classes')
-    .select('id, school_name, class_name, teacher_name, slogan, theme, logo_path, class_logo_path')
+    .select('id, school_name, class_name, teacher_name, slogan, theme, logo_path')
     .is('archived_at', null)
     .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle()
   // Ngoại lệ có chủ ý: trang đăng nhập chưa có phiên (không gọi được requireTeacher), nên dùng khóa dịch vụ
-  // chỉ để ký hai đường dẫn logo của lớp. Chỉ ký đường dẫn nằm trong <lớp>/branding/ (save_class_info bảo đảm điều này,
+  // chỉ để ký đường dẫn logo của trường. Chỉ ký đường dẫn nằm trong <lớp>/branding/ (save_class_info bảo đảm điều này,
   // và giáo viên không còn quyền UPDATE trực tiếp các cột đường dẫn).
   const sign = async (path: string | null | undefined) => {
     if (!path || !data || !path.startsWith(`${data.id}/branding/`)) return null
     const { data: signed } = await admin.storage.from('class-media').createSignedUrl(path, 3600)
     return signed?.signedUrl ?? null
   }
-  return data && { ...data, logoUrl: await sign(data.logo_path), classLogoUrl: await sign(data.class_logo_path) }
+  return data && { ...data, logoUrl: await sign(data.logo_path) }
 }
 
 export default async function LoginPage({
@@ -74,16 +74,6 @@ export default async function LoginPage({
             <img
               src={cls?.logoUrl ?? '/brand/logo-truong.jpg'}
               alt={`Logo trường ${school}`}
-              width={92}
-              height={92}
-              className="absolute -left-0.5 -top-0.5 h-[92px] w-[92px] max-w-none object-cover"
-            />
-          </div>
-          <div className="relative h-[88px] w-[88px] flex-none overflow-hidden rounded-full bg-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={cls?.classLogoUrl ?? '/brand/logo-lop.jpg'}
-              alt={className ? `Logo lớp ${className}` : 'Logo lớp'}
               width={92}
               height={92}
               className="absolute -left-0.5 -top-0.5 h-[92px] w-[92px] max-w-none object-cover"
