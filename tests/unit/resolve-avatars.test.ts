@@ -13,9 +13,10 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
-import { resolveAvatars } from '@/lib/avatars/resolve'
+import { clearSignedAvatarCache, resolveAvatars } from '@/lib/avatars/resolve'
 
 beforeEach(() => {
+  clearSignedAvatarCache()
   vi.clearAllMocks()
   inFn.mockResolvedValue({
     data: [

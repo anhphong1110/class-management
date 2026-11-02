@@ -31,12 +31,14 @@ vi.mock('@/lib/avatars/resolve', async () => {
 })
 
 import { getRewardRequests, getRewards } from '@/lib/rewards/queries'
+import { clearSignedAvatarCache } from '@/lib/avatars/resolve'
 
 const reward = (o: Record<string, unknown>) => ({
   id: 'r', name: 'Q', cost: 10, description: '', image_path: null, icon: 'star', stock: 5, hidden: false, ...o,
 })
 
 beforeEach(() => {
+  clearSignedAvatarCache()
   vi.clearAllMocks()
   calls.length = 0
   for (const k of Object.keys(tables)) delete tables[k]
