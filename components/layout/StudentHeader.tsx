@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { signOut } from '@/app/(auth)/actions'
+import { ChangePasswordButton } from '@/components/layout/ChangePasswordButton'
 import { STUDENT_NAV, STUDENT_TITLES } from '@/lib/student/flags'
 
 type Props = {
@@ -11,9 +12,10 @@ type Props = {
   name: string
   avatar: AvatarValue
   showBell: boolean
+  canChangePassword: boolean
 }
 
-export function StudentHeader({ subtitle, name, avatar, showBell }: Props) {
+export function StudentHeader({ subtitle, name, avatar, showBell, canChangePassword }: Props) {
   const pathname = usePathname()
   const page = STUDENT_NAV.find((n) => (n.href === '/em' ? pathname === '/em' : pathname === n.href || pathname.startsWith(n.href + '/')))
   const id = page?.id ?? 'home'
@@ -41,6 +43,7 @@ export function StudentHeader({ subtitle, name, avatar, showBell }: Props) {
           <div className="text-[15px] font-extrabold">{name}</div>
           <div className="text-[12.5px] text-muted">Học sinh</div>
         </div>
+        {canChangePassword && <ChangePasswordButton />}
         <form action={signOut}>
           <button
             type="submit"

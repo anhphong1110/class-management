@@ -1,11 +1,19 @@
-import { randomInt } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 
-/** Bỏ các ký tự dễ nhầm (i, l, o, 0, 1). */
-export const TEMP_PASSWORD_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'
-export const TEMP_PASSWORD_LENGTH = 10
+/** Khớp `minimum_password_length` của Supabase; 72 là giới hạn bcrypt của GoTrue. */
+export const MIN_PASSWORD_LENGTH = 6
+export const MAX_PASSWORD_LENGTH = 72
 
-export function generateTempPassword(rand: (n: number) => number = (n) => randomInt(n)): string {
-  let out = ''
-  for (let i = 0; i < TEMP_PASSWORD_LENGTH; i++) out += TEMP_PASSWORD_ALPHABET[rand(TEMP_PASSWORD_ALPHABET.length)]
-  return out
+export function validateNewPassword(password: string): 'password_too_short' | 'password_too_long' | null {
+  if (password.length < MIN_PASSWORD_LENGTH) return 'password_too_short'
+  if (password.length > MAX_PASSWORD_LENGTH) return 'password_too_long'
+  return null
+}
+
+/**
+ * Mật khẩu nội bộ khi vừa tạo tài khoản: Auth bắt buộc có mật khẩu, nhưng không ai biết nó (không hiện, không lưu).
+ * Học sinh chỉ đăng nhập được sau khi cô đặt mật khẩu.
+ */
+export function generateInternalPassword(): string {
+  return randomBytes(24).toString('base64url')
 }

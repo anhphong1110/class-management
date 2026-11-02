@@ -245,3 +245,15 @@ Kết quả: 1021 test cơ sở dữ liệu, 386 unit test, 538 test trình duy�
      - "Gỡ avatar" đưa một học sinh hoặc cô về avatar mặc định (`set_avatar_for` và `set_student_avatar` nhận null).
      - Xóa ảnh tải lên khỏi thư viện (chỉ ảnh tải lên, không xóa được avatar có sẵn); ai đang dùng ảnh tự về mặc định, file trong storage bị xóa theo.
      - Logo trường, logo lớp, ảnh bìa có nút "Gỡ" trong Cài đặt (chỉ hiện khi đang có ảnh), về ảnh mặc định.
+
+### Đổi mật khẩu
+109. **Em tự đổi mật khẩu bằng nút "Đổi mật khẩu" ở đầu trang `/em`** (cạnh "Đăng xuất").
+     - Hộp thoại có hai ô (mật khẩu mới, nhập lại). Tối thiểu 6 ký tự (khớp `minimum_password_length` của Supabase), tối đa 72.
+     - Em **không** cần nhập mật khẩu cũ, theo lựa chọn của cô: ai mượn máy khi em đang đăng nhập cũng đổi được. Đổi xong không đăng xuất các phiên khác.
+     - Cô xem thử `/em` thì không thấy nút này (cô không phải học sinh).
+110. **Không còn mật khẩu tạm ngẫu nhiên (thay các quyết định 87 và 89 về mật khẩu tạm).**
+     - "Tạo tài khoản hàng loạt" chỉ tạo tài khoản; Auth bắt buộc có mật khẩu nên hệ thống đặt một mật khẩu nội bộ ngẫu nhiên, không ai biết, không hiện, không lưu. Học sinh chưa đăng nhập được cho tới khi cô đặt mật khẩu.
+     - Cô chọn nhiều bạn (hộp chọn từng bạn hoặc "Chọn tất cả"; các bạn vừa tạo được chọn sẵn) rồi bấm "Đặt mật khẩu cho N bạn đã chọn": một mật khẩu chung, 6 đến 72 ký tự. Cùng mật khẩu vẫn không vào nhầm tài khoản của nhau vì tên đăng nhập khác nhau.
+     - Ô nhập hiện chữ rõ để cô báo lại cho các em. Mật khẩu không hiện lại, không ghi nhật ký; nhật ký chỉ ghi `account_passwords_set` kèm số lượng.
+     - Bỏ nút "Đặt lại mật khẩu", hộp "Mật khẩu tạm" và nút in danh sách. Muốn đặt lại cho một bạn thì chọn riêng bạn đó rồi đặt mật khẩu mới.
+     - Các em tự đổi mật khẩu bằng nút ở quyết định 109.
