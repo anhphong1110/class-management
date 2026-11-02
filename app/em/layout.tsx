@@ -29,6 +29,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
           name={profile?.fullName ?? data?.user.displayName ?? ''}
           avatar={profile?.avatar ?? data?.avatar ?? null}
           showBell={pages.has('news')}
+          canChangePassword={!ctx.preview}
         />
         <main className="flex min-w-0 flex-col gap-5">{children}</main>
       </div>

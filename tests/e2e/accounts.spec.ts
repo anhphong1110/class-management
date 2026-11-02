@@ -37,14 +37,6 @@ async function orphans() {
   return (data?.users ?? []).filter((u) => !have.has(u.id)).map((u) => u.email)
 }
 
-/** Đóng Modal mật khẩu tạm: bấm "Đóng" rồi xác nhận "Đã ghi, đóng". */
-async function closeTemp(page: Page) {
-  const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
-  await dialog.getByRole('button', { name: 'Đóng' }).click()
-  await page.getByRole('dialog', { name: /Cô đã in hoặc ghi lại mật khẩu tạm chưa/ }).getByRole('button', { name: 'Đã ghi, đóng' }).click()
-  await expect(dialog).toBeHidden()
-}
-
 async function removeAuthUser(username: string) {
   const db = admin()
   const { data } = await db.auth.admin.listUsers({ perPage: 1000 })
@@ -87,6 +79,24 @@ async function studentLogin(page: Page, username: string, pass: string) {
   await page.getByRole('button', { name: 'Cất cánh' }).click()
 }
 
+const region = (page: Page) => page.getByRole('region', { name: 'Tài khoản học sinh' })
+const pick = (page: Page, name: string) => region(page).getByRole('checkbox', { name: `Chọn ${name}` })
+
+/** Cô chọn các bạn, bấm "Đặt mật khẩu", nhập mật khẩu và lưu. */
+async function setPasswordFor(page: Page, names: string[], pass: string) {
+  for (const n of names) await pick(page, n).check()
+  await region(page).getByRole('button', { name: /^Đặt mật khẩu cho/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Đặt mật khẩu' })
+  await dialog.getByLabel('Mật khẩu mới').fill(pass)
+  await dialog.getByRole('button', { name: 'Lưu' }).click()
+  return dialog
+}
+
+async function displayName(username: string) {
+  const { data } = await admin().from('profiles').select('display_name').eq('username', username).single()
+  return data!.display_name as string
+}
+
 test('một bạn bị Auth từ chối: các bạn khác vẫn được tạo, không còn hồ sơ dư', async ({ page }) => {
   const db = admin()
   const created = await db.auth.admin.createUser({
@@ -100,20 +110,14 @@ test('một bạn bị Auth từ chối: các bạn khác vẫn được tạo, 
     await openSettings(page)
     await expect(row(page)).toContainText('Chưa có tài khoản')
     await page.getByRole('button', { name: 'Tạo tài khoản hàng loạt' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
-    await expect(dialog).toBeVisible()
-    await expect(dialog.getByText('Chưa tạo được:')).toBeVisible()
-    await expect(dialog.getByRole('listitem').filter({ hasText: NAME })).toBeVisible()
-    await expect(dialog.getByRole('cell', { name: 'hs.giabao' })).toBeVisible()
-    await expect(dialog.getByText('Mật khẩu tạm chỉ hiện một lần. Cô in hoặc ghi lại trước khi đóng.')).toBeVisible()
+    await expect(region(page).getByText('Chưa tạo được:')).toBeVisible()
+    await expect(region(page).getByRole('listitem').filter({ hasText: `${NAME}:` })).toBeVisible()
+    await expect(region(page).getByText('Đã tạo', { exact: false })).toBeVisible()
 
     const { data: made } = await db.from('profiles').select('username').in('username', ['hs.giabao', USERNAME])
     expect((made ?? []).map((p) => p.username)).toEqual(['hs.giabao'])
     // Ngoài tài khoản chặn do test tạo, không còn tài khoản Auth nào thiếu profiles.
     expect(await orphans()).toEqual([`${USERNAME}@${domain()}`])
-
-    await closeTemp(page)
-    await expect(row(page)).toContainText('Chưa có tài khoản')
   } finally {
     if (blocker) await db.auth.admin.deleteUser(blocker.id)
     await cleanAccounts()
@@ -129,65 +133,76 @@ test('chèn profiles lỗi thì hoàn tác: bạn đó ở "Chưa tạo được
   try {
     await openSettings(page)
     await page.getByRole('button', { name: 'Tạo tài khoản hàng loạt' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
-    await expect(dialog.getByText('Chưa tạo được:')).toBeVisible()
-    await expect(dialog.getByRole('listitem').filter({ hasText: NAME })).toContainText('Chưa lưu được hồ sơ tài khoản này.')
-    await expect(dialog.getByRole('cell', { name: 'hs.giabao' })).toBeVisible()
+    await expect(region(page).getByText('Chưa tạo được:')).toBeVisible()
+    await expect(region(page).getByRole('listitem').filter({ hasText: `${NAME}:` })).toContainText('Chưa lưu được hồ sơ tài khoản này.')
     expect(await orphans()).toEqual([])
     const { data } = await admin().auth.admin.listUsers({ perPage: 1000 })
     expect(data?.users.some((u) => u.email === `${USERNAME}@${domain()}`)).toBe(false)
-    await closeTemp(page)
   } finally {
     sql('drop trigger if exists tmp_block_profile on public.profiles; drop function if exists public.tmp_block_profile()')
     await cleanAccounts()
   }
 })
 
-test('Esc không đóng Modal mật khẩu tạm; "Quay lại" giữ nguyên bảng', async ({ page }) => {
-  try {
-    await openSettings(page)
-    await page.getByRole('button', { name: 'Tạo tài khoản hàng loạt' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
-    await expect(dialog).toBeVisible()
-    await page.keyboard.press('Escape')
-    await expect(dialog).toBeVisible()
-    await dialog.getByRole('button', { name: 'Đóng' }).click()
-    await page.getByRole('dialog', { name: /Cô đã in hoặc ghi lại/ }).getByRole('button', { name: 'Quay lại' }).click()
-    await expect(dialog.getByRole('cell', { name: USERNAME })).toBeVisible()
-    await closeTemp(page)
-  } finally {
-    await cleanAccounts()
-  }
-})
-
-test('tạo tài khoản hàng loạt, học sinh mới đăng nhập được', async ({ page }) => {
+test('tạo tài khoản hàng loạt: không hiện mật khẩu, các bạn mới được chọn sẵn, chưa ai đăng nhập được', async ({ page }) => {
   await openSettings(page)
   await page.getByRole('button', { name: 'Tạo tài khoản hàng loạt' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
-  await expect(dialog).toBeVisible()
-  const cells = dialog.getByRole('row').filter({ hasText: USERNAME }).getByRole('cell')
-  await expect(cells.nth(1)).toHaveText(USERNAME)
-  password = (await cells.nth(2).innerText()).trim()
-  expect(password).toMatch(/^[abcdefghjkmnpqrstuvwxyz23456789]{10}$/)
-  await expect(dialog.getByRole('button', { name: 'In danh sách' })).toBeVisible()
-  await closeTemp(page)
   await expect(row(page)).toContainText(USERNAME)
+  await expect(region(page).getByText('Đã tạo', { exact: false })).toBeVisible()
+  await expect(page.getByText('Mật khẩu tạm')).toHaveCount(0)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(pick(page, NAME)).toBeChecked()
   await expect(row(page).getByRole('switch', { name: 'Được đăng nhập' })).toBeVisible()
+
+  // Cô chưa đặt mật khẩu: không có mật khẩu nào để học sinh đăng nhập.
+  await studentLogin(page, USERNAME, 'bat-ky-123')
+  await expect(page.getByText('Tên đăng nhập hoặc mật khẩu chưa đúng.')).toBeVisible()
+})
+
+test('chưa chọn bạn nào thì nút đặt mật khẩu bị khóa; "Chọn tất cả" chọn hết', async ({ page }) => {
+  await openSettings(page)
+  const button = region(page).getByRole('button', { name: /^Đặt mật khẩu cho/ })
+  await expect(button).toBeDisabled()
+  await region(page).getByRole('checkbox', { name: 'Chọn tất cả' }).check()
+  await expect(pick(page, NAME)).toBeChecked()
+  await expect(button).toBeEnabled()
+  await region(page).getByRole('checkbox', { name: 'Chọn tất cả' }).uncheck()
+  await expect(pick(page, NAME)).not.toBeChecked()
+  await expect(button).toBeDisabled()
+})
+
+test('mật khẩu dưới 6 ký tự bị từ chối, vẫn chưa ai đăng nhập được', async ({ page }) => {
+  await openSettings(page)
+  const dialog = await setPasswordFor(page, [NAME], 'abc12')
+  await expect(dialog.getByText('Mật khẩu cần ít nhất 6 ký tự.')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Hủy' }).click()
+  await expect(dialog).toBeHidden()
+})
+
+test('cô đặt một mật khẩu cho nhiều bạn cùng lúc: cả hai đăng nhập được, bạn không chọn thì không', async ({ page }) => {
+  const other = await displayName('hs.giabao')
+  const skipped = await displayName('hs.hamy')
+  await openSettings(page)
+  password = 'Lop58-chung'
+  const dialog = await setPasswordFor(page, [NAME, other], password)
+  await expect(dialog).toBeHidden()
+  await expect(region(page).getByText('Đã đặt mật khẩu cho 2 bạn.')).toBeVisible()
+  await expect(pick(page, skipped)).not.toBeChecked()
 
   await studentLogin(page, USERNAME, password)
   await expect(page).toHaveURL(/\/em$/)
+  await studentLogin(page, 'hs.giabao', password)
+  await expect(page).toHaveURL(/\/em$/)
+  await studentLogin(page, 'hs.hamy', password)
+  await expect(page.getByText('Tên đăng nhập hoặc mật khẩu chưa đúng.')).toBeVisible()
 })
 
-test('đặt lại mật khẩu: mật khẩu cũ hết dùng được', async ({ page }) => {
+test('cô đặt lại mật khẩu mới cho một bạn: mật khẩu cũ hết dùng', async ({ page }) => {
+  const next = 'Lop58-moi'
   await openSettings(page)
-  await row(page).getByRole('button', { name: 'Đặt lại mật khẩu' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
-  await expect(dialog).toBeVisible()
-  const next = (await dialog.getByRole('row').filter({ hasText: USERNAME }).getByRole('cell').nth(2).innerText()).trim()
-  expect(next).toMatch(/^[abcdefghjkmnpqrstuvwxyz23456789]{10}$/)
-  expect(next).not.toBe(password)
-  await closeTemp(page)
-
+  const dialog = await setPasswordFor(page, [NAME], next)
+  await expect(dialog).toBeHidden()
+  await expect(region(page).getByText('Đã đặt mật khẩu cho 1 bạn.')).toBeVisible()
   await studentLogin(page, USERNAME, password)
   await expect(page.getByText('Tên đăng nhập hoặc mật khẩu chưa đúng.')).toBeVisible()
   await studentLogin(page, USERNAME, next)
