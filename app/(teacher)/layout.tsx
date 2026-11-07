@@ -5,6 +5,7 @@ import { ThemeBodyVars } from '@/components/layout/ThemeBodyVars'
 import { themeVars } from '@/lib/domain/theme'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { FlashNotice } from '@/components/layout/FlashNotice'
+import { RouteFocus, SkipLink } from '@/components/layout/RouteFocus'
 
 export default async function TeacherLayout({ children }: { children: ReactNode }) {
   await requireTeacher()
@@ -16,6 +17,8 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
       className="box-border flex min-h-screen flex-wrap content-start gap-5 bg-bg p-4 text-ink"
     >
       <ThemeBodyVars vars={themeVars(data?.cls.theme)} />
+      <SkipLink />
+      <RouteFocus />
       <div className="min-w-0 max-w-none basis-full lg:max-w-[272px] lg:flex-[1_1_248px]">
         <Sidebar
           teacher={{ displayName: data?.user.displayName ?? '', avatar: data?.avatar ?? null }}
@@ -25,7 +28,7 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
           schoolName={data?.cls.school_name}
         />
       </div>
-      <main className="flex min-w-0 basis-full lg:flex-[999_1_560px] flex-col gap-5">
+      <main id="main" tabIndex={-1} className="flex min-w-0 basis-full flex-col gap-5 outline-none lg:flex-[999_1_560px]">
         <FlashNotice />
         {children}
       </main>

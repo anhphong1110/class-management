@@ -1,10 +1,12 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
-import { brandLines, schoolLabel } from '@/lib/classes/brand'
-import { TEACHER_NAV } from './nav'
+import { Icon, ICONS } from '@/components/ui/Icon'
+import { BrandBlocks } from './NavParts'
+import { NAV_TONES, TEACHER_NAV, TEACHER_NAV_META } from './nav'
 
 type Props = {
   active?: string
@@ -16,70 +18,75 @@ type Props = {
 }
 
 export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, className, schoolName }: Props) {
-  const brand = brandLines({ class_name: className })
   const pathname = usePathname()
   const activeId =
     active ??
     TEACHER_NAV.find((n) => pathname === n.href || pathname.startsWith(n.href + '/'))?.id
+
+  // Dưới lg menu là một hàng cuộn ngang: đưa mục đang chọn vào giữa để không bị khuất.
+  useEffect(() => {
+    document
+      .querySelector('aside nav [aria-current="page"]')
+      ?.scrollIntoView({ inline: 'center', block: 'nearest' })
+  }, [pathname])
+
+  let lastGroup = ''
   return (
-    <aside className="box-border flex w-full flex-col gap-[18px] rounded-[28px] bg-gradient-to-b from-navy-from to-navy-to px-3.5 py-5 text-white">
-      <div className="flex items-center gap-2.5 px-1.5">
-        <div className="relative size-11 flex-none overflow-hidden rounded-full bg-white">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={schoolLogoUrl ?? '/brand/logo-truong.jpg'}
-            alt={`Logo ${schoolLabel(schoolName).toLocaleLowerCase('vi-VN')}`}
-            className="absolute -left-px -top-px size-[46px] max-w-none object-cover"
-          />
-        </div>
-        <div className="font-display text-[13.5px] font-extrabold leading-[1.15] tracking-[.04em]">
-          {schoolLabel(schoolName).toLocaleUpperCase('vi-VN')}
-        </div>
-      </div>
-      <div className="flex items-center gap-2.5 px-1.5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={classLogoUrl ?? '/brand/logo-lop.jpg'}
-          alt="Logo lớp"
-          className="size-11 flex-none rounded-full bg-white object-cover"
-        />
-        <div className="font-display text-[17px] font-extrabold leading-[1.05] tracking-[.02em]">
-          {brand.top}
-          {brand.accent && (
-            <>
-              <br />
-              <span className="text-[#FFD36B]">{brand.accent}</span>
-            </>
-          )}
-        </div>
-      </div>
-      <nav aria-label="Menu chính" className="min-w-0">
-        <ul className="m-0 flex list-none flex-col gap-1 p-0 max-lg:flex-row max-lg:overflow-x-auto">
+    <aside className="clay-card box-border flex w-full flex-col gap-[18px] px-3.5 py-5 text-ink lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+      <BrandBlocks
+        classLogoUrl={classLogoUrl}
+        schoolLogoUrl={schoolLogoUrl}
+        className={className}
+        schoolName={schoolName}
+      />
+      <nav
+        aria-label="Menu chính"
+        className="min-w-0 max-lg:[mask-image:linear-gradient(to_right,#000_90%,transparent)]"
+      >
+        <ul className="m-0 flex list-none flex-col gap-1 p-0 max-lg:flex-row max-lg:overflow-x-auto max-lg:pb-1 max-lg:pr-6">
           {TEACHER_NAV.map((it) => {
             const on = it.id === activeId
+            const meta = TEACHER_NAV_META[it.id]
+            const heading = meta && meta.group !== lastGroup ? meta.group : null
+            if (meta) lastGroup = meta.group
             return (
-              <li key={it.id} className="max-lg:flex-none">
+              <li key={it.id} className="max-lg:flex-none first:[&>div]:pt-0">
+                {heading && (
+                  <div
+                    aria-hidden="true"
+                    className="px-3.5 pb-1 pt-3 text-[12px] font-extrabold uppercase tracking-[.08em] text-muted max-lg:hidden"
+                  >
+                    {heading}
+                  </div>
+                )}
                 <Link
                   href={it.href}
                   aria-current={on ? 'page' : undefined}
-                  className={`flex min-h-11 items-center gap-3 whitespace-nowrap rounded-2xl px-3.5 py-2 text-[15px] hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white ${
-                    on ? 'bg-white/[.18] font-extrabold text-white' : 'bg-transparent font-bold text-[#D5D9FF]'
+                  className={`flex min-h-11 items-center gap-3 whitespace-nowrap rounded-2xl px-2.5 py-1.5 text-[15px] transition-colors ${
+                    on
+                      ? 'bg-primary-strong font-extrabold text-white shadow-[0_3px_0_var(--primary-deep)]'
+                      : 'font-bold text-ink hover:bg-primary-soft hover:text-primary-deep'
                   }`}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="22"
-                    height="22"
-                    fill="none"
-                    stroke={on ? '#FFD36B' : '#D5D9FF'}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                    className="flex-none"
+                  <span
+                    className={`flex size-[30px] flex-none items-center justify-center rounded-[10px] ${
+                      on ? 'bg-white/25 text-[#FFE08A]' : NAV_TONES[meta?.tone ?? 'blue']
+                    }`}
                   >
-                    <path d={it.icon} />
-                  </svg>
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d={it.icon} />
+                    </svg>
+                  </span>
                   {it.label}
                 </Link>
               </li>
@@ -87,15 +94,21 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
           })}
         </ul>
       </nav>
-      <div
-        data-testid="sidebar-foot"
-        className="flex items-center gap-2.5 rounded-[20px] bg-white/10 p-3.5 max-lg:hidden"
-      >
-        <AvatarImage avatar={teacher.avatar} size={44} />
-        <div className="leading-tight">
-          <div className="text-[15px] font-extrabold">{teacher.displayName}</div>
-          <div className="text-[12.5px] text-[#D5D9FF]">Giáo viên – Admin</div>
+      <div data-testid="sidebar-foot" className="flex flex-col gap-3 rounded-[20px] bg-primary-soft p-3.5 max-lg:hidden">
+        <div className="flex items-center gap-2.5">
+          <AvatarImage avatar={teacher.avatar} size={44} />
+          <div className="leading-tight">
+            <div className="text-[15px] font-extrabold">{teacher.displayName}</div>
+            <div className="text-[13px] font-semibold text-muted">Giáo viên – Admin</div>
+          </div>
         </div>
+        <Link
+          href="/em"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border-2 border-primary-strong bg-white px-3 text-[14px] font-extrabold text-primary-strong transition-colors hover:bg-primary-soft hover:text-primary-deep"
+        >
+          <Icon d={ICONS.eye} size={18} />
+          Xem như học sinh
+        </Link>
       </div>
     </aside>
   )
