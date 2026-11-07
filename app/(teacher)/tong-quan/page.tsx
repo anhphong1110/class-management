@@ -19,12 +19,12 @@ const USER_X = 'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0
 
 // Thứ tự khớp với buildOverviewStats (lib/overview/stats.ts); mỗi thẻ dẫn tới trang liên quan.
 const STATS = [
-  { icon: ICONS.users, tone: 'blue', href: '/hoc-sinh' },
-  { icon: ICONS.checkCircle, tone: 'mint', href: '/diem-danh' },
-  { icon: USER_X, tone: 'pink', href: '/diem-danh' },
-  { icon: ICONS.star, tone: 'star', href: '/thi-dua' },
-  { icon: ICONS.gift, tone: 'pink', href: '/doi-qua' },
-  { icon: ICONS.trophy, tone: 'blue', href: '/xep-hang' },
+  { icon: ICONS.users, art: '/brand/overview/stat-hoc-sinh.webp', tone: 'blue', href: '/hoc-sinh' },
+  { icon: ICONS.checkCircle, art: '/brand/overview/stat-co-mat.webp', tone: 'mint', href: '/diem-danh' },
+  { icon: USER_X, art: '/brand/overview/stat-vang.webp', tone: 'pink', href: '/diem-danh' },
+  { icon: ICONS.star, art: '/brand/overview/stat-sao.webp', tone: 'star', href: '/thi-dua' },
+  { icon: ICONS.gift, art: '/brand/overview/stat-doi-qua.webp', tone: 'pink', href: '/doi-qua' },
+  { icon: ICONS.trophy, art: '/brand/overview/stat-noi-bat.webp', tone: 'blue', href: '/xep-hang' },
 ] as const
 
 const ACTIONS = [
@@ -114,12 +114,12 @@ export default async function Page() {
 
         <TodayBlock tasks={tasks} />
 
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))' }}>
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,290px),1fr))' }}>
           {data.stats.map((st, i) => {
             const s = STATS[i] ?? STATS[0]
             return (
               <div key={st.label} data-testid="stat" className="flex flex-col [&>*]:flex-1">
-                <StatCard icon={s.icon} tone={s.tone} href={s.href} value={st.value} label={st.label} note={st.sub} />
+                <StatCard icon={s.icon} art={s.art} tone={s.tone} href={s.href} value={st.value} label={st.label} note={st.sub} />
               </div>
             )
           })}

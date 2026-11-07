@@ -8,6 +8,7 @@ const DIR = '/brand/login'
 const ARROW = 'M5 12h14M13 6l6 6-6 6'
 const STAR = '12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9'
 // Kích thước avatar theo hạng; dưới 640px .ov-ava được thu nhỏ bằng CSS.
+const BASE = { 1: 'bug-vang', 2: 'bug-bac', 3: 'bug-dong' } as const
 const AVATAR_SIZE = { 1: 104, 2: 84, 3: 84 } as const
 
 function Deco({ src, className }: { src: string; className: string }) {
@@ -49,22 +50,26 @@ export function Top3Podium({ order }: { order: Top3Row[] }) {
           const rank = Math.min(3, Math.max(1, t.rank)) as 1 | 2 | 3
           return (
             <div key={t.id} data-testid="top3-card" data-rank={rank} className="ov-pcard">
-              {rank === 1 && t.stars > 0 ? <Crown /> : null}
-              <div className="ov-ava">
-                <AvatarImage avatar={t.avatar} size={AVATAR_SIZE[rank]} />
-              </div>
-              <div className="ov-rankpill">
-                <b>{rank}</b>
-                {`Hạng ${t.rank}`}
-              </div>
-              <div className="ov-pedestal">
-                <div className="ov-pname">{t.name}</div>
-                <div className="ov-pstars">
-                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                    <polygon points={STAR} className="fill-star stroke-star-edge" strokeWidth="1.2" strokeLinejoin="round" />
-                  </svg>
-                  {t.stars} sao
+              <div className="ov-stage">
+                {rank === 1 && t.stars > 0 ? <Crown /> : null}
+                <div className="ov-ava">
+                  <AvatarImage avatar={t.avatar} size={AVATAR_SIZE[rank]} />
                 </div>
+                <div className="ov-base">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/brand/overview/${BASE[rank]}.webp`} alt="" aria-hidden="true" width={520} height={250} loading="lazy" decoding="async" draggable={false} />
+                  <div className="ov-rankpill">
+                    <b>{rank}</b>
+                    {`Hạng ${t.rank}`}
+                  </div>
+                </div>
+              </div>
+              <div className="ov-pname">{t.name}</div>
+              <div className="ov-pstars">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <polygon points={STAR} className="fill-star stroke-star-edge" strokeWidth="1.2" strokeLinejoin="round" />
+                </svg>
+                {t.stars} sao
               </div>
             </div>
           )
