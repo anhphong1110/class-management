@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { ButtonLink } from '@/components/ui/Button'
 import { NAV_TONES, STUDENT_NAV_TONES } from '@/components/layout/nav'
 import { Card } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -11,6 +10,7 @@ import { announcementColors } from '@/lib/announcements/types'
 import { STUDENT_NAV, visibleStudentPages, type StudentPageId } from '@/lib/student/flags'
 import { getAvatarLibrary, getHomeData, getStudentContext, getStudentProfile } from '@/lib/student/queries'
 import { AvatarPicker } from './AvatarPicker'
+import { StudentHero } from './StudentHero'
 import { StudentStats } from './StudentStats'
 
 /** Tên gọi và lời gợi ý ngắn cho từng ô lối tắt (không trùng nhãn menu để không nhầm hai liên kết). */
@@ -39,35 +39,21 @@ export default async function StudentHome() {
   return (
     <div className="flex flex-col gap-5">
       {ctx.preview && <Notice tone="info">Đây là bản xem thử giao diện học sinh.</Notice>}
-      <section className="clay-card relative flex flex-wrap items-center justify-between gap-5 overflow-hidden bg-[linear-gradient(120deg,var(--primary-soft)_0%,#FFFFFF_55%,#FFF3C4_100%)] px-[30px] py-[26px] text-ink max-sm:px-5">
-        <div className="flex flex-[1_1_300px] flex-col items-start gap-2.5">
-          <div className="text-base font-extrabold tracking-[.08em] text-primary-deep">CÙNG HỌC – CÙNG CHƠI – CÙNG TỎA SÁNG</div>
-          <h1 className="m-0 font-display text-[40px] font-extrabold leading-[1.1] max-sm:text-[32px]">{greeting}</h1>
-          <p className="m-0 text-[18px] font-semibold leading-normal">
-            Hôm nay em còn {available} sao khả dụng. Cố gắng thêm nhé, phi hành gia nhí!
-          </p>
-          {mainId === 'gifts' && (
-            <ButtonLink size="lg" href="/em/doi-qua" className="mt-1">
-              <Icon d={ICONS.gift} size={22} />
-              Đi đổi quà
-            </ButtonLink>
-          )}
-          {mainId === 'stars' && (
-            <ButtonLink size="lg" href="/em/sao" className="mt-1">
-              <Icon d={ICONS.star} size={22} />
-              Xem lịch sử sao
-            </ButtonLink>
-          )}
-        </div>
-        {profile && (
-          <AvatarPicker
-            current={profile.avatar}
-            currentId={profile.avatarId}
-            library={library.map((a) => ({ id: a.id, label: a.label, avatar: a.avatar }))}
-            enabled={canChange}
-          />
-        )}
-      </section>
+      <StudentHero
+        greeting={greeting}
+        available={available}
+        main={mainId}
+        avatar={
+          profile ? (
+            <AvatarPicker
+              current={profile.avatar}
+              currentId={profile.avatarId}
+              library={library.map((a) => ({ id: a.id, label: a.label, avatar: a.avatar }))}
+              enabled={canChange}
+            />
+          ) : null
+        }
+      />
 
       {profile && (
         <StudentStats
