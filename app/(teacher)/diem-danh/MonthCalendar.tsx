@@ -2,6 +2,9 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
+import { Button } from '@/components/ui/Button'
+import { Icon, ICONS } from '@/components/ui/Icon'
+import { Notice } from '@/components/ui/Notice'
 import { exportMonthCsv } from './actions'
 
 export type CalendarDay = { date: string; attended: number }
@@ -58,45 +61,37 @@ export function MonthCalendar({
     })
   }
 
+  const nav =
+    'clay-press inline-flex min-h-11 items-center rounded-[16px] border-2 border-primary-strong bg-white px-4 text-sm font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep'
+
   return (
-    <section className="flex flex-col gap-3 rounded-[26px] bg-white p-6 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
+    <section className="clay-card flex flex-col gap-3 p-6">
       <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div>
           <h2 className="m-0 font-display text-[22px] font-extrabold">Lịch tháng</h2>
-          <p data-testid="calendar-days-marked" className="m-0 text-[13.5px] text-muted">
+          <p data-testid="calendar-days-marked" className="m-0 text-[13.5px] font-semibold text-muted">
             Tháng {String(m).padStart(2, '0')}/{y}: đã điểm danh {days.length} ngày
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={href(shiftMonth(month, -1))}
-            className="inline-flex min-h-11 items-center rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-sm font-extrabold text-primary-ink"
-          >
+          <Link href={href(shiftMonth(month, -1))} className={nav}>
             Tháng trước
           </Link>
-          <Link
-            href={href(shiftMonth(month, 1))}
-            className="inline-flex min-h-11 items-center rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-sm font-extrabold text-primary-ink"
-          >
+          <Link href={href(shiftMonth(month, 1))} className={nav}>
             Tháng sau
           </Link>
-          <button
-            type="button"
-            onClick={exportCsv}
-            disabled={pending}
-            className="min-h-11 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-5 text-sm font-extrabold text-white disabled:opacity-60"
-          >
+          <Button onClick={exportCsv} disabled={pending}>
             Xuất CSV
-          </button>
+          </Button>
         </div>
       </div>
-      {error && (
-        <div role="alert" className="rounded-[14px] bg-[#FFE3EA] px-4 py-3 text-sm font-bold text-[#8E1B3B]">
-          {error}
-        </div>
-      )}
+      {error && <Notice tone="error">{error}</Notice>}
+      <p className="m-0 flex items-center gap-1.5 text-[13px] font-semibold text-muted">
+        <Icon d={ICONS.checkCircle} size={16} className="text-success" />
+        Ngày có dấu tích là đã điểm danh, số bên dưới là số bạn đi học trên sĩ số lớp.
+      </p>
       <div className="overflow-x-auto">
-        <div className="grid min-w-[560px] grid-cols-7 gap-1.5">
+        <div className="grid min-w-[600px] grid-cols-7 gap-2">
           {WEEK.map((w) => (
             <div key={w} className="text-center text-xs font-extrabold text-muted">
               {w}
@@ -106,22 +101,29 @@ export function MonthCalendar({
             if (!d) return <div key={`b${i}`} />
             const attendedCount = attendedBy.get(d)
             const marked = attendedCount !== undefined
+            const isSel = d === selected
             const body = (
               <>
-                <span className="text-sm font-extrabold">{Number(d.slice(8))}</span>
-                <span data-testid={`cal-count-${d}`} className="text-xs font-bold text-[#12794F]">{marked ? `${attendedCount}/${classSize}` : ''}</span>
+                <span className="flex items-center gap-1 text-base font-extrabold">
+                  {Number(d.slice(8))}
+                  {marked ? <Icon d={ICONS.check} size={14} className="text-success" /> : null}
+                </span>
+                <span data-testid={`cal-count-${d}`} className="text-xs font-extrabold text-success-deep">
+                  {marked ? `${attendedCount}/${classSize}` : ''}
+                </span>
               </>
             )
-            const base = `flex min-h-14 flex-col items-center justify-center rounded-[12px] ${
-              d === selected ? 'border-2 border-primary-strong' : 'border-2 border-transparent'
-            } ${marked ? 'bg-[#EAF8F1]' : 'bg-bg'}`
-            if (d > today) return <div key={d} className={`${base} opacity-40`}>{body}</div>
+            const base = `flex min-h-16 flex-col items-center justify-center gap-0.5 rounded-[16px] border-2 text-ink sm:min-h-20 ${
+              isSel ? 'border-primary-strong shadow-[0_0_0_3px_var(--primary-soft)]' : d === today ? 'border-star-edge' : 'border-transparent'
+            } ${marked ? 'bg-success-soft' : 'bg-bg'}`
+            if (d > today) return <div key={d} aria-disabled="true" className={`${base} opacity-40`}>{body}</div>
             return (
               <Link
                 key={d}
                 data-testid={`cal-${d}`}
                 href={`/diem-danh?ngay=${d}&thang=${month}`}
-                className={base}
+                aria-current={isSel ? 'date' : undefined}
+                className={`${base} no-underline transition-colors hover:bg-primary-soft`}
               >
                 {body}
               </Link>

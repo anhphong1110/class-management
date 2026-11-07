@@ -1,6 +1,12 @@
 'use client'
 
 import { useState, useTransition, type CSSProperties } from 'react'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Field, Input, Select } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
+import { Notice } from '@/components/ui/Notice'
 import { PERIODS, WEEKDAY_LABELS, slotKey, weekdays, type Session } from '@/lib/timetable/layout'
 import { paletteFor } from '@/lib/timetable/palette'
 import type { TimetableSubject } from '@/lib/timetable/queries'
@@ -9,9 +15,7 @@ import { addSubject, cycleSubjectColor, deleteSubject, exportTimetable, renameSu
 type View = 'week' | 'day'
 type Edit = { weekday: number; session: Session; period: number }
 
-const CARD = 'rounded-[28px] bg-white p-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]'
-const GHOST_BTN =
-  'min-h-12 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-[14.5px] font-extrabold text-primary-ink'
+const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 export function TimetableClient({
@@ -34,6 +38,7 @@ export function TimetableClient({
   const [msg, setMsg] = useState('')
   const [slotMsg, setSlotMsg] = useState('')
   const [showExport, setShowExport] = useState(false)
+  const [deleting, setDeleting] = useState<TimetableSubject | null>(null)
   const [pending, startTransition] = useTransition()
 
   const byId = new Map(subjects.map((s) => [s.id, s]))
@@ -80,59 +85,55 @@ export function TimetableClient({
 
   return (
     <div className="flex flex-col gap-5">
-      <style>{`@page{size:landscape;margin:10mm}@media print{[data-testid=teacher-shell]>div:first-child,main>header{display:none!important}[data-testid=teacher-shell]{display:block;padding:0}#timetable-print{box-shadow:none;padding:0}#timetable-print [data-testid=timetable-scroll]{overflow:visible}#timetable-print [data-testid=timetable-inner]{min-width:0!important}}`}</style>
+      <style>{`@page{size:landscape;margin:10mm}@media print{[data-testid=teacher-shell]>div:first-child,main>header{display:none!important}[data-testid=teacher-shell]{display:block;padding:0}#timetable-print{box-shadow:none;border:0;padding:0}#timetable-print [data-testid=timetable-scroll]{overflow:visible}#timetable-print [data-testid=timetable-inner]{min-width:0!important}}`}</style>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[26px] bg-white px-6 print:hidden py-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
+      <Card className="flex flex-wrap items-center justify-between gap-3 !py-4 print:hidden">
         <div className="flex flex-wrap gap-2">
-          {([['week', 'Cả tuần'], ['day', 'Theo ngày']] as const).map(([k, text]) => {
-            const on = view === k
-            return (
-              <button
-                key={k}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setView(k)}
-                className="min-h-12 cursor-pointer rounded-[14px] border-2 px-[22px] text-[15px] font-extrabold"
-                style={{ background: on ? 'var(--primary-strong)' : '#fff', color: on ? '#fff' : '#3A3769', borderColor: on ? 'var(--primary-strong)' : '#D9D5F2' }}
-              >
-                {text}
-              </button>
-            )
-          })}
+          {([['week', 'Cả tuần'], ['day', 'Theo ngày']] as const).map(([k, text]) => (
+            <Button key={k} variant={view === k ? 'primary' : 'secondary'} aria-pressed={view === k} onClick={() => setView(k)}>
+              {text}
+            </Button>
+          ))}
         </div>
-        <button type="button" aria-expanded={showExport} onClick={() => setShowExport((v) => !v)} className={GHOST_BTN}>
-          In / Xuất
-        </button>
-      </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {allDays.includes(todayWeekday) && (
+            <span className="inline-flex items-center gap-1.5 text-[15px] font-extrabold text-primary-deep">
+              <Icon d={ICONS.star} size={18} />
+              Hôm nay là {WEEKDAY_LABELS[todayWeekday]}
+            </span>
+          )}
+          <Button variant="secondary" aria-expanded={showExport} onClick={() => setShowExport((v) => !v)}>
+            In / Xuất
+          </Button>
+        </div>
+      </Card>
 
       {showExport && (
-        <div className="flex flex-wrap gap-2.5 rounded-[20px] bg-white px-5 py-4 print:hidden shadow-[0_6px_20px_rgba(102,117,232,.10)]">
-          <button type="button" onClick={() => window.print()} className={GHOST_BTN}>
+        <Card className="flex flex-wrap gap-2.5 !py-4 print:hidden">
+          <Button variant="secondary" onClick={() => window.print()}>
             In thời khóa biểu
-          </button>
-          <button type="button" disabled={pending} onClick={exportFile} className={GHOST_BTN}>
+          </Button>
+          <Button variant="secondary" disabled={pending} onClick={exportFile}>
+            {pending && <Icon d={SPIN} size={16} className="motion-safe:animate-spin" />}
             Tải Excel (.xlsx)
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {view === 'day' && (
         <div className="flex flex-wrap gap-2 print:hidden">
-          {allDays.map((d) => {
-            const on = day === d
-            return (
-              <button
-                key={d}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setDay(d)}
-                className="min-h-11 cursor-pointer rounded-full border-2 px-[18px] text-[14.5px] font-extrabold"
-                style={{ background: on ? 'var(--primary-soft)' : '#fff', color: on ? 'var(--primary-deep)' : '#3A3769', borderColor: on ? 'var(--primary-strong)' : '#D9D5F2' }}
-              >
-                {WEEKDAY_LABELS[d]}
-              </button>
-            )
-          })}
+          {allDays.map((d) => (
+            <Button
+              key={d}
+              variant={day === d ? 'primary' : 'secondary'}
+              className="!rounded-full"
+              aria-pressed={day === d}
+              onClick={() => setDay(d)}
+            >
+              {WEEKDAY_LABELS[d]}
+              {d === todayWeekday && <Icon d={ICONS.star} size={16} />}
+            </Button>
+          ))}
         </div>
       )}
 
@@ -140,25 +141,25 @@ export function TimetableClient({
         <div
           role="region"
           aria-label="Sửa tiết học"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border-2 print:hidden border-primary-strong bg-primary-soft px-[18px] py-3.5"
+          className="clay-card flex flex-wrap items-center justify-between gap-3 !border-primary-strong bg-primary-soft px-[18px] py-3.5 print:hidden"
         >
           <div className="text-[15.5px] font-extrabold">Đang sửa: {label(edit)}</div>
           {slotMsg && (
-            <div role="alert" className="basis-full rounded-xl bg-[#FFF1CC] px-3.5 py-2.5 text-[14.5px] font-bold text-[#5E3E00]">
-              {slotMsg}
+            <div className="basis-full">
+              <Notice tone="error">{slotMsg}</Notice>
             </div>
           )}
           <div className="flex flex-wrap items-center gap-2.5">
             <label className="flex items-center gap-2 text-sm font-bold">
               Môn học
-              <select
+              <Select
                 aria-label="Chọn môn học"
                 value={current}
                 disabled={pending}
                 onChange={(e) =>
                   run(() => setSlot(edit.weekday, edit.session, edit.period, e.target.value || null), { panel: true })
                 }
-                className="min-h-11 rounded-xl border-2 border-[#B9B5E8] bg-white px-3 text-[15px] font-bold text-[#231F4D]"
+                className="!min-h-11 !w-auto"
               >
                 <option value="">— Trống —</option>
                 {subjects.map((s) => (
@@ -166,27 +167,31 @@ export function TimetableClient({
                     {s.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
-            <button
-              type="button"
+            <Button
               onClick={() => {
                 setEdit(null)
                 setSlotMsg('')
               }}
-              className="min-h-11 cursor-pointer rounded-xl border-0 bg-primary-strong px-[18px] font-extrabold text-white"
             >
               Xong
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
-      <div id="timetable-print" data-testid="timetable-grid" className={CARD}>
+      <Card id="timetable-print" data-testid="timetable-grid" className="!p-5">
+        {view === 'week' && (
+          <p className="m-0 mb-3 flex items-center gap-1.5 text-sm font-bold text-muted md:hidden print:hidden">
+            <Icon d="M5 12h14M13 6l6 6-6 6" size={16} />
+            Vuốt ngang để xem đủ các ngày
+          </p>
+        )}
         <div data-testid="timetable-scroll" className="overflow-x-auto">
           <div data-testid="timetable-inner" className="flex flex-col gap-2" style={{ minWidth: view === 'week' ? (saturday ? 880 : 760) : 320 }}>
             <div className="grid gap-2" style={{ gridTemplateColumns: cols }}>
-              <div className="rounded-[14px] px-1.5 py-2.5 text-center font-display text-base font-extrabold text-[#5B5890]">Tiết</div>
+              <div className="rounded-[14px] px-1.5 py-2.5 text-center font-display text-base font-extrabold text-muted">Tiết</div>
               {days.map((d) => {
                 const isToday = d === todayWeekday
                 return (
@@ -194,9 +199,10 @@ export function TimetableClient({
                     key={d}
                     data-testid="day-head"
                     data-today={isToday}
-                    className="rounded-[14px] px-1.5 py-2.5 text-center font-display text-base font-extrabold"
-                    style={{ background: isToday ? 'var(--primary-strong)' : 'var(--primary-soft)', color: isToday ? '#fff' : 'var(--primary-deep)' }}
+                    aria-current={isToday ? 'date' : undefined}
+                    className={`flex items-center justify-center gap-1.5 rounded-[14px] px-1.5 py-2.5 text-center font-display text-base font-extrabold ${isToday ? 'bg-primary-strong text-white' : 'bg-primary-soft text-primary-deep'}`}
                   >
+                    {isToday && <Icon d={ICONS.star} size={16} />}
                     {WEEKDAY_LABELS[d]}
                   </div>
                 )
@@ -210,28 +216,31 @@ export function TimetableClient({
                   </div>
                 )}
                 <div data-testid="period-row" className="grid gap-2" style={{ gridTemplateColumns: cols }}>
-                  <div className="flex min-h-[60px] items-center justify-center rounded-[14px] bg-[#F6F4FF] px-1 py-2 text-[15px] font-extrabold">
+                  <div className="flex min-h-[60px] items-center justify-center rounded-[14px] bg-field px-1 py-2 text-[15px] font-extrabold">
                     Tiết {period}
                   </div>
                   {days.map((d) => {
                     const subject = byId.get(slots[slotKey(d, session, period)] ?? '')
                     const pal = subject ? paletteFor(subject.color) : null
                     const on = edit?.weekday === d && edit.session === session && edit.period === period
+                    const isToday = d === todayWeekday
                     const style: CSSProperties = {
-                      background: pal?.bg ?? '#F6F4FF',
-                      color: pal?.ink ?? '#B9B5E8',
-                      borderColor: on ? 'var(--primary-strong)' : 'transparent',
+                      background: pal?.bg ?? (isToday ? 'var(--primary-soft)' : '#F6F4FF'),
+                      color: pal?.ink ?? '#5B5890',
+                      borderColor: on ? 'var(--primary-strong)' : isToday ? 'var(--primary)' : 'transparent',
                     }
                     return (
                       <button
                         key={d}
                         type="button"
                         data-testid={`cell-${d}-${session}-${period}`}
+                        aria-label={`${label({ weekday: d, session, period })}: ${subject?.name ?? 'trống'}`}
+                        aria-pressed={on}
                         onClick={() => {
                           setEdit({ weekday: d, session, period })
                           setSlotMsg('')
                         }}
-                        className="min-h-[60px] cursor-pointer rounded-[14px] border-2 px-1.5 py-2 text-[14.5px] font-extrabold leading-tight"
+                        className="min-h-[60px] cursor-pointer rounded-[14px] border-2 px-1.5 py-2 text-[15px] font-extrabold leading-tight transition-colors hover:brightness-95 motion-reduce:transition-none"
                         style={style}
                       >
                         {subject?.name ?? '—'}
@@ -243,20 +252,16 @@ export function TimetableClient({
             ))}
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="flex flex-col gap-3.5 rounded-[28px] bg-white p-6 print:hidden shadow-[0_6px_20px_rgba(102,117,232,.10)]">
+      <Card className="flex flex-col gap-3.5 print:hidden">
         <div>
           <h2 className="m-0 font-display text-[22px] font-extrabold">Danh sách môn học của lớp</h2>
-          <div className="text-sm text-[#5B5890]">
+          <div className="text-sm font-semibold text-muted">
             Cô đổi tên, đổi màu, thêm hoặc xóa môn. Môn đang có trong thời khóa biểu thì chưa xóa được.
           </div>
         </div>
-        {msg && (
-          <div role="status" className="rounded-xl bg-[#FFF1CC] px-3.5 py-2.5 text-[14.5px] font-bold text-[#5E3E00]">
-            {msg}
-          </div>
-        )}
+        {msg && <Notice tone="info">{msg}</Notice>}
         <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
           {subjects.map((s) => {
             const pal = paletteFor(s.color)
@@ -272,12 +277,12 @@ export function TimetableClient({
                   aria-label={`Đổi màu môn ${s.name}`}
                   disabled={pending}
                   onClick={() => run(() => cycleSubjectColor(s.id))}
-                  className="flex size-11 flex-none cursor-pointer items-center justify-center rounded-xl border-2"
+                  className="flex size-11 flex-none cursor-pointer items-center justify-center rounded-xl border-2 disabled:opacity-50"
                   style={{ borderColor: pal.ink, background: pal.bg }}
                 >
                   <span className="size-5 rounded-full" style={{ background: pal.ink }} />
                 </button>
-                <input
+                <Input
                   key={`${s.id}-${s.name}`}
                   type="text"
                   defaultValue={s.name}
@@ -293,47 +298,64 @@ export function TimetableClient({
                     // Khi lưu được, `key` đổi theo tên mới và ô dựng lại.
                     run(() => renameSubject(s.id, v), { onErr: () => { input.value = s.name } })
                   }}
-                  className="box-border min-h-11 min-w-0 flex-1 rounded-xl border-2 border-transparent bg-white/70 px-2.5 text-[15px] font-extrabold"
+                  className="!min-h-11 min-w-0 flex-1 !bg-white/70 !px-2.5 text-[15px] font-extrabold"
                   style={{ color: pal.ink }}
                 />
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
                   aria-label={`Xóa môn ${s.name}`}
                   disabled={pending}
-                  onClick={() => run(() => deleteSubject(s.id))}
-                  className="flex size-11 flex-none cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-[#9E2257]"
+                  onClick={() => setDeleting(s)}
+                  className="!w-11 flex-none !px-0 text-danger-deep hover:!bg-danger-soft hover:!text-danger-deep"
                 >
-                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" />
-                  </svg>
-                </button>
+                  <Icon d={ICONS.trash} size={19} />
+                </Button>
               </div>
             )
           })}
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && document.getElementById('add-subject')?.click()}
-            placeholder="Tên môn mới, ví dụ: Công nghệ"
-            aria-label="Tên môn mới"
-            maxLength={40}
-            className="box-border min-h-12 flex-[1_1_240px] rounded-[14px] border-2 border-[#D9D5F2] px-3.5 text-base font-semibold text-[#231F4D]"
-          />
-          <button
+        <div className="flex flex-wrap items-end gap-2.5">
+          <Field label="Tên môn mới" className="flex-[1_1_240px]">
+            {(a) => (
+              <Input
+                {...a}
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && document.getElementById('add-subject')?.click()}
+                placeholder="Ví dụ: Công nghệ"
+                maxLength={40}
+              />
+            )}
+          </Field>
+          <Button
             id="add-subject"
-            type="button"
+            size="lg"
             disabled={pending}
             onClick={() => run(() => addSubject(newName), { onOk: () => setNewName('') })}
-            className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-[22px] text-[15px] font-extrabold text-white"
           >
+            {pending && <Icon d={SPIN} size={16} className="motion-safe:animate-spin" />}
             + Thêm môn
-          </button>
+          </Button>
         </div>
-      </div>
-      <div className="text-[13.5px] text-[#5B5890] print:hidden">Học sinh chỉ được xem.</div>
+      </Card>
+      <div className="text-[15px] font-semibold text-muted print:hidden">Học sinh chỉ được xem.</div>
+
+      <ConfirmDialog
+        open={deleting !== null}
+        title="Xóa môn học này?"
+        message={deleting ? `Môn "${deleting.name}" sẽ bị xóa khỏi danh sách môn của lớp.` : ''}
+        confirmLabel="Xóa môn"
+        danger
+        pending={pending}
+        onCancel={() => setDeleting(null)}
+        onConfirm={() => {
+          const s = deleting
+          if (!s) return
+          setDeleting(null)
+          run(() => deleteSubject(s.id))
+        }}
+      />
     </div>
   )
 }

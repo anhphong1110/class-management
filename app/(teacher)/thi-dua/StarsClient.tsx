@@ -1,11 +1,16 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
 import { StarBurst } from '@/components/stars/StarBurst'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Field, Input } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
+import { UndoToast } from '@/components/ui/UndoToast'
 import { joinNames } from '@/lib/domain/names'
 import { formatRelative } from '@/lib/domain/relative-time'
 import type { StarBatchView } from '@/lib/stars/history'
@@ -27,8 +32,12 @@ type Props = {
 }
 
 const SUB_MAX = 5
-const card = 'rounded-[26px] bg-white p-[22px_24px] shadow-[0_6px_20px_rgba(102,117,232,0.10)]'
+const card = 'clay-card p-[22px_24px]'
 const h2 = 'm-0 font-display text-[22px] font-extrabold'
+const PENCIL = 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z'
+
+/** Ngữ cảnh để Hoàn tác ngay sau khi chấm: nhận ra lượt vừa tạo trong `batches` sau khi trang làm mới. */
+type UndoCtx = { key: number; knownIds: string[]; studentIds: string[]; points: number; isAdd: boolean }
 
 function defaultAmount(mode: Mode, steps: number[]): number {
   const list = mode === 'add' ? steps : steps.filter((n) => n <= SUB_MAX)
@@ -61,6 +70,7 @@ export function StarsClient({
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
   const [flash, setFlash] = useState(0)
+  const [undoCtx, setUndoCtx] = useState<UndoCtx | null>(null)
   const [pending, startTransition] = useTransition()
 
   const isAdd = mode === 'add'
@@ -73,6 +83,22 @@ export function StarsClient({
   const critList = criteria.filter((c) => c.kind === (isAdd ? 'award' : 'penalty'))
   const crit = critList.find((c) => c.id === critId) ?? null
   const reasonText = [crit?.label, note.trim()].filter(Boolean).join(' – ')
+  // Lượt vừa chấm: batch mới (chưa có trước khi gửi), cùng loại, cùng số sao, cùng nhóm bạn, chưa bị hoàn tác.
+  const undoTarget = useMemo(() => {
+    if (!undoCtx) return null
+    const want = new Set(undoCtx.studentIds)
+    return (
+      batches.find(
+        (b) =>
+          !undoCtx.knownIds.includes(b.batchId) &&
+          !b.reversed &&
+          b.kind === (undoCtx.isAdd ? 'award' : 'penalty') &&
+          Math.abs(b.delta) === undoCtx.points &&
+          b.studentIds.length === want.size &&
+          b.studentIds.every((id) => want.has(id)),
+      ) ?? null
+    )
+  }, [undoCtx, batches])
   const nameList = (ids: string[]) =>
     joinNames(
       ids
@@ -145,6 +171,7 @@ export function StarsClient({
       return
     }
     const input = { studentIds: selected.map((s) => s.id), points: amt, criterionId: crit?.id ?? null, note: note.trim() }
+    const knownIds = batches.map((b) => b.batchId)
     startTransition(async () => {
       const res = await (isAdd ? awardStars(input) : penalizeStars(input))
       setConfirming(false)
@@ -156,6 +183,7 @@ export function StarsClient({
       setErr('')
       setMsg(res.message ?? '')
       if (isAdd) setFlash((f) => f + 1)
+      setUndoCtx({ key: Date.now(), knownIds, studentIds: input.studentIds, points: input.points, isAdd })
     })
   }
 
@@ -187,6 +215,14 @@ export function StarsClient({
         setMsg(res.message ?? '')
       }
     })
+  }
+
+  /** Hoàn tác lượt vừa chấm bằng chính hành động hoàn tác của lịch sử (ghi thêm bản ghi đảo, không xóa bản cũ). */
+  function undoLast() {
+    if (!undoTarget) return
+    const id = undoTarget.batchId
+    setUndoCtx(null)
+    undo(id)
   }
 
   // Quản lý tiêu chí
@@ -229,10 +265,13 @@ export function StarsClient({
     })
   }
 
-  const goBg = isAdd ? 'bg-[#FFC857] text-[#4A3300]' : 'bg-[#C0314E] text-white'
-  const pill = (on: boolean) =>
-    on ? 'border-primary-strong bg-primary-soft text-primary-deep' : 'border-[#D9D5F2] bg-white text-[#3A3769]'
+
+  const chip = (on: boolean) =>
+    on
+      ? 'border-primary-strong bg-primary-soft text-primary-deep'
+      : 'border-edge bg-white text-ink hover:bg-primary-soft'
   const manageList = [...criteria.filter((c) => c.kind === 'award'), ...criteria.filter((c) => c.kind === 'penalty')]
+  const onAmount = isAdd ? 'border-star-edge bg-star text-star-ink' : 'border-danger bg-danger text-white'
 
   return (
     <>
@@ -243,46 +282,52 @@ export function StarsClient({
             <span className="font-body text-[15px] font-bold text-muted">(đã chọn {selected.length})</span>
           </h2>
           <div className="flex flex-wrap gap-2.5">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={() => {
                 setSel(new Set(students.map((s) => s.id)))
                 setErr('')
               }}
-              className="min-h-11 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-primary-ink"
             >
               Chọn cả lớp
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => {
                 setSel(new Set())
                 setErr('')
               }}
-              className="min-h-11 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-[#4A476E]"
             >
               Bỏ chọn
-            </button>
+            </Button>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[14.5px] font-extrabold text-[#4A476E]">Chọn cả tổ:</span>
-          {groups.map((g) => {
-            const ids = g.memberIds.filter((id) => byId.has(id))
-            const on = ids.length > 0 && ids.every((id) => sel.has(id))
-            return (
-              <button
-                key={g.id}
-                type="button"
-                aria-pressed={on}
-                onClick={() => toggleGroup(g)}
-                className={`min-h-11 cursor-pointer rounded-full border-2 px-4 text-[14.5px] font-extrabold ${pill(on)}`}
-              >
-                {g.name} ({ids.length} bạn)
-              </button>
-            )
-          })}
-        </div>
+        {groups.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[14.5px] font-extrabold text-muted">Chọn cả tổ:</span>
+            {groups.map((g) => {
+              const ids = g.memberIds.filter((id) => byId.has(id))
+              const on = ids.length > 0 && ids.every((id) => sel.has(id))
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggleGroup(g)}
+                  className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border-2 px-4 text-[14.5px] font-extrabold transition-colors ${chip(on)}`}
+                >
+                  {on ? <Icon d={ICONS.check} size={16} /> : null}
+                  {g.name} ({ids.length} bạn)
+                </button>
+              )
+            })}
+          </div>
+        )}
+        {students.length === 0 ? (
+          <EmptyState title="Lớp chưa có học sinh" icon={ICONS.users}>
+            Cô thêm học sinh ở trang Quản lý học sinh rồi quay lại chấm sao nhé.
+          </EmptyState>
+        ) : null}
         <div data-testid="students" className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-2.5">
           {students.map((s) => {
             const on = sel.has(s.id)
@@ -292,8 +337,8 @@ export function StarsClient({
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggleStudent(s.id)}
-                className={`flex min-h-16 cursor-pointer items-center gap-2.5 rounded-[18px] border-2 px-3 py-2.5 text-left text-ink ${
-                  on ? 'border-primary-strong bg-primary-soft' : 'border-[#E4E0F7] bg-white'
+                className={`relative flex min-h-16 cursor-pointer items-center gap-2.5 rounded-[18px] border-2 px-3 py-2.5 text-left text-ink transition-colors ${
+                  on ? 'border-primary-strong bg-primary-soft' : 'border-edge bg-white hover:bg-bg'
                 }`}
               >
                 <AvatarImage avatar={s.avatar} size={46} />
@@ -301,6 +346,11 @@ export function StarsClient({
                   <span className="text-[14.5px] font-extrabold leading-[1.2]">{s.fullName}</span>
                   <span className="text-[12.5px] font-bold text-muted">{s.available} sao khả dụng</span>
                 </span>
+                {on ? (
+                  <span className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-primary-strong text-white">
+                    <Icon d={ICONS.check} size={13} />
+                  </span>
+                ) : null}
               </button>
             )
           })}
@@ -309,32 +359,32 @@ export function StarsClient({
 
       <section className={`${card} relative flex flex-col gap-[18px]`}>
         <h2 className={h2}>2. Chọn thao tác và lý do</h2>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
             aria-pressed={isAdd}
             onClick={() => chooseMode('add')}
-            className={`min-h-14 flex-[1_1_180px] cursor-pointer rounded-[18px] border-2 text-lg font-extrabold ${
-              isAdd ? 'border-[#E0A020] bg-[#FFC857] text-[#4A3300]' : 'border-[#D9D5F2] bg-white text-[#3A3769]'
+            className={`inline-flex min-h-16 flex-[1_1_180px] cursor-pointer items-center justify-center gap-2 rounded-[20px] border-2 text-xl font-extrabold transition-colors ${
+              isAdd ? 'border-star-edge bg-star text-star-ink shadow-[0_4px_0_var(--color-star-edge)]' : 'border-edge bg-white text-ink hover:bg-primary-soft'
             }`}
           >
-            + Cộng sao
+            {isAdd ? <Icon d={ICONS.check} size={22} /> : null}+ Cộng sao
           </button>
           <button
             type="button"
             aria-pressed={!isAdd}
             onClick={() => chooseMode('sub')}
-            className={`min-h-14 flex-[1_1_180px] cursor-pointer rounded-[18px] border-2 text-lg font-extrabold ${
-              !isAdd ? 'border-[#C0314E] bg-[#C0314E] text-white' : 'border-[#D9D5F2] bg-white text-[#3A3769]'
+            className={`inline-flex min-h-16 flex-[1_1_180px] cursor-pointer items-center justify-center gap-2 rounded-[20px] border-2 text-xl font-extrabold transition-colors ${
+              !isAdd ? 'border-danger bg-danger text-white shadow-[0_4px_0_var(--color-danger-deep)]' : 'border-edge bg-white text-ink hover:bg-primary-soft'
             }`}
           >
-            − Trừ sao
+            {!isAdd ? <Icon d={ICONS.check} size={22} /> : null}− Trừ sao
           </button>
         </div>
 
         <div className="flex flex-col gap-2">
-          <div className="text-[14.5px] font-extrabold text-[#4A476E]">Số sao</div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="text-[15px] font-extrabold text-ink">Số sao</div>
+          <div className="flex flex-wrap items-center gap-2.5">
             <div data-testid="amounts" className="contents">
               {amountList.map((v) => {
                 const on = custom === '' && amount === v
@@ -348,12 +398,8 @@ export function StarsClient({
                       setCustom('')
                       setErr('')
                     }}
-                    className={`min-h-12 min-w-16 cursor-pointer rounded-[14px] border-2 px-3.5 text-[17px] font-extrabold ${
-                      on
-                        ? isAdd
-                          ? 'border-[#E0A020] bg-[#FFC857] text-[#4A3300]'
-                          : 'border-[#C0314E] bg-[#C0314E] text-white'
-                        : 'border-[#D9D5F2] bg-white text-[#3A3769]'
+                    className={`min-h-14 min-w-[72px] cursor-pointer rounded-[16px] border-2 px-4 text-xl font-extrabold transition-colors ${
+                      on ? onAmount : 'border-edge bg-white text-ink hover:bg-primary-soft'
                     }`}
                   >
                     {isAdd ? '+' : '−'}
@@ -362,9 +408,9 @@ export function StarsClient({
                 )
               })}
             </div>
-            <label className="flex items-center gap-2 text-sm font-bold text-[#4A476E]">
+            <label className="flex items-center gap-2 text-sm font-bold text-muted">
               Tùy chỉnh
-              <input
+              <Input
                 type="number"
                 min={1}
                 max={100}
@@ -375,14 +421,19 @@ export function StarsClient({
                   setCustom(e.target.value === '' || Number.isNaN(n) ? '' : String(Math.min(100, Math.max(1, n))))
                   setErr('')
                 }}
-                className="min-h-12 w-[100px] rounded-[14px] border-2 border-[#D9D5F2] px-3 text-base font-bold text-ink"
+                className="!min-h-14 !w-[120px] text-lg"
               />
             </label>
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <div className="text-[14.5px] font-extrabold text-[#4A476E]">Tiêu chí</div>
+          <div className="text-[15px] font-extrabold text-ink">Tiêu chí</div>
+          {critList.length === 0 ? (
+            <p className="m-0 text-sm font-semibold text-muted">
+              Chưa có tiêu chí {isAdd ? 'cộng' : 'trừ'} sao. Cô thêm ở khung Quản lý tiêu chí bên dưới, hoặc ghi lý do vào ô ghi chú.
+            </p>
+          ) : null}
           <div data-testid="criteria-picker" className="flex flex-wrap gap-2">
             {critList.map((c) => {
               const on = c.id === critId
@@ -392,8 +443,9 @@ export function StarsClient({
                   type="button"
                   aria-pressed={on}
                   onClick={() => pickCriterion(c)}
-                  className={`min-h-11 cursor-pointer rounded-full border-2 px-3.5 text-[14.5px] font-bold ${pill(on)}`}
+                  className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border-2 px-3.5 text-[14.5px] font-bold transition-colors ${chip(on)}`}
                 >
+                  {on ? <Icon d={ICONS.check} size={16} /> : null}
                   {c.label} <b>{isAdd ? '+' : '−'}{c.defaultPoints}</b>
                 </button>
               )
@@ -401,38 +453,34 @@ export function StarsClient({
           </div>
         </div>
 
-        <label className="flex flex-col gap-1.5 text-[14.5px] font-extrabold text-[#4A476E]">
-          Ghi chú / lý do khác
-          <input
-            type="text"
-            value={note}
-            maxLength={200}
-            placeholder="Cô nhập thêm lý do nếu cần"
-            onChange={(e) => {
-              setNote(e.target.value)
-              setErr('')
-            }}
-            className="min-h-12 rounded-[14px] border-2 border-[#D9D5F2] px-3.5 text-base font-semibold text-ink"
-          />
-        </label>
+        <Field label="Ghi chú / lý do khác">
+          {(f) => (
+            <Input
+              {...f}
+              type="text"
+              value={note}
+              maxLength={200}
+              placeholder="Cô nhập thêm lý do nếu cần"
+              onChange={(e) => {
+                setNote(e.target.value)
+                setErr('')
+              }}
+            />
+          )}
+        </Field>
 
         {err && <Notice tone="error">{err}</Notice>}
         {msg && <Notice tone="success">{msg}</Notice>}
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm font-bold text-muted">
+          <div className="text-[15px] font-bold text-muted">
             {selected.length
               ? `${isAdd ? 'Cộng' : 'Trừ'} ${amt} sao cho ${selected.length} học sinh`
               : 'Chưa chọn học sinh'}
           </div>
-          <button
-            type="button"
-            onClick={submit}
-            disabled={pending}
-            className={`min-h-14 cursor-pointer rounded-[18px] border-0 px-8 text-lg font-extrabold disabled:cursor-not-allowed disabled:opacity-60 ${goBg}`}
-          >
+          <Button size="lg" variant={isAdd ? 'accent' : 'danger'} onClick={submit} disabled={pending} className="!px-8 !text-xl">
             {isAdd ? 'Xác nhận cộng sao' : 'Xác nhận trừ sao'}
-          </button>
+          </Button>
         </div>
         <StarBurst playKey={flash} />
       </section>
@@ -440,7 +488,7 @@ export function StarsClient({
       <div className="flex flex-wrap items-start gap-4">
         <section data-testid="history" className={`${card} flex min-w-0 flex-[1_1_420px] flex-col gap-3 !p-6`}>
           <h2 className={h2}>Lịch sử giao dịch sao</h2>
-          <div className="text-[13.5px] text-muted">Hoàn tác sẽ tạo thêm một bản ghi mới, không xóa bản ghi cũ.</div>
+          <div className="text-[13.5px] font-semibold text-muted">Hoàn tác sẽ tạo thêm một bản ghi mới, không xóa bản ghi cũ.</div>
           {batches.map((b) => {
             const isReversal = b.kind === 'reversal'
             const done = isReversal || b.reversed
@@ -449,48 +497,42 @@ export function StarsClient({
               <div key={b.batchId} data-testid="history-row" className="flex items-center gap-3 rounded-2xl bg-bg px-3.5 py-2.5">
                 <div
                   className={`min-w-[46px] shrink-0 rounded-xl px-2 py-1.5 text-center font-extrabold ${
-                    positive ? 'bg-[#FFF1CC] text-[#7A4E00]' : 'bg-[#FFE3EE] text-[#9E2257]'
+                    positive ? 'bg-star-soft text-star-ink' : 'bg-danger-soft text-danger-deep'
                   }`}
                 >
                   {signed(b.delta)}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-[14.5px] font-extrabold">{joinNames(b.studentNames)}</div>
-                  <div className="text-[13px] text-muted">
+                  <div className="text-[13px] font-semibold text-muted">
                     {b.reason} · {formatRelative(new Date(b.at), now)} · {b.actorName}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  disabled={done || pending}
-                  onClick={() => setUndoing(b)}
-                  className="min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3 text-[13px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
-                >
+                <Button variant="secondary" disabled={done || pending} onClick={() => setUndoing(b)} className="!px-3 text-[13px]">
+                  {!done ? <Icon d={ICONS.undo} size={16} /> : null}
                   {isReversal ? 'Đã ghi' : b.reversed ? 'Đã hoàn tác' : 'Hoàn tác'}
-                </button>
+                </Button>
               </div>
             )
           })}
-          {batches.length === 0 && <div className="text-sm font-bold text-muted">Chưa có giao dịch nào.</div>}
+          {batches.length === 0 && (
+            <EmptyState title="Chưa có giao dịch nào" icon={ICONS.star}>
+              Cô chọn học sinh rồi cộng hoặc trừ sao, lịch sử sẽ hiện ở đây.
+            </EmptyState>
+          )}
         </section>
 
         <section data-testid="manage" className={`${card} flex min-w-0 flex-[1_1_320px] flex-col gap-3 !p-6`}>
           <div className="flex items-center justify-between gap-2">
             <h2 className={h2}>Quản lý tiêu chí</h2>
-            <button
-              type="button"
-              onClick={() => openEditor()}
-              className="min-h-11 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-4 text-sm font-extrabold text-white"
-            >
-              + Thêm tiêu chí
-            </button>
+            <Button onClick={() => openEditor()}>+ Thêm tiêu chí</Button>
           </div>
-          <div className="text-[13.5px] text-muted">Cô có thể sửa tên, số sao mặc định hoặc lưu trữ từng tiêu chí.</div>
+          <div className="text-[13.5px] font-semibold text-muted">Cô có thể sửa tên, số sao mặc định hoặc lưu trữ từng tiêu chí.</div>
           {manageList.map((c) => (
             <div key={c.id} className="flex items-center gap-2.5 rounded-[14px] bg-bg px-3 py-2">
               <span
                 className={`min-w-9 shrink-0 rounded-[10px] px-2 py-1 text-center text-[13px] font-extrabold ${
-                  c.kind === 'award' ? 'bg-[#FFF1CC] text-[#7A4E00]' : 'bg-[#FFE3EE] text-[#9E2257]'
+                  c.kind === 'award' ? 'bg-star-soft text-star-ink' : 'bg-danger-soft text-danger-deep'
                 }`}
               >
                 {c.kind === 'award' ? '+' : '−'}
@@ -501,84 +543,78 @@ export function StarsClient({
                 type="button"
                 aria-label={`Sửa tiêu chí ${c.label}`}
                 onClick={() => openEditor(c)}
-                className="flex size-11 cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-primary-ink"
+                className="flex size-11 cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-primary-ink hover:bg-primary-soft"
               >
-                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
-                </svg>
+                <Icon d={PENCIL} size={19} />
               </button>
               <button
                 type="button"
                 aria-label={`Lưu trữ tiêu chí ${c.label}`}
                 onClick={() => setArchiving(c)}
-                className="flex size-11 cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-[#B02A4B]"
+                className="flex size-11 cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-danger-deep hover:bg-danger-soft"
               >
-                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" />
-                </svg>
+                <Icon d={ICONS.trash} size={19} />
               </button>
             </div>
           ))}
+          {manageList.length === 0 && (
+            <EmptyState title="Chưa có tiêu chí nào" icon={ICONS.plus}>
+              Thêm tiêu chí để chấm sao nhanh hơn, ví dụ &quot;Giúp đỡ bạn bè&quot;.
+            </EmptyState>
+          )}
         </section>
       </div>
 
-      <Modal open={confirming} onClose={() => setConfirming(false)} title="Xác nhận trừ sao">
-        <p className="m-0 mb-4 text-[15.5px] font-bold">
-          Cô muốn trừ {amt} sao của {nameList(selected.map((s) => s.id))} với lý do &quot;{reasonText}&quot;?
-        </p>
-        <div className="flex justify-end gap-2.5">
-          <Button variant="secondary" onClick={() => setConfirming(false)}>
-            Hủy
-          </Button>
-          <Button variant="danger" disabled={pending} onClick={run}>
-            Đồng ý trừ sao
-          </Button>
-        </div>
-      </Modal>
+      {undoCtx && undoTarget ? (
+        <UndoToast
+          id={undoCtx.key}
+          message={`Vừa ${undoCtx.isAdd ? 'cộng' : 'trừ'} ${undoCtx.points} sao cho ${undoCtx.studentIds.length} bạn.`}
+          onUndo={undoLast}
+          onDismiss={() => setUndoCtx(null)}
+          seconds={8}
+        />
+      ) : null}
 
-      <Modal open={undoing !== null} onClose={() => setUndoing(null)} title="Xác nhận hoàn tác">
-        <p className="m-0 mb-4 text-[15.5px] font-bold">
-          Cô muốn hoàn tác lượt {undoing ? signed(undoing.delta) : ''} của {undoing ? joinNames(undoing.studentNames) : ''}?
-        </p>
-        <div className="flex justify-end gap-2.5">
-          <Button variant="secondary" onClick={() => setUndoing(null)}>
-            Hủy
-          </Button>
-          <Button variant="danger" disabled={pending} onClick={() => undoing && undo(undoing.batchId)}>
-            Đồng ý hoàn tác
-          </Button>
-        </div>
-      </Modal>
+      <ConfirmDialog
+        open={confirming}
+        danger
+        pending={pending}
+        title="Xác nhận trừ sao"
+        message={`Cô muốn trừ ${amt} sao của ${nameList(selected.map((s) => s.id))} với lý do "${reasonText}"?`}
+        confirmLabel="Đồng ý trừ sao"
+        cancelLabel="Hủy"
+        onCancel={() => setConfirming(false)}
+        onConfirm={run}
+      />
+
+      <ConfirmDialog
+        open={undoing !== null}
+        danger
+        pending={pending}
+        title="Xác nhận hoàn tác"
+        message={`Cô muốn hoàn tác lượt ${undoing ? signed(undoing.delta) : ''} của ${undoing ? joinNames(undoing.studentNames) : ''}?`}
+        confirmLabel="Đồng ý hoàn tác"
+        cancelLabel="Hủy"
+        onCancel={() => setUndoing(null)}
+        onConfirm={() => undoing && undo(undoing.batchId)}
+      />
 
       <Modal
         open={editing !== null}
         onClose={() => setEditing(null)}
         title={editing?.id ? 'Sửa tiêu chí' : editing?.kind === 'penalty' ? 'Thêm tiêu chí trừ sao' : 'Thêm tiêu chí cộng sao'}
       >
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {fErr && <Notice tone="error">{fErr}</Notice>}
-          <label className="flex flex-col gap-1.5 text-[14.5px] font-extrabold text-[#4A476E]">
-            Tên tiêu chí
-            <input
-              type="text"
-              value={fLabel}
-              maxLength={200}
-              onChange={(e) => setFLabel(e.target.value)}
-              className="min-h-12 rounded-[14px] border-2 border-[#D9D5F2] px-3.5 text-base font-semibold text-ink"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5 text-[14.5px] font-extrabold text-[#4A476E]">
-            Số sao mặc định
-            <input
-              type="number"
-              min={1}
-              max={100}
-              value={fPoints}
-              onChange={(e) => setFPoints(e.target.value)}
-              className="min-h-12 w-[120px] rounded-[14px] border-2 border-[#D9D5F2] px-3.5 text-base font-semibold text-ink"
-            />
-          </label>
-          <div className="flex justify-end gap-2.5">
+          <Field label="Tên tiêu chí">
+            {(f) => <Input {...f} type="text" value={fLabel} maxLength={200} onChange={(e) => setFLabel(e.target.value)} />}
+          </Field>
+          <Field label="Số sao mặc định">
+            {(f) => (
+              <Input {...f} type="number" min={1} max={100} value={fPoints} onChange={(e) => setFPoints(e.target.value)} className="!w-[140px]" />
+            )}
+          </Field>
+          <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={() => setEditing(null)}>
               Hủy
             </Button>
@@ -589,19 +625,17 @@ export function StarsClient({
         </div>
       </Modal>
 
-      <Modal open={archiving !== null} onClose={() => setArchiving(null)} title="Lưu trữ tiêu chí">
-        <p className="m-0 mb-4 text-[15.5px] font-bold">
-          Cô muốn lưu trữ tiêu chí &quot;{archiving?.label}&quot;? Các bản ghi sao cũ vẫn được giữ.
-        </p>
-        <div className="flex justify-end gap-2.5">
-          <Button variant="secondary" onClick={() => setArchiving(null)}>
-            Hủy
-          </Button>
-          <Button variant="danger" disabled={pending} onClick={confirmArchive}>
-            Đồng ý lưu trữ
-          </Button>
-        </div>
-      </Modal>
+      <ConfirmDialog
+        open={archiving !== null}
+        danger
+        pending={pending}
+        title="Lưu trữ tiêu chí"
+        message={`Cô muốn lưu trữ tiêu chí "${archiving?.label ?? ''}"? Các bản ghi sao cũ vẫn được giữ.`}
+        confirmLabel="Đồng ý lưu trữ"
+        cancelLabel="Hủy"
+        onCancel={() => setArchiving(null)}
+        onConfirm={confirmArchive}
+      />
     </>
   )
 }

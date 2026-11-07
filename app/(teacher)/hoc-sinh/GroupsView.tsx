@@ -3,25 +3,28 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
+import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Field, Input, Select } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Notice } from '@/components/ui/Notice'
 import type { StarGroup } from '@/lib/stars/queries'
 import type { StudentCard } from '@/lib/students/queries'
 import { createGroup, deleteGroup, moveStudent, setGroupRole } from './actions'
 
 const ROLE_STYLE = {
-  leader: ['Tổ trưởng', '#FFC857', '#4A3300'],
-  deputy: ['Tổ phó', '#E3EEFF', '#1F4C9E'],
-  member: ['Thành viên', '#fff', '#4A476E'],
+  leader: ['Tổ trưởng', 'bg-star text-star-ink', ICONS.star],
+  deputy: ['Tổ phó', 'bg-primary-soft text-primary-deep', ICONS.check],
+  member: ['Thành viên', 'bg-white text-muted border border-edge', ICONS.user],
 } as const
 const ORDER = { leader: 0, deputy: 1, member: 2 } as const
-
-const roleBtn =
-  'min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3 text-[13px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-60'
 
 export function GroupsView({ students, groups }: { students: StudentCard[]; groups: StarGroup[] }) {
   const [error, setError] = useState('')
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
+  const [deleting, setDeleting] = useState<StarGroup | null>(null)
   const [pending, startTransition] = useTransition()
 
   function run(fn: () => Promise<{ error?: string }>, after?: () => void) {
@@ -35,9 +38,16 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
   const grouped = new Set(groups.flatMap((g) => g.memberIds))
   const unassigned = students.filter((s) => !grouped.has(s.id)).sort((a, b) => a.rollNo - b.rollNo)
 
+  const roleBtn = '!min-h-11 !px-3 text-[13.5px]'
+
   return (
     <div className="flex flex-col gap-4">
       {error && <Notice tone="error">{error}</Notice>}
+      {groups.length === 0 && (
+        <EmptyState title="Lớp chưa chia tổ" icon={ICONS.users}>
+          Cô tạo tổ đầu tiên bằng nút Thêm tổ bên dưới nhé.
+        </EmptyState>
+      )}
       <div data-testid="groups-view" className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,420px),1fr))' }}>
         {groups.map((g) => {
           const members = students
@@ -45,75 +55,72 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
             .sort((a, b) => ORDER[a.groupRole ?? 'member'] - ORDER[b.groupRole ?? 'member'] || a.rollNo - b.rollNo)
           const stars = members.reduce((n, s) => n + s.competition, 0)
           return (
-            <div
-              key={g.id}
-              data-testid="group-card"
-              role="group"
-              aria-label={g.name}
-              className="flex flex-col gap-3 rounded-[26px] bg-white p-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]"
-            >
+            <div key={g.id} data-testid="group-card" role="group" aria-label={g.name} className="clay-card flex flex-col gap-3 p-5">
               <div className="flex flex-wrap items-center justify-between gap-2.5">
                 <div>
                   <div className="font-display text-[22px] font-extrabold leading-[1.1]">{g.name}</div>
-                  <div data-testid="group-summary" className="text-[13.5px] font-bold text-[#5B5890]">
+                  <div data-testid="group-summary" className="text-[13.5px] font-bold text-muted">
                     {members.length} bạn · {stars} sao tích lũy
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {members.length === 0 ? (
-                    <button
-                      type="button"
+                    <Button
+                      variant="secondary"
                       disabled={pending}
-                      onClick={() => run(() => deleteGroup(g.id))}
-                      className="min-h-11 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-sm font-extrabold text-[#8E1B3B] disabled:opacity-60"
+                      onClick={() => setDeleting(g)}
+                      className="!border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft"
                     >
+                      <Icon d={ICONS.trash} size={18} />
                       Xóa tổ
-                    </button>
+                    </Button>
                   ) : (
                     <Link
                       href={`/thi-dua?to=${g.id}`}
-                      className="inline-flex min-h-11 items-center rounded-[14px] bg-[#FFC857] px-4 text-sm font-extrabold text-[#3B2A00]"
+                      className="clay-press inline-flex min-h-11 items-center gap-2 rounded-[16px] bg-star px-4 text-sm font-extrabold text-star-ink no-underline [--edge:var(--color-star-edge)] hover:bg-[#FFD65E]"
                     >
+                      <Icon d={ICONS.star} size={18} />
                       Cộng sao cả tổ
                     </Link>
                   )}
                 </div>
               </div>
               {members.map((m) => {
-                const [label, bg, ink] = ROLE_STYLE[m.groupRole ?? 'member']
+                const [label, tone, icon] = ROLE_STYLE[m.groupRole ?? 'member']
                 return (
-                  <div key={m.id} data-testid="group-member" className="flex flex-col gap-2 rounded-[18px] bg-[#F6F4FF] px-3 py-2.5">
+                  <div key={m.id} data-testid="group-member" className="flex flex-col gap-2 rounded-[18px] bg-bg px-3 py-2.5">
                     <div className="flex items-center gap-2.5">
                       <AvatarImage avatar={m.avatar} size={44} />
                       <div className="min-w-0 flex-1">
                         <div className="text-[15px] font-extrabold">{m.fullName}</div>
-                        <span className="rounded-full px-2.5 py-0.5 text-xs font-extrabold" style={{ background: bg, color: ink }}>
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-extrabold ${tone}`}>
+                          <Icon d={icon} size={12} />
                           {label}
                         </span>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <button type="button" disabled={pending} className={roleBtn} onClick={() => run(() => setGroupRole(m.id, 'leader'))}>
+                      <Button variant="secondary" disabled={pending} className={roleBtn} onClick={() => run(() => setGroupRole(m.id, 'leader'))}>
                         Đặt tổ trưởng
-                      </button>
-                      <button type="button" disabled={pending} className={roleBtn} onClick={() => run(() => setGroupRole(m.id, 'deputy'))}>
+                      </Button>
+                      <Button variant="secondary" disabled={pending} className={roleBtn} onClick={() => run(() => setGroupRole(m.id, 'deputy'))}>
                         Đặt tổ phó
-                      </button>
-                      <label className="flex items-center gap-1.5 text-[13px] font-bold text-[#4A476E]">
+                      </Button>
+                      <label className="flex items-center gap-1.5 text-[13px] font-bold text-muted">
                         Chuyển sang
-                        <select
+                        <Select
                           aria-label="Chuyển tổ"
                           disabled={pending}
                           value={g.id}
                           onChange={(e) => run(() => moveStudent(m.id, e.target.value))}
-                          className="min-h-11 rounded-xl border-2 border-[#D9D5F2] bg-white px-2 text-sm font-bold text-ink"
+                          className="!min-h-11 !w-auto !px-2 text-sm"
                         >
                           {groups.map((o) => (
                             <option key={o.id} value={o.id}>
                               {o.name}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </label>
                     </div>
                   </div>
@@ -123,32 +130,27 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
           )
         })}
         {unassigned.length > 0 && (
-          <div
-            role="group"
-            aria-label="Chưa có tổ"
-            data-testid="ungrouped-card"
-            className="flex flex-col gap-3 rounded-[26px] bg-white p-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]"
-          >
+          <div role="group" aria-label="Chưa có tổ" data-testid="ungrouped-card" className="clay-card flex flex-col gap-3 p-5">
             <div>
               <div className="font-display text-[22px] font-extrabold leading-[1.1]">Chưa có tổ</div>
-              <div data-testid="group-summary" className="text-[13.5px] font-bold text-[#5B5890]">
+              <div data-testid="group-summary" className="text-[13.5px] font-bold text-muted">
                 {unassigned.length} bạn
               </div>
             </div>
             {unassigned.map((m) => (
-              <div key={m.id} data-testid="group-member" className="flex flex-col gap-2 rounded-[18px] bg-[#F6F4FF] px-3 py-2.5">
+              <div key={m.id} data-testid="group-member" className="flex flex-col gap-2 rounded-[18px] bg-bg px-3 py-2.5">
                 <div className="flex items-center gap-2.5">
                   <AvatarImage avatar={m.avatar} size={44} />
                   <div className="min-w-0 flex-1 text-[15px] font-extrabold">{m.fullName}</div>
                 </div>
-                <label className="flex items-center gap-1.5 text-[13px] font-bold text-[#4A476E]">
+                <label className="flex items-center gap-1.5 text-[13px] font-bold text-muted">
                   Chuyển sang
-                  <select
+                  <Select
                     aria-label="Chuyển tổ"
                     disabled={pending}
                     value=""
                     onChange={(e) => e.target.value && run(() => moveStudent(m.id, e.target.value))}
-                    className="min-h-11 rounded-xl border-2 border-[#D9D5F2] bg-white px-2 text-sm font-bold text-ink"
+                    className="!min-h-11 !w-auto !px-2 text-sm"
                   >
                     <option value="">Chọn tổ</option>
                     {groups.map((o) => (
@@ -156,7 +158,7 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
                         {o.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
               </div>
             ))}
@@ -166,42 +168,51 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
 
       {adding ? (
         <form
-          className="flex flex-wrap items-center gap-2.5"
+          className="flex flex-wrap items-end gap-3"
           onSubmit={(e) => {
             e.preventDefault()
             run(() => createGroup(newName), () => setAdding(false))
           }}
         >
-          <label className="flex items-center gap-2 text-sm font-bold text-[#4A476E]">
-            Tên tổ
-            <input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              maxLength={200}
-              className="min-h-12 rounded-[14px] border-2 border-[#D9D5F2] bg-white px-3 text-base font-semibold text-ink"
-            />
-          </label>
-          <button type="submit" disabled={pending} className="min-h-12 rounded-[14px] bg-primary-strong px-5 text-[15px] font-extrabold text-white disabled:opacity-60">
+          <Field label="Tên tổ">
+            {(f) => <Input {...f} value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={200} className="!w-[220px]" />}
+          </Field>
+          <Button type="submit" disabled={pending}>
             Lưu tổ
-          </button>
-          <button type="button" onClick={() => setAdding(false)} className={`${roleBtn} min-h-12`}>
+          </Button>
+          <Button variant="secondary" onClick={() => setAdding(false)}>
             Hủy
-          </button>
+          </Button>
         </form>
       ) : (
         <div>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={() => {
               setNewName(`Tổ ${groups.length + 1}`)
               setAdding(true)
             }}
-            className="min-h-12 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-5 text-[15px] font-extrabold text-primary-ink"
           >
             + Thêm tổ
-          </button>
+          </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleting !== null}
+        danger
+        title="Xóa tổ này?"
+        message={`Tổ "${deleting?.name ?? ''}" đang trống nên xóa không ảnh hưởng bạn nào. Cô muốn xóa tổ này chứ?`}
+        confirmLabel="Xóa tổ"
+        cancelLabel="Hủy"
+        onCancel={() => setDeleting(null)}
+        onConfirm={() => {
+          if (!deleting) return
+          const id = deleting.id
+          setDeleting(null)
+          run(() => deleteGroup(id))
+        }}
+      />
     </div>
   )
 }

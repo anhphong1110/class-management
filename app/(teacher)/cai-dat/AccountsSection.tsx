@@ -3,6 +3,9 @@
 import { useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
@@ -12,8 +15,8 @@ import { createStudentAccounts, resetStudentPassword, setStudentLogin, type Temp
 
 type Shown = { rows: TempAccount[]; failed: { name: string; reason: string }[] }
 
-const card =
-  'flex flex-col gap-3.5 rounded-[26px] bg-white px-6 py-[22px] shadow-[0_6px_20px_rgba(102,117,232,0.10)]'
+const card = 'clay-card flex flex-col gap-3.5 px-6 py-[22px]'
+const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 
 /** Khi in: ẩn mọi thứ ngoài bảng mật khẩu (bảng được đưa thẳng vào <body> nên chỉ cần ẩn các phần tử anh em). */
 const PRINT_CSS = '@media print { body > *:not(#pw-print) { display: none !important } #pw-print { display: block !important } }'
@@ -22,7 +25,7 @@ function PasswordTable({ rows }: { rows: TempAccount[] }) {
   return (
     <table className="w-full border-collapse text-left text-sm">
       <thead>
-        <tr className="border-b-2 border-[#E4E0F7]">
+        <tr className="border-b-2 border-edge">
           <th className="py-1.5 pr-3 font-extrabold">Họ tên</th>
           <th className="py-1.5 pr-3 font-extrabold">Tên đăng nhập</th>
           <th className="py-1.5 font-extrabold">Mật khẩu tạm</th>
@@ -30,7 +33,7 @@ function PasswordTable({ rows }: { rows: TempAccount[] }) {
       </thead>
       <tbody>
         {rows.map((r) => (
-          <tr key={r.username} className="border-b border-[#E4E0F7]">
+          <tr key={r.username} className="border-b border-edge">
             <td className="py-1.5 pr-3 font-bold">{r.name}</td>
             <td className="py-1.5 pr-3">{r.username}</td>
             <td className="py-1.5 font-mono text-base font-bold tracking-wider">{r.password}</td>
@@ -47,6 +50,7 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
   const [info, setInfo] = useState<string | null>(null)
   const [shown, setShown] = useState<Shown | null>(null)
   const [confirmClose, setConfirmClose] = useState(false)
+  const [resetFor, setResetFor] = useState<AccountRow | null>(null)
   const missing = accounts.filter((a) => a.username === null).length
 
   const unknown = () => setError(toVietnameseMessage('unknown'))
@@ -99,43 +103,69 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
           Tài khoản học sinh
         </h2>
         <Button onClick={createAll} disabled={pending || missing === 0}>
+          {pending ? <Icon d={SPIN} size={16} className="motion-safe:animate-spin" /> : <Icon d={ICONS.plus} size={18} />}
           Tạo tài khoản hàng loạt
         </Button>
       </div>
-      <p className="m-0 text-[13.5px] text-muted">
+      <p className="m-0 text-sm font-semibold text-muted">
         Cô không xem lại được mật khẩu của học sinh, chỉ đặt lại để nhận mật khẩu tạm mới. Mật khẩu tạm chỉ hiện một lần.
       </p>
       {error && <Notice tone="error">{error}</Notice>}
       {info && <Notice tone="success">{info}</Notice>}
-      <div className="overflow-x-auto">
-        <ul className="m-0 flex min-w-[560px] list-none flex-col gap-2 p-0">
-          {accounts.map((a) => (
-            <li
-              key={a.studentId}
-              aria-label={a.name}
-              className="grid items-center gap-2.5 rounded-[14px] bg-[#F6F4FF] px-3.5 py-1.5 [grid-template-columns:1.6fr_1.3fr_1fr_1.2fr]"
-            >
-              <div className="text-[15px] font-extrabold">{a.name}</div>
-              <div className="text-sm font-bold text-[#4A476E]">{a.username ?? ''}</div>
-              {a.username === null ? (
-                <div className="col-span-2 text-sm font-bold text-muted">Chưa có tài khoản</div>
-              ) : (
-                <>
-                  <Switch
-                    checked={!a.loginDisabled}
-                    onChange={(next) => setLogin(a.studentId, next)}
-                    label={a.loginDisabled ? 'Đã khóa' : 'Được đăng nhập'}
-                    disabled={pending}
-                  />
-                  <Button variant="secondary" onClick={() => reset(a.studentId)} disabled={pending}>
-                    Đặt lại mật khẩu
-                  </Button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {accounts.length === 0 && (
+        <EmptyState title="Chưa có học sinh nào" icon={ICONS.users}>
+          Khi cô thêm học sinh ở trang Học sinh, danh sách tài khoản sẽ hiện ở đây.
+        </EmptyState>
+      )}
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        {accounts.map((a) => (
+          <li
+            key={a.studentId}
+            aria-label={a.name}
+            className="grid items-center gap-2.5 rounded-[16px] border-2 border-edge bg-field px-3.5 py-2 sm:[grid-template-columns:1.6fr_1.3fr_1fr_1.2fr]"
+          >
+            <div className="text-[15px] font-extrabold">{a.name}</div>
+            <div className="text-sm font-bold text-muted">{a.username ?? ''}</div>
+            {a.username === null ? (
+              <div className="flex items-center gap-1.5 text-sm font-bold text-muted sm:col-span-2">
+                <Icon d={ICONS.user} size={16} />
+                Chưa có tài khoản
+              </div>
+            ) : (
+              <>
+                <Switch
+                  checked={!a.loginDisabled}
+                  onChange={(next) => setLogin(a.studentId, next)}
+                  label={a.loginDisabled ? 'Đã khóa' : 'Được đăng nhập'}
+                  disabled={pending}
+                />
+                <Button variant="secondary" onClick={() => setResetFor(a)} disabled={pending}>
+                  Đặt lại mật khẩu
+                </Button>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <ConfirmDialog
+        open={resetFor !== null}
+        title="Đặt lại mật khẩu?"
+        message={
+          resetFor
+            ? `Mật khẩu cũ của ${resetFor.name} sẽ không dùng được nữa. Cô sẽ nhận một mật khẩu tạm mới, chỉ hiện một lần.`
+            : ''
+        }
+        confirmLabel="Đặt lại"
+        cancelLabel="Hủy"
+        danger
+        onCancel={() => setResetFor(null)}
+        onConfirm={() => {
+          const a = resetFor
+          setResetFor(null)
+          if (a) reset(a.studentId)
+        }}
+      />
 
       {/* Chỉ đóng bằng nút "Đóng" (không Esc, không bấm nền) để cô không lỡ mất mật khẩu tạm. */}
       <Modal open={shown !== null} onClose={() => {}} title="Mật khẩu tạm">
@@ -158,7 +188,7 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
                 </ul>
               </div>
             )}
-            <p className="m-0 text-sm font-bold text-[#4A476E]">Mật khẩu tạm chỉ hiện một lần. Cô in hoặc ghi lại trước khi đóng.</p>
+            <p className="m-0 text-sm font-bold text-muted">Mật khẩu tạm chỉ hiện một lần. Cô in hoặc ghi lại trước khi đóng.</p>
             <div className="flex flex-wrap justify-end gap-2.5">
               {shown.rows.length > 0 && (
                 <Button variant="secondary" onClick={() => window.print()}>

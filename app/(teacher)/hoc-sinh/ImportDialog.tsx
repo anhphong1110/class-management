@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import { toVietnameseMessage } from '@/lib/errors'
 import { MAX_IMPORT_BYTES, MAX_IMPORT_ROWS } from '@/lib/students/import-limits'
 import type { ImportRow } from '@/lib/students/import'
@@ -69,55 +72,106 @@ function Body({ existingCodes, onClose, onDone }: { existingCodes: Set<string>; 
     })
   }
 
+  // Gom lỗi theo nội dung để nói gọn: "Thiếu họ và tên: dòng 3, 5".
+  const invalid = (rows ?? []).filter((r) => r.error)
+  const problems = new Map<string, number[]>()
+  for (const r of invalid) problems.set(r.error as string, [...(problems.get(r.error as string) ?? []), r.line])
+
+  const step = pending ? 3 : rows ? 2 : 1
+  const stepLabel = ['Chọn file', 'Kiểm tra danh sách', 'Đang thêm học sinh'][step - 1]
+
   return (
-    <div className="flex flex-col gap-3.5">
-      <p className="text-[14.5px] font-semibold text-[#4A476E]">
-        Chọn file Excel (.xlsx, .xls) hoặc CSV gồm các cột Số thứ tự, Họ và tên, Mã học sinh. Để trống mã thì hệ thống tự sinh.{' '}
-        <a href="/mau/mau-danh-sach-hoc-sinh.xlsx" download className="font-extrabold text-primary-ink underline">
-          Tải file mẫu
-        </a>
-      </p>
-      <input
-        type="file"
-        accept=".xlsx,.xls,.csv"
-        aria-label="Chọn file danh sách"
-        onChange={onFile}
-        disabled={pending}
-        className="min-h-12 w-full rounded-[14px] border-2 border-[#D9D5F2] bg-white p-2.5 text-[15px] font-semibold"
-      />
+    <div className="flex flex-col gap-4">
+      <ProgressBar value={step} max={3} label={`Bước ${step} trên 3: ${stepLabel}`} />
+
+      <div className="flex flex-col gap-2">
+        <p className="m-0 text-[15px] font-semibold text-muted">
+          <b className="text-ink">Bước 1.</b> Chọn file Excel (.xlsx, .xls) hoặc CSV gồm các cột Số thứ tự, Họ và tên, Mã học sinh. Để trống mã thì hệ thống tự sinh.{' '}
+          <a href="/mau/mau-danh-sach-hoc-sinh.xlsx" download className="font-extrabold text-primary-ink underline">
+            Tải file mẫu
+          </a>
+        </p>
+        <input
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          aria-label="Chọn file danh sách"
+          onChange={onFile}
+          disabled={pending}
+          className="min-h-12 w-full rounded-[16px] border-2 border-dashed border-edge bg-field p-2.5 text-[15px] font-semibold text-ink file:mr-3 file:min-h-10 file:cursor-pointer file:rounded-[12px] file:border-0 file:bg-primary-strong file:px-4 file:font-extrabold file:text-white hover:border-primary"
+        />
+      </div>
       {error && <Notice tone="error">{error}</Notice>}
       {rows && (
-        <div className="max-h-[320px] overflow-auto rounded-[14px] border-2 border-[#D9D5F2]">
-          <table className="w-full border-collapse text-left text-[14px]">
-            <thead>
-              <tr className="bg-[#F0EEFA] text-[#4A476E]">
-                <th className="px-3 py-2">Dòng</th>
-                <th className="px-3 py-2">Số thứ tự</th>
-                <th className="px-3 py-2">Họ và tên</th>
-                <th className="px-3 py-2">Mã</th>
-                <th className="px-3 py-2">Ghi chú</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.line} data-testid="import-row" data-invalid={r.error ? 'true' : 'false'} style={r.error ? { background: '#FFE3EA', color: '#8E1B3B' } : undefined} className="border-t border-[#EEEBFA] font-semibold">
-                  <td className="px-3 py-2">{r.line}</td>
-                  <td className="px-3 py-2">{r.rollNo ?? '—'}</td>
-                  <td className="px-3 py-2">{r.fullName || '—'}</td>
-                  <td className="px-3 py-2">{r.code ?? 'Tự sinh'}</td>
-                  <td className="px-3 py-2 font-extrabold">{r.error ?? 'Hợp lệ'}</td>
+        <div className="flex flex-col gap-3">
+          <p className="m-0 text-[15px] font-semibold text-muted">
+            <b className="text-ink">Bước 2.</b> Cô xem lại danh sách rồi bấm thêm.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Badge tone="success">
+              <Icon d={ICONS.check} size={14} />
+              {valid.length} dòng dùng được
+            </Badge>
+            {invalid.length > 0 ? (
+              <Badge tone="danger">
+                <Icon d={ICONS.alert} size={14} />
+                {invalid.length} dòng cần sửa
+              </Badge>
+            ) : null}
+          </div>
+          {invalid.length > 0 ? (
+            <Notice tone="info">
+              <p className="m-0">Các dòng cần sửa sẽ được bỏ qua, cô có thể sửa file rồi chọn lại:</p>
+              <ul className="m-0 mt-1 list-disc pl-5">
+                {[...problems].map(([msg, lines]) => (
+                  <li key={msg}>
+                    {msg} (dòng {lines.join(', ')})
+                  </li>
+                ))}
+              </ul>
+            </Notice>
+          ) : null}
+          <div className="max-h-[300px] overflow-auto rounded-[16px] border-2 border-edge">
+            <table className="w-full border-collapse text-left text-[14px]">
+              <thead>
+                <tr className="bg-primary-soft text-primary-deep">
+                  <th className="px-3 py-2">Dòng</th>
+                  <th className="px-3 py-2">Số thứ tự</th>
+                  <th className="px-3 py-2">Họ và tên</th>
+                  <th className="px-3 py-2">Mã</th>
+                  <th className="px-3 py-2">Ghi chú</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr
+                    key={r.line}
+                    data-testid="import-row"
+                    data-invalid={r.error ? 'true' : 'false'}
+                    className={`border-t border-edge font-semibold ${r.error ? 'bg-danger-soft text-danger-deep' : ''}`}
+                  >
+                    <td className="px-3 py-2">{r.line}</td>
+                    <td className="px-3 py-2">{r.rollNo ?? '—'}</td>
+                    <td className="px-3 py-2">{r.fullName || '—'}</td>
+                    <td className="px-3 py-2">{r.code ?? 'Tự sinh'}</td>
+                    <td className="px-3 py-2 font-extrabold">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Icon d={r.error ? ICONS.alert : ICONS.check} size={16} />
+                        {r.error ?? 'Hợp lệ'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
-      <div className="flex flex-wrap justify-end gap-2.5">
+      <div className="flex flex-wrap justify-end gap-3">
         <Button variant="secondary" onClick={onClose} disabled={pending}>
           Hủy
         </Button>
         <Button onClick={submit} disabled={pending || valid.length === 0}>
-          Thêm {valid.length} học sinh
+          {pending ? 'Đang thêm…' : `Thêm ${valid.length} học sinh`}
         </Button>
       </div>
     </div>

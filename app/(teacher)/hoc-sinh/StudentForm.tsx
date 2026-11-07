@@ -2,13 +2,12 @@
 
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/Button'
+import { Field, Input } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { createStudent, updateStudent } from './actions'
 
 export type EditTarget = { id: string; fullName: string; rollNo: number }
-
-const input = 'min-h-12 w-full rounded-[14px] border-2 border-[#D9D5F2] bg-white px-3.5 text-base font-semibold text-ink'
 
 /** Thêm mới khi `student` là null, sửa khi có. */
 export function StudentForm({ open, student, onClose }: { open: boolean; student: EditTarget | null; onClose: () => void }) {
@@ -45,29 +44,29 @@ function FormBody({ student, onClose }: { student: EditTarget | null; onClose: (
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-3.5">
-      <label className="flex flex-col gap-1.5 text-sm font-bold text-[#4A476E]">
-        Họ và tên
-        <input className={input} value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={200} autoComplete="off" />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm font-bold text-[#4A476E]">
-        Số thứ tự
-        <input
-          className={input}
-          inputMode="numeric"
-          value={roll}
-          onChange={(e) => setRoll(e.target.value)}
-          placeholder={student ? undefined : 'Để trống để tự điền số tiếp theo'}
-          autoComplete="off"
-        />
-      </label>
+    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+      <Field label="Họ và tên">
+        {(f) => <Input {...f} value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={200} autoComplete="off" />}
+      </Field>
+      <Field label="Số thứ tự">
+        {(f) => (
+          <Input
+            {...f}
+            inputMode="numeric"
+            value={roll}
+            onChange={(e) => setRoll(e.target.value)}
+            placeholder={student ? undefined : 'Để trống để tự điền số tiếp theo'}
+            autoComplete="off"
+          />
+        )}
+      </Field>
       {error && <Notice tone="error">{error}</Notice>}
-      <div className="flex flex-wrap justify-end gap-2.5">
+      <div className="flex flex-wrap justify-end gap-3">
         <Button variant="secondary" onClick={onClose} disabled={pending}>
           Hủy
         </Button>
         <Button type="submit" disabled={pending}>
-          Lưu
+          {pending ? 'Đang lưu…' : 'Lưu'}
         </Button>
       </div>
     </form>

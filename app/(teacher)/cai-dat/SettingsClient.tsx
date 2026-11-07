@@ -4,7 +4,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Modal } from '@/components/ui/Modal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Field, Input } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
@@ -20,13 +22,12 @@ type FlagKey = { [K in keyof SettingsFlags]: SettingsFlags[K] extends boolean ? 
 type UploadKind = 'logo_path' | 'class_logo_path' | 'cover_path'
 
 const SAVED = 'Đã lưu cài đặt.'
-const card =
-  'flex flex-col gap-3.5 rounded-[26px] bg-white px-6 py-[22px] shadow-[0_6px_20px_rgba(102,117,232,0.10)]'
+const card = 'clay-card flex flex-col gap-3.5 px-6 py-[22px]'
 const h2 = 'm-0 font-display text-[22px] font-extrabold'
-const row = 'rounded-2xl border-2 border-[#E4E0F7] bg-white px-3.5 py-1.5'
-const fieldLabel = 'flex flex-col gap-1 text-sm font-extrabold text-[#4A476E]'
-const input =
-  'min-h-12 box-border rounded-xl border-2 border-[#D9D5F2] bg-white px-3.5 text-base font-bold text-ink disabled:opacity-50'
+const row = 'rounded-2xl border-2 border-edge bg-field px-3.5 py-1.5'
+const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
+const LINK_BTN =
+  'clay-press inline-flex min-h-11 items-center justify-center gap-2 rounded-[16px] border-2 border-primary-strong bg-white px-5 text-base font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep'
 
 const INFO_FIELDS: [keyof InfoValues, string][] = [
   ['school_name', 'Tên trường'],
@@ -244,7 +245,21 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
 
   return (
     <>
-      {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border-2 border-edge bg-primary-soft px-5 py-3">
+        <p className="m-0 flex-1 basis-64 text-[15px] font-bold text-primary-deep">
+          Muốn biết học sinh nhìn thấy gì sau khi cô đổi cài đặt? Cô xem thử rồi quay lại nhé.
+        </p>
+        <Link href="/em" className={LINK_BTN}>
+          <Icon d={ICONS.eye} size={20} />
+          Xem như học sinh
+        </Link>
+      </div>
+
+      {msg && (
+        <div className="sticky top-3 z-30 rounded-[16px] shadow-[0_8px_20px_-8px_rgba(35,31,77,0.35)]">
+          <Notice tone={msg.tone}>{msg.text}</Notice>
+        </div>
+      )}
 
       <section className={card} aria-labelledby="info-h">
         <h2 id="info-h" className={h2}>
@@ -252,33 +267,35 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
         </h2>
         <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
           {INFO_FIELDS.map(([k, label]) => (
-            <label key={k} className={fieldLabel}>
-              {label}
-              <input
-                type="text"
-                value={vals[k]}
-                disabled={pending}
-                onChange={(e) => setVals({ ...vals, [k]: e.target.value })}
-                className={input}
-              />
-            </label>
+            <Field key={k} label={label}>
+              {(a) => (
+                <Input
+                  {...a}
+                  type="text"
+                  value={vals[k]}
+                  disabled={pending}
+                  onChange={(e) => setVals({ ...vals, [k]: e.target.value })}
+                />
+              )}
+            </Field>
           ))}
         </div>
         <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
           {TERM_FIELDS.map(([k, label]) => (
-            <label key={k} className={fieldLabel}>
-              {label}
-              <input
-                type="date"
-                value={vals[k]}
-                disabled={pending}
-                onChange={(e) => setVals({ ...vals, [k]: e.target.value })}
-                className={input}
-              />
-            </label>
+            <Field key={k} label={label}>
+              {(a) => (
+                <Input
+                  {...a}
+                  type="date"
+                  value={vals[k]}
+                  disabled={pending}
+                  onChange={(e) => setVals({ ...vals, [k]: e.target.value })}
+                />
+              )}
+            </Field>
           ))}
         </div>
-        <p className="m-0 text-[13.5px] text-muted">
+        <p className="m-0 text-sm font-semibold text-muted">
           Mỗi năm học cô cập nhật ngày học kỳ để bảng xếp hạng và nhiệm vụ theo học kỳ tính đúng.
         </p>
         <div className={row}>
@@ -290,7 +307,8 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
           />
         </div>
         <div>
-          <Button onClick={saveInfo} disabled={pending}>
+          <Button size="lg" onClick={saveInfo} disabled={pending}>
+            {pending && <Icon d={SPIN} size={18} className="motion-safe:animate-spin" />}
             Lưu thông tin
           </Button>
         </div>
@@ -319,7 +337,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
                 type="button"
                 disabled={pending}
                 onClick={() => fileRefs.current[kind]?.click()}
-                className="flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-[#8E86D8] bg-bg p-2.5 text-center text-sm font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+                className="flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-primary bg-bg p-2.5 text-center text-sm font-extrabold text-primary-ink transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
@@ -329,8 +347,8 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
             </div>
           ))}
         </div>
-        <div className="text-sm font-extrabold text-[#4A476E]">Màu chủ đạo</div>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="text-[15px] font-extrabold text-ink">Màu chủ đạo</div>
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
           {(Object.keys(THEMES) as ThemeKey[]).map((key) => {
             const t = THEMES[key]
             const on = key === theme
@@ -341,12 +359,31 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
                 aria-pressed={on}
                 disabled={pending}
                 onClick={() => pickTheme(key)}
-                className={`flex min-h-12 cursor-pointer items-center gap-2 rounded-full border-2 bg-white py-0 pl-2 pr-4 text-sm font-extrabold text-ink disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong ${
-                  on ? 'border-ink' : 'border-[#E4E0F7]'
+                className={`flex min-h-[44px] cursor-pointer flex-col gap-2.5 rounded-[20px] border-2 p-3 text-left text-[15px] font-extrabold text-ink transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${
+                  on ? 'border-ink shadow-[0_4px_0_var(--color-ink)]' : 'border-edge shadow-[0_4px_0_var(--primary-edge)]'
                 }`}
+                style={{ background: t.bg }}
               >
-                <span className="size-8 rounded-full" style={{ background: t.primary }} />
-                {t.label}
+                <span className="flex items-center justify-between gap-2">
+                  {t.label}
+                  {on && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-0.5 text-xs font-extrabold text-white">
+                      <Icon d={ICONS.check} size={12} />
+                      Đang dùng
+                    </span>
+                  )}
+                </span>
+                <span aria-hidden="true" className="flex items-center gap-1.5">
+                  <span className="size-7 rounded-full border-2 border-white" style={{ background: t.primary }} />
+                  <span className="size-7 rounded-full border-2 border-white" style={{ background: t.strong }} />
+                  <span className="size-7 rounded-full border-2" style={{ background: t.soft, borderColor: t.edge }} />
+                  <span
+                    className="ml-auto rounded-full px-3 py-1 text-xs font-extrabold text-white"
+                    style={{ background: t.strong, boxShadow: `0 3px 0 ${t.deep}` }}
+                  >
+                    Nút mẫu
+                  </span>
+                </span>
               </button>
             )
           })}
@@ -359,24 +396,25 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
             Quy định thi đua và đổi quà
           </h2>
           {RULES.map(([k, label, hint]) => switchRow(k, label, hint))}
-          <p className="m-0 text-[13.5px] text-muted">
+          <p className="m-0 text-sm font-semibold text-muted">
             Khi &quot;Giữ trước sao&quot; bật, học sinh luôn cần đủ sao để gửi yêu cầu. &quot;Chỉ cho đổi khi đủ sao&quot; chỉ có tác dụng khi &quot;Giữ trước sao&quot; tắt.
           </p>
-          <label className="flex flex-wrap items-center gap-2 text-[14.5px] font-extrabold text-[#4A476E]">
-            Tối đa lượt đổi quà mỗi tuần
-            <input
-              type="number"
-              value={limit}
-              disabled={pending}
-              onChange={(e) => setLimit(e.target.value)}
-              onBlur={saveLimit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') e.currentTarget.blur()
-              }}
-              className={`${input} w-[84px] px-2.5`}
-            />
-          </label>
-          <div className="text-sm font-extrabold text-[#4A476E]">Mức sao gợi ý (cộng)</div>
+          <Field label="Tối đa lượt đổi quà mỗi tuần" className="max-w-[240px]">
+            {(a) => (
+              <Input
+                {...a}
+                type="number"
+                value={limit}
+                disabled={pending}
+                onChange={(e) => setLimit(e.target.value)}
+                onBlur={saveLimit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur()
+                }}
+              />
+            )}
+          </Field>
+          <div className="text-[15px] font-extrabold text-ink">Mức sao gợi ý (cộng)</div>
           <div className="flex flex-wrap items-center gap-2">
             {s.star_steps.map((n) => (
               <button
@@ -385,14 +423,15 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
                 disabled={pending}
                 aria-label={`Xóa mức +${n}`}
                 onClick={() => saveSteps(removeStep(s.star_steps, n))}
-                className="min-h-11 min-w-14 cursor-pointer rounded-xl border-2 border-[#E0A020] bg-[#FFF1CC] px-3 text-[15px] font-extrabold text-[#4A3300] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 min-w-14 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 border-star-edge bg-star-soft px-3 text-[15px] font-extrabold text-star-ink hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                +{n} ×
+                <span>+{n}</span>
+                <Icon d={ICONS.x} size={14} />
               </button>
             ))}
             {adding ? (
               <span className="flex items-center gap-2">
-                <input
+                <Input
                   type="number"
                   min={1}
                   aria-label="Mức sao mới"
@@ -407,24 +446,19 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
                       setStepText('')
                     }
                   }}
-                  className={`${input} w-[84px] px-2.5`}
+                  className="!w-[96px]"
                 />
                 <Button onClick={confirmStep} disabled={pending}>
                   Thêm
                 </Button>
               </span>
             ) : (
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => setAdding(true)}
-                className="min-h-11 cursor-pointer rounded-xl border-2 border-dashed border-[#8E86D8] bg-white px-3.5 text-sm font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              <Button variant="secondary" className="border-dashed" disabled={pending} onClick={() => setAdding(true)}>
                 + Thêm mức
-              </button>
+              </Button>
             )}
           </div>
-          <Link href="/thi-dua" className="text-[14.5px] font-extrabold text-primary-strong">
+          <Link href="/thi-dua" className="inline-flex min-h-11 items-center text-[15px] font-extrabold text-primary-strong">
             Sửa tiêu chí cộng/trừ sao ở Trạm thi đua
           </Link>
         </section>
@@ -439,22 +473,19 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
         </section>
       </div>
 
-      <Modal
+      <ConfirmDialog
         open={askSaturday}
-        onClose={() => {
+        title="Tắt học thứ Bảy?"
+        message={`Thời khóa biểu còn ${saturdaySlots} tiết thứ Bảy. Cô muốn xóa các tiết này và tắt học thứ Bảy?`}
+        confirmLabel="Xóa và tắt"
+        cancelLabel="Hủy"
+        danger
+        pending={pending}
+        onCancel={() => {
           if (!pending) setAskSaturday(false)
         }}
-        title={`Thời khóa biểu còn ${saturdaySlots} tiết thứ Bảy. Cô muốn xóa các tiết này và tắt học thứ Bảy?`}
-      >
-        <div className="flex flex-wrap justify-end gap-2.5">
-          <Button variant="secondary" onClick={() => setAskSaturday(false)} disabled={pending}>
-            Hủy
-          </Button>
-          <Button variant="danger" onClick={() => saturday(false, true)} disabled={pending}>
-            Xóa và tắt
-          </Button>
-        </div>
-      </Modal>
+        onConfirm={() => saturday(false, true)}
+      />
     </>
   )
 }

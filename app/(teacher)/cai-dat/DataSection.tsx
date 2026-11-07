@@ -3,6 +3,9 @@
 import { useRef, useState, useTransition, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Field, Input } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { toVietnameseMessage } from '@/lib/errors'
@@ -13,14 +16,10 @@ import { createBrowserSupabase } from '@/lib/supabase/client'
 import { COPY_OPTIONS, DEFAULT_COPY, nextSchoolYear, type CopyKey } from '@/lib/backup/year'
 import { deleteDemoData, openNewYear, restoreBackup } from './data-actions'
 
-const card =
-  'flex flex-col gap-3.5 rounded-[26px] bg-white px-6 py-[22px] shadow-[0_6px_20px_rgba(102,117,232,0.10)]'
+const card = 'clay-card flex flex-col gap-3.5 px-6 py-[22px]'
 const action =
-  'flex min-h-24 cursor-pointer flex-col gap-1 rounded-[20px] border-2 border-[#E4E0F7] bg-[#F6F4FF] px-4 py-3.5 text-left text-ink no-underline disabled:cursor-not-allowed disabled:opacity-50'
-
-const field = 'flex flex-col gap-1 text-sm font-extrabold text-[#4A476E]'
-const fieldInput =
-  'min-h-12 box-border rounded-xl border-2 border-[#D9D5F2] bg-white px-3.5 text-base font-bold text-ink disabled:opacity-50'
+  'clay-press flex min-h-24 cursor-pointer flex-col gap-1 rounded-[20px] border-2 border-edge bg-field px-4 py-3.5 text-left text-ink no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50'
+const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 
 const NEW_YEAR_NOTE =
   'Năm học hiện tại được lưu trữ và năm mới bắt đầu từ 0 sao. Học sinh không được chép sang; các yêu cầu đổi quà đang chờ sẽ bị từ chối và sao được trả lại.'
@@ -54,6 +53,9 @@ export function DataSection({
   const [done, setDone] = useState<string | null>(null)
   const [yearOpen, setYearOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1)
+  const [deleteSure, setDeleteSure] = useState(false)
+  const [archiveAsk, setArchiveAsk] = useState(false)
   const [yearForm, setYearForm] = useState({ schoolYear: '', className: '', teacherName: '' })
   const [copy, setCopy] = useState<CopyKey[]>(DEFAULT_COPY)
   const [preview, setPreview] = useState<Preview | null>(null)
@@ -153,6 +155,12 @@ export function DataSection({
     })
   }
 
+  function openDelete() {
+    setDeleteStep(1)
+    setDeleteSure(false)
+    setDeleteOpen(true)
+  }
+
   function closeDelete() {
     if (!pending) setDeleteOpen(false)
   }
@@ -174,6 +182,8 @@ export function DataSection({
     })
   }
 
+  const spinner = pending ? <Icon d={SPIN} size={16} className="motion-safe:animate-spin" /> : null
+
   return (
     <section className={card} aria-labelledby="data-h">
       <h2 id="data-h" className="m-0 font-display text-[22px] font-extrabold">
@@ -181,41 +191,25 @@ export function DataSection({
       </h2>
       {error && <Notice tone="error">{error}</Notice>}
       {done && <Notice tone="success">{done}</Notice>}
+
+      <h3 className="m-0 font-display text-lg font-extrabold">Sao lưu và khôi phục</h3>
       <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
         <a href="/cai-dat/sao-luu" className={action}>
-          <span className="text-base font-extrabold">Sao lưu dữ liệu</span>
-          <span className="text-[13.5px] font-semibold leading-snug text-[#4A476E]">
+          <span className="flex items-center gap-2 text-base font-extrabold">
+            <Icon d="M12 4v12M7 11l5 5 5-5M4 20h16" size={20} className="text-primary-ink" />
+            Sao lưu dữ liệu
+          </span>
+          <span className="text-sm font-semibold leading-snug text-muted">
             Tải bản sao lưu toàn bộ lớp (học sinh, sao, điểm danh, quà).
           </span>
         </a>
         <button type="button" className={action} disabled={pending} onClick={() => fileRef.current?.click()}>
-          <span className="text-base font-extrabold">Khôi phục từ bản sao lưu</span>
-          <span className="text-[13.5px] font-semibold leading-snug text-[#4A476E]">
+          <span className="flex items-center gap-2 text-base font-extrabold">
+            <Icon d="M12 16V4M7 9l5-5 5 5M4 20h16" size={20} className="text-primary-ink" />
+            Khôi phục từ bản sao lưu
+          </span>
+          <span className="text-sm font-semibold leading-snug text-muted">
             Chọn file sao lưu để quay lại dữ liệu cũ.
-          </span>
-        </button>
-        <button
-          type="button"
-          className={`${action} !border-[#4F5BD5] !bg-[#EEF0FF]`}
-          disabled={pending}
-          onClick={openYear}
-        >
-          <span className="text-base font-extrabold text-[#2C37A8]">Lưu trữ năm học {current.schoolYear}</span>
-          <span className="text-[13.5px] font-semibold leading-snug text-[#4A476E]">
-            Đóng sổ năm học, mở năm mới mà không ghi đè lịch sử cũ.
-          </span>
-        </button>
-        <button
-          type="button"
-          className={`${action} !border-[#C0314E] !bg-[#FFF4F7]`}
-          disabled={pending || demoCount === 0}
-          onClick={() => setDeleteOpen(true)}
-        >
-          <span className="text-base font-extrabold text-[#8E1B3B]">Xóa dữ liệu demo</span>
-          <span className="text-[13.5px] font-semibold leading-snug text-[#4A476E]">
-            {demoCount === 0
-              ? 'Không còn dữ liệu demo.'
-              : `Xóa ${demoCount} học sinh mẫu để nhập danh sách thật. Cần xác nhận.`}
           </span>
         </button>
         <input
@@ -238,14 +232,14 @@ export function DataSection({
               <li
                 key={c.id}
                 aria-label={`${c.className} · ${c.schoolYear}`}
-                className="flex flex-wrap items-center justify-between gap-2.5 rounded-[14px] bg-[#F6F4FF] px-3.5 py-1.5"
+                className="flex flex-wrap items-center justify-between gap-2.5 rounded-[14px] border-2 border-edge bg-field px-3.5 py-1.5"
               >
                 <span className="text-[15px] font-extrabold">
                   {c.className} · {c.schoolYear}
                 </span>
                 <a
                   href={`/cai-dat/sao-luu?lop=${c.id}`}
-                  className="inline-flex min-h-11 items-center rounded-[14px] border-2 border-primary-strong bg-white px-5 font-extrabold text-primary-strong no-underline hover:bg-bg"
+                  className="inline-flex min-h-11 items-center rounded-[14px] border-2 border-primary-strong bg-white px-5 font-extrabold text-primary-strong no-underline hover:bg-primary-soft"
                 >
                   Tải sao lưu
                 </a>
@@ -255,47 +249,100 @@ export function DataSection({
         </>
       )}
 
+      <div className="mt-2 flex flex-col gap-3 rounded-[20px] border-2 border-danger bg-danger-soft/40 p-4">
+        <h3 className="m-0 flex items-center gap-2 font-display text-lg font-extrabold text-danger-deep">
+          <Icon d={ICONS.alert} size={22} />
+          Khu vực nguy hiểm
+        </h3>
+        <p className="m-0 text-sm font-semibold text-muted">
+          Những việc dưới đây khó hoặc không thể hoàn tác. Cô nên tải bản sao lưu trước khi làm.
+        </p>
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+          <button
+            type="button"
+            className={`${action} !border-primary-strong !bg-primary-soft`}
+            disabled={pending}
+            onClick={() => setArchiveAsk(true)}
+          >
+            <span className="text-base font-extrabold text-primary-deep">Lưu trữ năm học {current.schoolYear}</span>
+            <span className="text-sm font-semibold leading-snug text-muted">
+              Đóng sổ năm học, mở năm mới mà không ghi đè lịch sử cũ.
+            </span>
+          </button>
+          <button
+            type="button"
+            className={`${action} !border-danger !bg-white`}
+            disabled={pending || demoCount === 0}
+            onClick={openDelete}
+          >
+            <span className="text-base font-extrabold text-danger-deep">Xóa dữ liệu demo</span>
+            <span className="text-sm font-semibold leading-snug text-muted">
+              {demoCount === 0
+                ? 'Không còn dữ liệu demo.'
+                : `Xóa ${demoCount} học sinh mẫu để nhập danh sách thật. Cần xác nhận.`}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <ConfirmDialog
+        open={archiveAsk}
+        title="Lưu trữ năm học này?"
+        message={`Năm học ${current.schoolYear} sẽ được đóng sổ và một năm học mới được mở. Cô sẽ chọn dữ liệu chép sang ở bước sau.`}
+        confirmLabel="Tiếp tục"
+        cancelLabel="Để sau"
+        danger
+        onCancel={() => setArchiveAsk(false)}
+        onConfirm={() => {
+          setArchiveAsk(false)
+          openYear()
+        }}
+      />
+
       <Modal open={yearOpen} onClose={closeYear} title="Mở năm học mới">
         <form onSubmit={submitYear} className="flex max-h-[70vh] flex-col gap-3 overflow-y-auto">
-          <label className={field}>
-            Năm học
-            <input
-              className={fieldInput}
-              value={yearForm.schoolYear}
-              onChange={(e) => setYearForm((f) => ({ ...f, schoolYear: e.target.value }))}
-              disabled={pending}
-              required
-              maxLength={100}
-            />
-          </label>
-          <label className={field}>
-            Tên lớp
-            <input
-              className={fieldInput}
-              value={yearForm.className}
-              onChange={(e) => setYearForm((f) => ({ ...f, className: e.target.value }))}
-              disabled={pending}
-              required
-              maxLength={100}
-            />
-          </label>
-          <label className={field}>
-            Giáo viên chủ nhiệm
-            <input
-              className={fieldInput}
-              value={yearForm.teacherName}
-              onChange={(e) => setYearForm((f) => ({ ...f, teacherName: e.target.value }))}
-              disabled={pending}
-              maxLength={100}
-            />
-          </label>
+          <Field label="Năm học">
+            {(a) => (
+              <Input
+                {...a}
+                value={yearForm.schoolYear}
+                onChange={(e) => setYearForm((f) => ({ ...f, schoolYear: e.target.value }))}
+                disabled={pending}
+                required
+                maxLength={100}
+              />
+            )}
+          </Field>
+          <Field label="Tên lớp">
+            {(a) => (
+              <Input
+                {...a}
+                value={yearForm.className}
+                onChange={(e) => setYearForm((f) => ({ ...f, className: e.target.value }))}
+                disabled={pending}
+                required
+                maxLength={100}
+              />
+            )}
+          </Field>
+          <Field label="Giáo viên chủ nhiệm">
+            {(a) => (
+              <Input
+                {...a}
+                value={yearForm.teacherName}
+                onChange={(e) => setYearForm((f) => ({ ...f, teacherName: e.target.value }))}
+                disabled={pending}
+                maxLength={100}
+              />
+            )}
+          </Field>
           <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
-            <legend className="mb-1 p-0 text-sm font-extrabold text-[#4A476E]">Chép sang năm mới</legend>
+            <legend className="mb-1 p-0 text-[15px] font-extrabold text-ink">Chép sang năm mới</legend>
             {COPY_OPTIONS.map((o) => (
               <label key={o.key} className="flex min-h-11 items-center gap-2.5 text-[15px] font-bold">
                 <input
                   type="checkbox"
-                  className="size-5 accent-[#4F5BD5]"
+                  className="size-5 accent-primary-strong"
                   checked={copy.includes(o.key)}
                   disabled={pending || (o.key === 'timetable' && !copy.includes('subjects'))}
                   onChange={(e) => toggleCopy(o.key, e.target.checked)}
@@ -304,12 +351,13 @@ export function DataSection({
               </label>
             ))}
           </fieldset>
-          <p className="m-0 text-[14px] text-muted">{NEW_YEAR_NOTE}</p>
+          <p className="m-0 text-sm font-semibold text-muted">{NEW_YEAR_NOTE}</p>
           <div className="flex flex-wrap justify-end gap-2.5">
             <Button variant="secondary" onClick={closeYear} disabled={pending}>
               Hủy
             </Button>
             <Button type="submit" disabled={pending || !yearForm.schoolYear.trim() || !yearForm.className.trim()}>
+              {spinner}
               Lưu trữ và mở năm mới
             </Button>
           </div>
@@ -321,35 +369,66 @@ export function DataSection({
         onClose={closeDelete}
         title={`Xóa toàn bộ dữ liệu mẫu (${demoCount} học sinh mẫu và dữ liệu đi kèm)? Không hoàn tác được.`}
       >
-        <div className="flex flex-wrap justify-end gap-2.5">
-          <Button variant="secondary" onClick={closeDelete} disabled={pending}>
-            Hủy
-          </Button>
-          <Button variant="danger" onClick={removeDemo} disabled={pending}>
-            Xóa dữ liệu demo
-          </Button>
-        </div>
+        {deleteStep === 1 ? (
+          <div className="flex flex-col gap-4">
+            <p className="m-0 flex items-start gap-3 text-base font-semibold text-muted">
+              <Icon d={ICONS.alert} size={22} className="mt-0.5 text-danger" />
+              <span>Học sinh mẫu, sao, điểm danh và các dữ liệu đi kèm sẽ bị xóa. Học sinh thật cô đã nhập không bị ảnh hưởng.</span>
+            </p>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <Button variant="secondary" onClick={closeDelete} disabled={pending}>
+                Hủy
+              </Button>
+              <Button variant="danger" onClick={() => setDeleteStep(2)} disabled={pending}>
+                Tiếp tục
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <label className="flex min-h-11 items-start gap-2.5 text-[15px] font-bold">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-5 accent-danger"
+                checked={deleteSure}
+                disabled={pending}
+                onChange={(e) => setDeleteSure(e.target.checked)}
+              />
+              Cô hiểu việc này không hoàn tác được.
+            </label>
+            <div className="flex flex-wrap justify-end gap-2.5">
+              <Button variant="secondary" onClick={() => setDeleteStep(1)} disabled={pending}>
+                Quay lại
+              </Button>
+              <Button variant="danger" onClick={removeDemo} disabled={pending || !deleteSure}>
+                {spinner}
+                Xóa dữ liệu demo
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <Modal open={preview !== null} onClose={close} title="Khôi phục từ bản sao lưu">
         {preview && (
           <div className="flex flex-col gap-3">
             <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[15px]">
-              <dt className="font-bold text-[#4A476E]">Tên lớp</dt>
+              <dt className="font-bold text-muted">Tên lớp</dt>
               <dd className="m-0 font-extrabold">{preview.summary.className}</dd>
-              <dt className="font-bold text-[#4A476E]">Năm học</dt>
+              <dt className="font-bold text-muted">Năm học</dt>
               <dd className="m-0 font-extrabold">{preview.summary.schoolYear}</dd>
-              <dt className="font-bold text-[#4A476E]">Số học sinh</dt>
+              <dt className="font-bold text-muted">Số học sinh</dt>
               <dd className="m-0 font-extrabold">{preview.summary.counts.students ?? 0}</dd>
-              <dt className="font-bold text-[#4A476E]">Số giao dịch sao</dt>
+              <dt className="font-bold text-muted">Số giao dịch sao</dt>
               <dd className="m-0 font-extrabold">{preview.summary.counts.star_transactions ?? 0}</dd>
             </dl>
-            <p className="m-0 text-[14px] text-muted">{RESTORE_NOTE}</p>
+            <p className="m-0 text-sm font-semibold text-muted">{RESTORE_NOTE}</p>
             <div className="flex flex-wrap justify-end gap-2.5">
               <Button variant="secondary" onClick={close} disabled={pending}>
                 Hủy
               </Button>
               <Button onClick={restore} disabled={pending}>
+                {spinner}
                 Khôi phục
               </Button>
             </div>

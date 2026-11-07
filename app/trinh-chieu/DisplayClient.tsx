@@ -118,7 +118,7 @@ export function DisplayClient({ data, brand }: { data: DisplayData; brand: { top
                 setIndex(0)
                 setAuto((v) => !v)
               }}
-              className={`inline-flex min-h-12 cursor-pointer items-center rounded-[14px] border-2 px-5 text-base font-extrabold text-white focus-visible:outline-2 focus-visible:outline-white ${
+              className={`inline-flex min-h-12 cursor-pointer items-center rounded-[14px] border-2 px-5 text-base font-extrabold text-white transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-white ${
                 auto ? 'border-[#FFE08A] bg-white/20' : 'border-white/60 bg-transparent'
               }`}
             >
@@ -126,7 +126,7 @@ export function DisplayClient({ data, brand }: { data: DisplayData; brand: { top
             </button>
             <Link
               href="/tong-quan"
-              className="inline-flex min-h-12 items-center rounded-[14px] border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline focus-visible:outline-2 focus-visible:outline-white"
+              className="inline-flex min-h-12 items-center rounded-[14px] border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-white"
             >
               Thoát trình chiếu
             </Link>

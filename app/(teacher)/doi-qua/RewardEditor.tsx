@@ -2,15 +2,16 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { RewardVisual } from '@/components/rewards/RewardVisual'
+import { Button } from '@/components/ui/Button'
+import { Field, Input, Textarea } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
+import { Notice } from '@/components/ui/Notice'
 import { compressImage } from '@/lib/domain/compress-image'
 import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { REWARD_PRESETS } from '@/lib/rewards/presets'
 import type { RewardView } from '@/lib/rewards/queries'
 import { saveReward, setRewardStock, uploadRewardImage } from './actions'
-
-const field =
-  'min-h-12 box-border rounded-xl border-2 border-[#B9B5E8] bg-white px-3 text-base font-bold text-ink'
 
 /** `reward` rỗng là thêm mới. Bấm "Xong" mới lưu; "Hủy" hoặc Esc đóng mà không lưu. */
 export function RewardEditor({ reward, onClose }: { reward: RewardView | null; onClose: () => void }) {
@@ -154,7 +155,7 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
       ref={regionRef}
       role="region"
       aria-label="Sửa phần thưởng"
-      className="flex flex-wrap gap-5 rounded-[28px] border-2 border-primary-strong bg-primary-soft px-6 py-[22px]"
+      className="clay-card flex flex-wrap gap-5 !border-primary-strong bg-primary-soft px-6 py-[22px]"
     >
       <div className="flex flex-none flex-col items-center gap-2.5">
         {shownImage ? (
@@ -162,45 +163,39 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
         ) : (
           <RewardVisual visual={{ kind: 'preset', key: icon ?? 'star' }} iconSize={84} className="h-40 w-[200px] rounded-[22px]" />
         )}
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          className="min-h-12 w-[200px] cursor-pointer rounded-[14px] border-2 border-dashed border-primary-strong bg-white text-sm font-extrabold text-primary-ink"
-        >
+        <Button variant="secondary" className="w-[200px] border-dashed" onClick={() => fileRef.current?.click()}>
+          <Icon d={ICONS.plus} size={18} />
           Tải ảnh quà lên
-        </button>
+        </Button>
         <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => onFile(e.target.files?.[0])} />
       </div>
       <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-3">
         <div className="font-display text-[22px] font-extrabold">Sửa phần thưởng</div>
         <div className="flex flex-wrap gap-2.5">
-          <label className="flex flex-[2_1_200px] flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
-            Tên quà
-            <input ref={nameRef} type="text" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className={field} />
-          </label>
-          <label className="flex flex-[1_1_110px] flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
-            Giá (sao)
-            <input type="number" min={1} value={cost} onChange={(e) => setCost(e.target.value)} className={field} />
-          </label>
-          <div className="flex flex-[1_1_130px] flex-col gap-1">
-            <label className="flex flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
-              Số lượng trong kho
-              <input type="number" min={held} required value={stock} onChange={(e) => setStock(e.target.value)} className={field} />
-            </label>
-            {reward && <span className="text-xs font-bold text-muted">Đang giữ {held} (kho không được ít hơn)</span>}
-          </div>
+          <Field label="Tên quà" className="flex-[2_1_200px]">
+            {(a) => (
+              <Input {...a} ref={nameRef} type="text" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} />
+            )}
+          </Field>
+          <Field label="Giá (sao)" className="flex-[1_1_110px]">
+            {(a) => <Input {...a} type="number" min={1} value={cost} onChange={(e) => setCost(e.target.value)} />}
+          </Field>
+          <Field
+            label="Số lượng trong kho"
+            hint={reward ? `Đang giữ ${held} (kho không được ít hơn)` : undefined}
+            className="flex-[1_1_130px]"
+          >
+            {(a) => (
+              <Input {...a} type="number" min={held} required value={stock} onChange={(e) => setStock(e.target.value)} />
+            )}
+          </Field>
         </div>
-        <label className="flex flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
-          Mô tả
-          <textarea
-            value={description}
-            maxLength={200}
-            rows={2}
-            onChange={(e) => setDescription(e.target.value)}
-            className="rounded-xl border-2 border-[#B9B5E8] bg-white px-3 py-2 text-base font-bold text-ink"
-          />
-        </label>
-        <div className="text-sm font-extrabold text-[#4A476E]">Hoặc chọn hình có sẵn</div>
+        <Field label="Mô tả">
+          {(a) => (
+            <Textarea {...a} value={description} maxLength={200} rows={2} onChange={(e) => setDescription(e.target.value)} />
+          )}
+        </Field>
+        <div className="text-[15px] font-extrabold text-ink">Hoặc chọn hình có sẵn</div>
         <div className="flex flex-wrap gap-2">
           {REWARD_PRESETS.map((p) => {
             const on = !shownImage && icon === p.key
@@ -211,38 +206,30 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
                 aria-label={p.label}
                 aria-pressed={on}
                 onClick={() => pickPreset(p.key)}
-                className={`flex size-16 cursor-pointer items-center justify-center rounded-2xl border-[3px] ${on ? 'border-ink' : 'border-transparent'}`}
+                className={`relative flex size-16 cursor-pointer items-center justify-center rounded-2xl border-[3px] transition-transform hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:transform-none ${on ? 'border-ink' : 'border-transparent'}`}
                 style={{ background: p.gradient }}
               >
                 <svg viewBox="0 0 24 24" width="30" height="30" fill="rgba(255,255,255,.28)" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d={p.path} />
                 </svg>
+                {on && (
+                  <span className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-ink text-white">
+                    <Icon d={ICONS.check} size={14} />
+                  </span>
+                )}
               </button>
             )
           })}
         </div>
-        {msg && (
-          <div role="alert" className="rounded-xl bg-white px-3.5 py-2.5 text-sm font-bold text-[#8E1B3B]">
-            {msg}
-          </div>
-        )}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={done}
-            className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-[26px] text-[15px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
+        {msg && <Notice tone="error">{msg}</Notice>}
+        <div className="flex gap-3">
+          <Button disabled={busy} onClick={done}>
+            {busy && <Icon d="M21 12a9 9 0 1 1-6.2-8.6" size={16} className="motion-safe:animate-spin" />}
             Xong
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={onClose}
-            className="min-h-12 cursor-pointer rounded-[14px] border-2 border-primary-strong bg-white px-[22px] text-[15px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="secondary" disabled={busy} onClick={onClose}>
             Hủy
-          </button>
+          </Button>
         </div>
       </div>
     </div>
