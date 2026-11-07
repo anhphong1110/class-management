@@ -17,7 +17,9 @@ export const TEACHER_NAV: NavItem[] = [
   { id: 'profile', label: 'Hồ sơ và avatar', href: '/ho-so', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8' },
 ]
 
-export type NavTone = 'blue' | 'purple' | 'mint' | 'star' | 'pink'
+import { TONES, type Tone } from '@/components/ui/tones'
+
+export type NavTone = Tone
 
 /** Nhóm và màu icon cho từng mục menu cô giáo. Các nhóm liền nhau theo đúng thứ tự TEACHER_NAV. */
 export const TEACHER_NAV_META: Record<string, { group: string; tone: NavTone }> = {
@@ -38,13 +40,7 @@ export const TEACHER_NAV_META: Record<string, { group: string; tone: NavTone }> 
 }
 
 /** Màu ô icon pastel (nền + nét) cho mục chưa chọn. */
-export const NAV_TONES: Record<NavTone, string> = {
-  blue: 'bg-[#E0EEFF] text-[#1D4ED8]',
-  purple: 'bg-[#EDE7FF] text-[#5B3CC4]',
-  mint: 'bg-[#D8F7EF] text-[#0E6156]',
-  star: 'bg-[#FFF3C4] text-[#7A4E00]',
-  pink: 'bg-[#FFE1EE] text-[#9B1D54]',
-}
+export const NAV_TONES = TONES
 
 /** Màu icon cho mục menu học sinh theo id. */
 export const STUDENT_NAV_TONES: Record<string, NavTone> = {

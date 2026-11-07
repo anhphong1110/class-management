@@ -26,6 +26,7 @@
   --color-star: #ffc93c;
   --color-star-edge: #f0b100;
   --color-star-soft: #fff3c4;
+  --color-star-hover: #ffd65e;
   --color-star-ink: #7a4e00;
   --color-orange: #ff9f43;
   --color-mint: #5edcc5;
@@ -42,8 +43,12 @@
   --color-navy-from: #25286a;
   --color-navy-to: #33378f;
 
-  --radius-card: 24px;
+  --radius-chip: 12px;
   --radius-ctl: 16px;
+  --radius-panel: 20px;
+  --radius-card: 24px;
+
+  --shadow-pop: 0 10px 30px rgba(35, 31, 77, 0.35);
 
   --font-display: var(--font-baloo);
   --font-body: var(--font-nunito);
