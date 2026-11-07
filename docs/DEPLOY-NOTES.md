@@ -51,6 +51,8 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
 
    Với mỗi biến, tick cả **Production** lẫn **Preview**. Thiếu Preview thì bản preview ở bước 7 không chạy được.
 
+   **Khung chat Bông (tùy chọn).** Khung chat chạy được mà không cần biến nào: Bông hiểu các câu hỏi về thời khóa biểu và số sao bằng luật và nút gợi ý. Muốn Bông hiểu cả câu hỏi tự do, thêm `GEMINI_API_KEY` (lấy miễn phí ở Google AI Studio, không cần thẻ). Biến này chỉ dùng để hiểu ý câu hỏi; tên học sinh luôn được che thành `{HS1}`... trước khi gửi, còn số sao và thời khóa biểu không bao giờ rời hệ thống. Gói miễn phí có hạn mức theo ngày và thay đổi theo thời gian; hết hạn mức thì Bông tự quay về luật. Có thể đổi model bằng `GEMINI_MODEL` (mặc định `gemini-flash-lite-latest`).
+
    Tạo tài khoản hàng loạt gọi Auth nhiều lần (khoảng 10–20 giây cho 40 học sinh), nên trang Cài đặt đặt `maxDuration = 60`. Bật Fluid compute cho project Vercel (Settings → Functions) để giới hạn này có hiệu lực trên gói Hobby; nếu không, tác vụ có thể bị cắt giữa chừng và mật khẩu tạm bị mất (vẫn đặt lại được từng học sinh).
 
    Các biến `SCHOOL_NAME`, `CLASS_NAME`, `TEACHER_*`, `TERM*` không đặt lên Vercel.

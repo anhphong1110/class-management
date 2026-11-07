@@ -51,6 +51,12 @@ describe('resolveRoute', () => {
     expect(resolveRoute({ pathname: '/dang-xuat', role: 'student' })).toEqual({ action: 'allow' })
     expect(resolveRoute({ pathname: '/dang-xuat', role: null })).toEqual({ action: 'allow' })
   })
+  it('/api/chat công khai để khung chat hiện cả ở trang đăng nhập; route tự kiểm phiên', () => {
+    expect(resolveRoute({ pathname: '/api/chat', role: null })).toEqual({ action: 'allow' })
+    expect(resolveRoute({ pathname: '/api/chat', role: 'student' })).toEqual({ action: 'allow' })
+    expect(resolveRoute({ pathname: '/api/chat', role: 'teacher' })).toEqual({ action: 'allow' })
+    expect(resolveRoute({ pathname: '/api/chat-x', role: null })).toEqual(redirect('/dang-nhap?next=%2Fapi%2Fchat-x'))
+  })
   it('học sinh mặc định bị chặn ngoài /em', () => {
     expect(resolveRoute({ pathname: '/foo', role: 'student' })).toEqual(redirect('/em'))
     expect(resolveRoute({ pathname: '/em/sao', role: 'student' })).toEqual({ action: 'allow' })

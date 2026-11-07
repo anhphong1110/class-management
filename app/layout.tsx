@@ -3,6 +3,7 @@ import { Baloo_2, Nunito } from "next/font/google";
 import { connection } from "next/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { brandSentence } from "@/lib/classes/brand";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import "./globals.css";
 
 const baloo = Baloo_2({
@@ -44,7 +45,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" className={`${baloo.variable} ${nunito.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <ChatWidget />
+      </body>
     </html>
   );
 }
