@@ -1,38 +1,58 @@
-# E2E cần cập nhật sau khi thiết kế lại giao diện
+# Trạng thái e2e sau khi thiết kế lại giao diện (07/11/2026)
 
-Lần redesign (Claymorphism, xanh trời) **không sửa và không chạy e2e**, theo thỏa thuận: duyệt giao diện trước, sửa e2e sau.
-Unit test (`pnpm test`, 390 ca), `tsc`, `eslint` và `pnpm build` đều qua.
+Lần chạy cuối **bị dừng giữa chừng theo yêu cầu**, nên e2e **chưa được xác nhận xanh toàn bộ** sau các thay đổi cuối. Cần chạy lại.
 
-## Nguyên nhân chung
-- Màu chủ đạo `indigo` đổi từ `#4F5BD5` sang xanh trời `#2563EB` (soft `#E0EEFF`, ink `#1D4ED8`, deep `#1E40AF`). Mọi `toHaveCSS` khóa `rgb(79,91,213)`, `rgb(238,240,255)`, `rgb(44,55,168)`, `rgb(232,235,255)` cần cập nhật.
-- Sidebar cô giáo chia nhóm bằng các `li` tiêu đề (không phải link) trong cùng một `ul`; vẫn 14 link. Sidebar không còn nền navy.
-- Menu học sinh dưới `lg` thành thanh tab đáy (`position: fixed`), không còn hàng ngang trong `aside`. Quá 5 trang thì 4 mục + nút "Thêm".
-- Nhiều thao tác nay qua hộp xác nhận (`ConfirmDialog` dùng `Modal`, role `dialog`, không phải `alertdialog`).
+## Đã chạy được gì
+| Lần | Cách chạy | Kết quả |
+|---|---|---|
+| 1 và 2 | `next dev` | 26 – 29 lỗi, 120 – 175 test không chạy. Phần lớn do dev server biên dịch chậm và lỗi dây chuyền, không phải lỗi giao diện. |
+| 3 | `next start` (bản build) | 33 lỗi. Nguyên nhân thật: `loading.tsx` làm danh sách không cập nhật sau khi lưu. Đã xóa `app/(teacher)/loading.tsx` và `app/em/loading.tsx`. |
+| 4 | `next start`, sau khi xóa `loading.tsx` | **530 đạt, 3 lỗi, 11 bỏ qua, 8 không chạy.** Ba lỗi: `stars.spec.ts:154` và `student-pages.spec.ts:162` đạt khi chạy riêng (chập chờn); `students-import.spec.ts:20` lỗi thật trên điện thoại. |
+| Sau lần 4 | chạy riêng | Sửa `Modal` cuộn được trên màn nhỏ: `students-import.spec.ts` đạt 9/9. Thêm `tests/e2e/ui-refresh.spec.ts`: 12/12 đạt. |
+| 5 (kiểm tra cuối) | `next start` | **Dừng ở 147/564** (đang ở project `mobile`, `student-portal.spec.ts`), chưa có kết quả tổng. |
 
-## Spec dự kiến đỏ
-| Spec | Lý do |
-|---|---|
-| `shell.spec.ts` | bố cục `aside`/`nav ul` (hàng ngang dưới `lg` của học sinh, `sidebar-foot` có thêm nút "Xem như học sinh"), có thể màu |
-| `theme.spec.ts`, `settings.spec.ts` | khóa màu nút indigo cũ; theme picker đổi cấu trúc |
-| `student-portal.spec.ts` | màu dòng "em" (`rgb(238,240,255)`, `rgb(79,91,213)`) |
-| `student-pages.spec.ts` | `getByRole('alertdialog', {name:'Xác nhận đổi quà'})` nay là `dialog` tên "Em có chắc không?"; màu ô hôm nay |
-| `timetable.spec.ts` | màu ô/swatch; "Xóa môn …" mở hộp xác nhận |
-| `rewards.spec.ts` | "Từ chối" cần xác nhận trong hộp thoại |
-| `announcements.spec.ts` | bước "Bấm lần nữa để xóa" thay bằng hộp thoại |
-| `backup.spec.ts` | "Lưu trữ năm học" có thêm xác nhận; xóa dữ liệu demo hai bước (tick xác nhận) |
-| `accounts.spec.ts` | "Đặt lại mật khẩu" có hộp xác nhận |
-| `students.spec.ts` (~203–205) | "Xóa tổ" mở hộp xác nhận trước |
-| `attendance.spec.ts` | nhãn "Đang lưu…" khi lưu |
-| `overview.spec.ts` | thẻ thống kê nay là link, có ghi chú bên trong |
-| `stars.spec.ts` | xác nhận/hoàn tác dùng `ConfirmDialog` (tiêu đề, nút giữ nguyên) |
+## Chưa chạy, cần chạy lại
+- Toàn bộ project `mobile` từ `student-portal.spec.ts:154` trở đi, và toàn bộ project `tablet` và `desktop` của lần 5.
+- Thay đổi sau lần 4 chưa được kiểm chứng trên toàn bộ suite: `components/ui/Modal.tsx` (giới hạn chiều cao, cuộn) và bộ chọn in `first-of-type` ở `TimetableClient.tsx`.
+- Hai spec chạy chập chờn khi chạy cả bộ: `stars.spec.ts:154` (lỗi `not_allowed` ở bước dựng dữ liệu) và `student-pages.spec.ts:162` (đăng nhập bị đưa về `/dang-nhap`). Cần xem lại nếu còn lặp.
 
-Khả năng vẫn qua: `reports.spec.ts`, phần còn lại của `settings.spec.ts`.
+## Cách chạy lại
+Bật Docker Desktop, rồi:
 
-## Hành vi mới nên thêm test
-Nhóm menu cô giáo, thanh tab đáy học sinh, `UndoToast` "Hoàn tác" ở `/thi-dua`, "Tất cả có mặt" và trạng thái lưu ở `/diem-danh`, nút "Xem như học sinh" (`/em`) và dải "Đang xem thử", hiện/ẩn mật khẩu và ghi nhớ tab ở đăng nhập, tiến độ "Còn N sao nữa" ở `/em/doi-qua`.
+```bash
+pnpm supabase start
+```
 
-## Việc không làm được lần này
-- Chấm "thông báo chưa đọc": chưa có dữ liệu đã đọc/chưa đọc.
-- Tô "tiết hiện tại" ở thời khóa biểu: dữ liệu chưa có giờ từng tiết.
-- Hoàn tác khi lưu trữ học sinh: chưa có thao tác khôi phục.
-- Hoàn tác ở `/thi-dua` dùng `undoBatch` hiện có (ghi thêm bản ghi đảo), không tạo thao tác ngược giả.
+```bash
+pnpm seed:dev
+```
+
+Chạy trên bản build (ổn định hơn `next dev`, dev server biên dịch chậm làm test chập chờn):
+
+```bash
+pnpm build && pnpm start
+```
+
+Ở cửa sổ khác:
+
+```bash
+pnpm exec playwright test --reporter=line
+```
+
+Playwright dùng lại server đang chạy ở cổng 3000. Cả bộ mất khoảng 10 phút (3 khổ màn hình). Có thể chạy riêng một khổ bằng `--project=desktop`.
+
+## Những spec đã sửa cho khớp giao diện mới
+- Màu theo chủ đề: `theme`, `settings`, `shell`, `student-portal`, `student-pages`, `timetable`.
+- Hộp xác nhận mới (thay cho bấm hai lần hoặc `alertdialog`): `accounts` (đặt lại mật khẩu), `announcements` (xóa), `new-year` (lưu trữ năm học và xóa dữ liệu demo hai bước), `rewards` (từ chối), `student-pages` (đổi quà, tên hộp là "Em có chắc không?"), `students` (xóa tổ), `timetable` (xóa môn).
+- `student-portal`: menu 7 mục dưới `lg` là thanh tab đáy (4 mục + "Thêm"); thêm test kiểm vị trí thanh tab.
+- `settings`: chờ trang hydrate trước khi điền ô (điền sớm bị React ghi đè, gây chập chờn).
+- `timetable`: nút ngày dùng `exact: true` vì ô có `aria-label` bắt đầu bằng tên thứ.
+
+## Phát hiện từ e2e (đã sửa trong mã)
+- `loading.tsx` làm giao diện không cập nhật sau thao tác lưu và làm trang 404 trả mã 200: đã bỏ.
+- `Modal` không cuộn trên điện thoại, nút xác nhận nằm ngoài màn hình: đã sửa.
+- Bố cục in thời khóa biểu hỏng vì skip link làm lệch `div:first-child`: đã sửa bằng `first-of-type`.
+
+## Chưa làm
+- Test e2e cho: `UndoToast` Hoàn tác ở `/thi-dua`, "Tất cả có mặt" và nhãn "Đã lưu" ở `/diem-danh`, tiến độ "Còn N sao nữa" ở `/em/doi-qua`.
+- Test unit riêng cho `Modal` cuộn (hiện chỉ có e2e `students-import` bắt được).

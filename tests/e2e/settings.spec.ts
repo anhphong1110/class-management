@@ -46,6 +46,8 @@ async function open(page: Page) {
   await expect(page).toHaveURL(/\/tong-quan$/)
   await page.goto('/cai-dat')
   await expect(page.getByRole('heading', { level: 1, name: 'Cài đặt' })).toBeVisible()
+  // Chờ trang hydrate xong: điền ô trước đó sẽ bị React ghi đè bằng giá trị ban đầu.
+  await page.waitForLoadState('networkidle')
 }
 
 const saved = (page: Page) => page.getByRole('status').filter({ hasText: 'Đã lưu cài đặt.' })
@@ -75,7 +77,7 @@ test('ngày học kỳ sai thứ tự báo lỗi', async ({ page }) => {
 test('chọn "Xanh mint" thì nút chính đổi màu', async ({ page }) => {
   await open(page)
   const save = page.getByRole('button', { name: 'Lưu thông tin' })
-  await expect(save).toHaveCSS('background-color', 'rgb(79, 91, 213)')
+  await expect(save).toHaveCSS('background-color', 'rgb(37, 99, 235)')
   await page.getByRole('button', { name: 'Xanh mint' }).click()
   await expect(saved(page)).toBeVisible()
   await expect(save).toHaveCSS('background-color', 'rgb(18, 121, 107)')

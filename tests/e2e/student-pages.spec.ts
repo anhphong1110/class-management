@@ -82,7 +82,7 @@ test('Đổi quà: đủ sao thì gửi yêu cầu, hiện câu thành công và
   if (info.project.name === 'desktop') await page.screenshot({ path: 'test-results/student-gifts-desktop.png', fullPage: true })
 
   await gift(page, 'Sticker vũ trụ').getByRole('button', { name: 'Đổi quà' }).click()
-  const dialog = page.getByRole('alertdialog', { name: 'Xác nhận đổi quà' })
+  const dialog = page.getByRole('dialog', { name: 'Em có chắc không?' })
   await expect(dialog).toContainText('Em muốn đổi "Sticker vũ trụ" với 10 sao?')
   await dialog.getByRole('button', { name: 'Hủy' }).click()
   await expect(dialog).toHaveCount(0)
@@ -135,11 +135,11 @@ test('Đổi quà: bạn khác lấy món cuối sau khi trang tải thì hiện
   sql(`update public.rewards set stock = 1 where id = '${SECRET}'`)
   await open(page, GIFTS)
   await gift(page, 'Quà bí mật').getByRole('button', { name: 'Đổi quà' }).click()
-  await expect(page.getByRole('alertdialog')).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Em có chắc không?' })).toBeVisible()
   sql(`insert into public.reward_requests (class_id, student_id, reward_id, cost) values ('${CLASS_ID}', '${sid(1)}', '${SECRET}', 50)`)
   await page.getByRole('button', { name: 'Gửi yêu cầu' }).click()
   await expect(page.getByRole('alert').filter({ hasText: 'Quà này đã hết.' })).toBeVisible()
-  await expect(page.getByRole('alertdialog')).toHaveCount(0)
+  await expect(page.getByRole('dialog', { name: 'Em có chắc không?' })).toHaveCount(0)
   await expect(page.getByRole('heading', { level: 1, name: 'Trạm đổi quà vũ trụ' })).toBeVisible()
   await expect(gift(page, 'Quà bí mật').getByRole('button')).toHaveText('Hết quà')
   await expect(page.getByTestId('my-request')).toHaveCount(0)
@@ -200,7 +200,7 @@ test('Thời khóa biểu: hiện môn đã gán, cột hôm nay tô #4F5BD5, th
   const today = table.locator('[data-today="true"]')
   if (wd >= 1 && wd <= 5) {
     await expect(today).toHaveCount(1)
-    await expect(today).toHaveCSS('background-color', 'rgb(79, 91, 213)')
+    await expect(today).toHaveCSS('background-color', 'rgb(37, 99, 235)')
   } else {
     await expect(today).toHaveCount(0)
   }

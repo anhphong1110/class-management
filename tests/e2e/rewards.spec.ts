@@ -112,6 +112,7 @@ test('từ chối trả lại sao và quà', async ({ page }) => {
   await open(page)
   const row = page.getByTestId('request-row').first()
   await row.getByRole('button', { name: 'Từ chối' }).click()
+  await page.getByRole('dialog', { name: 'Từ chối yêu cầu này?' }).getByRole('button', { name: 'Từ chối' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Đã từ chối. Số sao và quà đã giữ được trả lại cho Võ Hà My.' })).toBeVisible()
   await expect(row).toContainText('Từ chối')
   await expect(page.getByText('0 yêu cầu chờ duyệt')).toBeVisible()

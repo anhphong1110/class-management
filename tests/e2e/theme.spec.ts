@@ -26,5 +26,5 @@ test('màu chủ đạo của lớp đổi màu nút chính "+ Thêm tiêu chí"
 
   await setTheme('indigo')
   await page.reload()
-  await expect(page.getByRole('button', { name: '+ Thêm tiêu chí' }).first()).toHaveCSS('background-color', 'rgb(79, 91, 213)')
+  await expect(page.getByRole('button', { name: '+ Thêm tiêu chí' }).first()).toHaveCSS('background-color', 'rgb(37, 99, 235)')
 })

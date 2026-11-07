@@ -181,6 +181,7 @@ test('tạo tài khoản hàng loạt, học sinh mới đăng nhập được',
 test('đặt lại mật khẩu: mật khẩu cũ hết dùng được', async ({ page }) => {
   await openSettings(page)
   await row(page).getByRole('button', { name: 'Đặt lại mật khẩu' }).click()
+  await page.getByRole('dialog', { name: 'Đặt lại mật khẩu?' }).getByRole('button', { name: 'Đặt lại' }).click()
   const dialog = page.getByRole('dialog', { name: 'Mật khẩu tạm' })
   await expect(dialog).toBeVisible()
   const next = (await dialog.getByRole('row').filter({ hasText: USERNAME }).getByRole('cell').nth(2).innerText()).trim()

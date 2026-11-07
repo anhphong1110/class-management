@@ -29,6 +29,7 @@ test('mở form năm mới: năm gợi ý đúng, mặc định chọn hết tr�
   await open(page)
 
   await page.getByRole('button', { name: /^Lưu trữ năm học 2026 – 2027/ }).click()
+  await page.getByRole('dialog', { name: 'Lưu trữ năm học này?' }).getByRole('button', { name: 'Tiếp tục' }).click()
   const dialog = page.getByRole('dialog', { name: 'Mở năm học mới' })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByLabel('Năm học')).toHaveValue('2027 – 2028')
@@ -67,7 +68,13 @@ test('"Xóa dữ liệu demo" có hộp hỏi, "Hủy" thì vẫn còn 10 học 
     name: 'Xóa toàn bộ dữ liệu mẫu (10 học sinh mẫu và dữ liệu đi kèm)? Không hoàn tác được.',
   })
   await expect(dialog).toBeVisible()
-  await expect(dialog.getByRole('button', { name: 'Xóa dữ liệu demo' })).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Tiếp tục' })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Tiếp tục' }).click()
+  const del = dialog.getByRole('button', { name: 'Xóa dữ liệu demo' })
+  await expect(del).toBeDisabled()
+  await dialog.getByRole('checkbox', { name: 'Cô hiểu việc này không hoàn tác được.' }).check()
+  await expect(del).toBeEnabled()
+  await dialog.getByRole('button', { name: 'Quay lại' }).click()
   await dialog.getByRole('button', { name: 'Hủy' }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
 
