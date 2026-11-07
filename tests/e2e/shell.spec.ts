@@ -87,17 +87,14 @@ test('theme pink đổi --primary và bg-primary', async ({ page }) => {
     await login(page, 'Giáo viên', 'co.khanh')
     await expect(page).toHaveURL(/\/tong-quan$/)
     const shell = page.getByTestId('teacher-shell')
-    // Ô cửa tên lửa ở hero /tong-quan dùng utility text-primary (fill=currentColor).
-    const accent = page.getByTestId('hero-window')
-    const bg = () => accent.evaluate((el) => getComputedStyle(el).fill)
-    const before = await bg()
-    expect(before).toBe('rgb(77, 163, 255)')
+    // Banner /tong-quan giờ là cảnh vũ trụ cố định (không theo màu chủ đề), nên chỉ kiểm tra biến --primary của khung.
+    const before = await shell.evaluate((el) => getComputedStyle(el).getPropertyValue('--primary').trim())
+    expect(before.toUpperCase()).toBe('#4DA3FF')
     const { error } = await a.from('classes').update({ theme: 'pink' }).eq('id', CLASS_ID)
     expect(error).toBeNull()
     await page.reload()
     const v = await shell.evaluate((el) => getComputedStyle(el).getPropertyValue('--primary').trim())
     expect(v.toUpperCase()).toBe('#F46FA5')
-    expect(await bg()).toBe('rgb(244, 111, 165)')
   } finally {
     await a.from('classes').update({ theme: 'indigo' }).eq('id', CLASS_ID)
   }
