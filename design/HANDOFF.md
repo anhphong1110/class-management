@@ -31,9 +31,14 @@ Dùng chung: Sidebar (menu giáo viên), Header (thanh đầu trang), Avatar.
 
 ## 3. Phong cách
 
-- Màu: xanh tím `#6675E8`, nút chính `#4F5BD5` (đạt tương phản chữ trắng), lavender `#B9A7F8`, hồng sen `#F46FA5`, vàng sao `#FFC857`, mint `#80DDD0`. Nền trang `#F6F4FF`, thẻ trắng bo 22 – 28px. Menu và trang đăng nhập/trình chiếu nền xanh navy `#25286A` → `#33378F`.
-- Chữ: Baloo 2 (tiêu đề, số), Nunito (nội dung). Cả hai hỗ trợ tiếng Việt.
-- Nút bấm tối thiểu cao 44px. Bố cục co giãn cho máy tính, máy tính bảng, điện thoại (menu thành hàng cuộn ngang trên màn nhỏ).
+Cập nhật 07/11/2026: giao diện Claymorphism nhẹ, xanh trời. Nguồn chuẩn là `design-system/tram-khong-gian/MASTER.md` và `app/globals.css`.
+
+- Màu mặc định (khóa `indigo`, nhãn "Xanh trời"): chính `#4DA3FF`, nút chính `#2563EB` (chữ trắng đạt 5,2:1), nhạt `#E0EEFF`, mực `#1D4ED8`, đậm `#1E40AF`, nền trang `#EEF7FF`, viền `#CFE3FF`. Điểm nhấn: vàng sao `#FFC93C`, hồng kẹo `#FF6FAE`, mint `#5EDCC5`, cam `#FF9F43`. Ba chủ đề còn lại (hồng sen, mint, vàng sao) giữ nút chính cũ, đổi nền và viền pastel tương ứng. Màu theo lớp nằm trong `lib/domain/theme.ts`.
+- Kiểu "đất sét": viền 2px, gờ đáy 4px, bo `chip` 12 / `ctl` 16 / `panel` 20 / `card` 24, lún 3px khi bấm (`.clay-press`, `.clay-card`, `.clay-field`). Tắt chuyển động khi `prefers-reduced-motion`.
+- Chữ: Baloo 2 (tiêu đề, số), Nunito (nội dung, tối thiểu 16px). Cả hai hỗ trợ tiếng Việt.
+- Thành phần dùng chung (`components/ui`): `Button` (có `loading`), `ButtonLink`, `IconButton`, `SegmentedTabs`, `Input`/`Field`, `Card`, `Modal`, `ConfirmDialog`, `Notice`, `UndoToast`, `Badge`, `StatCard`, `EmptyState`, `ProgressBar`, `Skeleton`, `Icon`. Quy tắc: không dùng `<button>` tùy kiểu cho nút thường, không gõ hex trong className (có test chặn `tests/unit/hex-guard.test.ts`), dùng token bán kính và bóng đổ.
+- Khung trang: `AppShell`, `PageHeaderShell`, `Sidebar` (menu cô giáo chia nhóm), `StudentNav` (thanh bên từ `lg`, thanh tab đáy dưới `lg`).
+- Nút bấm tối thiểu cao 44px (học sinh 48 – 52px). Trang đăng nhập và trình chiếu giữ nền navy.
 - Không dùng emoji làm hình; icon là SVG nét.
 
 ## 4. Quy tắc nghiệp vụ
