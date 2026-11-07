@@ -3,7 +3,9 @@ import type { Role } from '@/lib/domain/types'
 export type RouteDecision = { action: 'allow' } | { action: 'redirect'; to: string }
 
 const PUBLIC_PREFIXES = ['/_next', '/brand']
-const PUBLIC_EXACT = ['/favicon.ico', '/dang-xuat']
+// /api/chat tự kiểm phiên và trả 401 khi chưa đăng nhập; nếu không mở ở đây thì học sinh bị đẩy về /em,
+// khách bị đẩy về trang đăng nhập và khung chat không hoạt động.
+const PUBLIC_EXACT = ['/favicon.ico', '/dang-xuat', '/api/chat']
 
 function matchesPrefix(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(prefix + '/')
