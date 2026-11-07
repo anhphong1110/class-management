@@ -1,0 +1,846 @@
+/*
+ * Trang đăng nhập "Trạm không gian": cảnh vũ trụ + buồng điều khiển.
+ * Bảng màu và hiệu ứng nằm riêng ở đây (không gõ mã hex trong .tsx, xem tests/unit/hex-guard.test.ts).
+ * Chỉ animate transform/opacity; tắt hết khi người dùng chọn giảm chuyển động.
+ */
+.sp {
+  --sp-navy: #24246b;
+  --sp-indigo: #514bdb;
+  --sp-lav: #9470f5;
+  --sp-pink: #f653a6;
+  --sp-cyan: #32d9f5;
+  --sp-gold: #ffc94f;
+  --sp-ink: #2a2468;
+  --sp-muted: #6b6598;
+  --sp-field: #f1eeff;
+  --sp-field-edge: #cdc4f7;
+
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-height: 100dvh;
+  overflow: hidden;
+  padding: 14px 16px 24px;
+  color: #fff;
+  background:
+    radial-gradient(55% 45% at 14% 82%, rgb(246 83 166 / 0.42), transparent 70%),
+    radial-gradient(42% 38% at 88% 10%, rgb(50 217 245 / 0.28), transparent 70%),
+    radial-gradient(52% 46% at 34% 38%, rgb(148 112 245 / 0.5), transparent 70%),
+    linear-gradient(165deg, var(--sp-navy) 0%, var(--sp-indigo) 52%, var(--sp-lav) 100%);
+}
+
+/* Trường sao: hai lớp ô gạch SVG có kích thước khác nhau để không lặp lại lộ liễu, nhấp nháy lệch pha. */
+.sp::before,
+.sp::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+}
+.sp::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cg fill='white'%3E%3Ccircle cx='30' cy='60' r='1.6'/%3E%3Ccircle cx='140' cy='24' r='1.1'/%3E%3Ccircle cx='250' cy='110' r='1.8'/%3E%3Ccircle cx='360' cy='40' r='1.2'/%3E%3Ccircle cx='80' cy='190' r='1.2'/%3E%3Ccircle cx='200' cy='250' r='1.6'/%3E%3Ccircle cx='330' cy='210' r='1'/%3E%3Ccircle cx='40' cy='330' r='1.8'/%3E%3Ccircle cx='170' cy='380' r='1.1'/%3E%3Ccircle cx='390' cy='340' r='1.5'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 420px 420px;
+  animation: sp-twinkle 4.5s ease-in-out infinite;
+}
+.sp::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='570' height='570'%3E%3Cg fill='%23ffe9a8'%3E%3Ccircle cx='60' cy='120' r='2'/%3E%3Ccircle cx='300' cy='60' r='1.6'/%3E%3Ccircle cx='480' cy='190' r='2.2'/%3E%3Ccircle cx='170' cy='330' r='1.8'/%3E%3Ccircle cx='400' cy='430' r='2'/%3E%3Ccircle cx='90' cy='500' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 570px 570px;
+  animation: sp-twinkle 6s ease-in-out -2.4s infinite;
+}
+
+.sp > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Cảnh bên trái ---------- */
+.sp-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  text-align: center;
+}
+.sp-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.sp-logo {
+  position: relative;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow:
+    0 0 0 3px rgb(255 255 255 / 0.9),
+    0 0 0 7px rgb(255 255 255 / 0.18),
+    0 8px 22px rgb(18 14 90 / 0.45);
+}
+.sp-logo img {
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  max-width: none;
+  object-fit: cover;
+}
+.sp-school {
+  margin: 0;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.15;
+  text-shadow: 0 2px 10px rgb(18 14 90 / 0.5);
+}
+.sp-class {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ffe48a, var(--sp-gold));
+  color: #5a2f8e;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  box-shadow:
+    0 3px 0 #e7a52a,
+    0 8px 16px rgb(18 14 90 / 0.35);
+}
+
+/* Khu minh hoạ: nhân vật ở giữa, đồ trang trí xếp quanh theo phần trăm. */
+.sp-art {
+  position: relative;
+  width: 100%;
+  height: 92px;
+  margin-top: 4px;
+}
+@media (max-width: 639px) and (max-height: 700px) {
+  .sp-art {
+    height: 70px;
+  }
+  .sp-title-img {
+    height: 64px;
+  }
+}
+.sp-art > * {
+  position: absolute;
+}
+.sp-halo {
+  inset: 6% 12% -4%;
+  border-radius: 9999px;
+  background:
+    radial-gradient(closest-side, rgb(255 255 255 / 0.55), rgb(255 160 220 / 0.28) 55%, transparent 100%);
+  filter: blur(6px);
+}
+.sp-art .sp-earth {
+  left: 50%;
+  bottom: -14%;
+  height: 112%;
+  width: auto;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0 36px rgb(50 217 245 / 0.45));
+  animation: sp-drift 20s ease-in-out infinite;
+}
+.sp-cluster {
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sp-group {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 16px 20px rgb(18 14 90 / 0.4));
+  animation: sp-float 7s ease-in-out infinite;
+}
+.sp-deco {
+  display: block;
+  height: auto;
+  filter: drop-shadow(0 8px 12px rgb(18 14 90 / 0.35));
+  user-select: none;
+  pointer-events: none;
+}
+
+.sp-rocket {
+  right: 4%;
+  top: -2%;
+  width: 40px;
+  transform: rotate(38deg);
+  animation: sp-hover 5s ease-in-out infinite;
+}
+.sp-trail {
+  right: 12%;
+  top: 8%;
+  width: 90px;
+  height: 14px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent, rgb(255 201 79 / 0.75), rgb(246 83 166 / 0.8));
+  transform: rotate(-142deg);
+  transform-origin: right center;
+  filter: blur(1px);
+  opacity: 0.85;
+}
+.sp-saturn {
+  left: 1%;
+  top: 0;
+  width: 64px;
+  animation: sp-drift 14s ease-in-out infinite;
+}
+.sp-saturn-2 {
+  right: 0;
+  bottom: -10%;
+  width: 70px;
+  animation: sp-drift 18s ease-in-out -6s infinite;
+}
+.sp-mascot {
+  left: 6%;
+  top: 38%;
+  width: 46px;
+  animation: sp-float 4.2s ease-in-out infinite;
+}
+.sp-robot {
+  left: 0;
+  bottom: -6%;
+  width: 54px;
+  animation: sp-float 5.4s ease-in-out -1.5s infinite;
+}
+.sp-books {
+  right: 4%;
+  bottom: -6%;
+  width: 62px;
+}
+.sp-sparkle {
+  width: 18px;
+  animation: sp-twinkle 3.2s ease-in-out infinite;
+}
+
+.sp-titlebox {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sp-title-img {
+  display: block;
+  width: auto;
+  height: 82px;
+  margin: 0 auto;
+  filter: drop-shadow(0 10px 16px rgb(18 14 90 / 0.45));
+}
+.sp-title {
+  margin: 4px 0 0;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+}
+.sp-title-top,
+.sp-title-accent {
+  display: block;
+  -webkit-text-stroke: 7px #2a1880;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+}
+.sp-title-top {
+  font-size: 27px;
+  text-shadow:
+    0 5px 0 #1b0f5c,
+    0 12px 20px rgb(18 14 90 / 0.45);
+}
+.sp-title-accent {
+  margin-top: 2px;
+  font-size: 30px;
+  color: var(--sp-gold);
+  text-shadow:
+    0 5px 0 #8a4a10,
+    0 12px 20px rgb(18 14 90 / 0.45);
+}
+.sp-slogan {
+  display: none;
+  margin: 14px 0 0;
+  padding: 8px 26px;
+  border-radius: 9999px;
+  border: 3px solid #fff;
+  background: linear-gradient(180deg, #e6f7ff, #bfe4ff);
+  color: #4a2fb0;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow:
+    0 4px 0 #8cc4f5,
+    0 14px 24px rgb(18 14 90 / 0.4);
+}
+
+/* Mây và mặt trăng nằm sau nội dung, ghim đáy trang. */
+.sp-clouds,
+.sp-moon {
+  position: absolute !important;
+  z-index: 0 !important;
+  pointer-events: none;
+  user-select: none;
+}
+.sp-clouds {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  translate: 0 8%;
+}
+.sp-moon {
+  z-index: 1 !important;
+  display: none;
+  left: 0;
+  bottom: 0;
+  width: clamp(180px, 19vw, 300px);
+  height: auto;
+  transform: scaleX(-1);
+}
+
+/* ---------- Buồng điều khiển (form) ---------- */
+.sp-cockpit {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  justify-self: center;
+}
+.sp-cockpit::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border-radius: 42px;
+  background: rgb(255 255 255 / 0.16);
+  border: 1.5px solid rgb(255 255 255 / 0.35);
+  backdrop-filter: blur(4px);
+}
+.sp-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px 16px;
+  border: 3px solid transparent;
+  border-radius: 32px;
+  color: var(--sp-ink);
+  background:
+    linear-gradient(180deg, #fff, #f7f4ff) padding-box,
+    linear-gradient(135deg, var(--sp-pink), var(--sp-lav) 55%, var(--sp-cyan)) border-box;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.5),
+    0 4px 0 #cbb8ff,
+    0 28px 60px rgb(14 10 80 / 0.5);
+}
+.sp-card-rocket {
+  position: absolute;
+  right: 14px;
+  top: -26px;
+  width: 54px;
+  transform: rotate(18deg);
+  filter: drop-shadow(0 6px 8px rgb(60 20 140 / 0.35));
+  animation: sp-hover 5s ease-in-out -2s infinite;
+  pointer-events: none;
+}
+.sp-welcome {
+  margin: 0;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: #3b2f8f;
+}
+.sp-welcome b {
+  display: block;
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--sp-pink), #b44bd8 60%, var(--sp-indigo));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.sp-sub {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sp-muted);
+}
+
+/* Tab vai trò: ghi đè SegmentedTabs bằng thuộc tính ARIA (CSS ngoài @layer thắng utility của Tailwind). */
+.sp-card [role="tablist"] {
+  gap: 8px;
+  padding: 6px 6px 9px;
+  border-radius: 24px;
+  background: #ece6ff;
+}
+.sp-card [role="tab"] {
+  min-height: 52px;
+  border-radius: 18px;
+  border: 2px solid #ddd3fb;
+  background: #fff;
+  color: #4a3f8f;
+  font-size: 16px;
+  --edge: #d6caf8;
+}
+.sp-card [role="tab"]:hover {
+  border-color: var(--sp-lav);
+  background: #f6f2ff;
+  color: #3b2f8f;
+}
+.sp-card [role="tab"][aria-selected="true"] {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--sp-pink), #b44bd8 55%, var(--sp-indigo));
+  color: #fff;
+  --edge: #5b2fb8;
+  box-shadow:
+    0 4px 0 var(--edge),
+    0 10px 18px rgb(148 80 230 / 0.4);
+}
+
+.sp-tab-ava {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  object-fit: cover;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9);
+}
+.sp-card [role="tab"][aria-selected="false"] .sp-tab-ava {
+  box-shadow: 0 0 0 2px #e2d9ff;
+}
+
+/* Ô nhập */
+.sp-card label {
+  color: #3b2f8f;
+}
+.sp-input {
+  position: relative;
+}
+.sp-input > svg {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  translate: 0 -50%;
+  color: #7d6fd0;
+  pointer-events: none;
+}
+.sp-card .clay-field {
+  padding-left: 46px;
+  border-color: var(--sp-field-edge);
+  background: var(--sp-field);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.8);
+}
+.sp-card .clay-field:hover:not(:disabled) {
+  border-color: var(--sp-lav);
+}
+.sp-card .clay-field:focus {
+  border-color: var(--sp-lav);
+  background: #fff;
+  box-shadow:
+    0 0 0 4px rgb(50 217 245 / 0.35),
+    0 0 0 7px rgb(148 112 245 / 0.18);
+}
+.sp-card .clay-field::placeholder {
+  color: #8c85b8;
+}
+.sp-eye {
+  color: #6f62c9;
+}
+.sp-eye:hover {
+  background: #e6defd;
+  color: #3b2f8f;
+}
+
+/* Nút CẤT CÁNH */
+.sp-cta {
+  --edge: #b42a85;
+  background: linear-gradient(100deg, var(--sp-pink), #c24bd8 55%, var(--sp-indigo)) !important;
+  color: #fff;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow:
+    0 5px 0 var(--edge),
+    0 16px 28px rgb(246 83 166 / 0.45);
+}
+.sp-cta:hover:not(:disabled) {
+  filter: brightness(1.1) saturate(1.05);
+  transform: translateY(-3px);
+  box-shadow:
+    0 7px 0 var(--edge),
+    0 20px 34px rgb(246 83 166 / 0.55);
+}
+.sp-cta:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 var(--edge),
+    0 6px 12px rgb(246 83 166 / 0.4);
+}
+.sp-cta[aria-busy="true"] {
+  opacity: 1 !important;
+  background-image: repeating-linear-gradient(
+      -45deg,
+      rgb(255 255 255 / 0.22) 0 14px,
+      transparent 14px 28px
+    ),
+    linear-gradient(100deg, var(--sp-pink), #c24bd8 55%, var(--sp-indigo)) !important;
+  background-size: 56px 56px, 100% 100%;
+  animation: sp-stripes 0.9s linear infinite;
+}
+.sp-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--sp-muted);
+}
+.sp-note svg {
+  flex: none;
+  margin-top: 2px;
+  color: #8b7ed8;
+}
+
+/* Khối "vào nhanh" cho ban giám khảo */
+.sp-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 2px dashed var(--sp-lav);
+  border-radius: 22px;
+  background: #f1edff;
+}
+.sp-demo-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #3b2f8f;
+}
+.sp-demo-btn {
+  flex-basis: 140px;
+  --edge: #5b2fb8;
+  background: linear-gradient(135deg, #7e5cf0, var(--sp-indigo));
+  color: #fff;
+}
+.sp-demo-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* Điện thoại: khối vào nhanh gọn lại để nút "Cất cánh" không bị đẩy xuống quá xa. */
+@media (max-width: 639px) {
+  .sp-demo {
+    gap: 8px;
+    padding: 10px;
+    border-radius: 18px;
+  }
+  .sp-demo-title {
+    font-size: 13.5px;
+    line-height: 1.3;
+  }
+  .sp-demo-btn {
+    min-height: 44px;
+    flex-basis: 130px;
+    padding: 0 10px;
+    font-size: 14px;
+  }
+  .sp-sub {
+    font-size: 14px;
+  }
+}
+
+/* ---------- Máy tính bảng: cảnh lớn hơn, xếp chồng ---------- */
+@media (min-width: 640px) {
+  .sp {
+    gap: 22px;
+    padding: 24px 24px 40px;
+  }
+  .sp-logo {
+    width: 76px;
+    height: 76px;
+  }
+  .sp-school {
+    font-size: 21px;
+  }
+  .sp-class {
+    font-size: 14px;
+    padding: 4px 16px;
+  }
+  .sp-art {
+    height: clamp(230px, 36vh, 330px);
+    margin-top: 10px;
+  }
+  .sp-rocket {
+    width: 78px;
+  }
+  .sp-trail {
+    width: 150px;
+    height: 22px;
+  }
+  .sp-saturn {
+    width: 120px;
+  }
+  .sp-saturn-2 {
+    width: 110px;
+  }
+  .sp-mascot {
+    width: 78px;
+  }
+  .sp-robot {
+    width: 96px;
+  }
+  .sp-books {
+    width: 100px;
+  }
+  .sp-sparkle {
+    width: 26px;
+  }
+  .sp-title-img {
+    height: clamp(120px, 15vh, 170px);
+  }
+  .sp-title-top {
+    font-size: clamp(40px, 7vw, 56px);
+    -webkit-text-stroke-width: 10px;
+  }
+  .sp-title-accent {
+    font-size: clamp(52px, 9vw, 74px);
+    -webkit-text-stroke-width: 12px;
+  }
+  .sp-slogan {
+    display: block;
+  }
+  .sp-card {
+    gap: 18px;
+    padding: 30px 30px 26px;
+  }
+  .sp-card-rocket {
+    right: 22px;
+    top: -34px;
+    width: 76px;
+  }
+  .sp-welcome {
+    font-size: 26px;
+  }
+  .sp-welcome b {
+    font-size: 48px;
+  }
+  .sp-sub {
+    font-size: 16px;
+  }
+}
+
+/* iPad dọc: cảnh thấp hơn để form lên gần màn hình đầu tiên. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .sp {
+    gap: 16px;
+    padding-top: 16px;
+  }
+  .sp-art {
+    height: clamp(170px, 21vh, 250px);
+  }
+  .sp-title-img {
+    height: clamp(96px, 11vh, 130px);
+  }
+  .sp-title-top {
+    font-size: clamp(34px, 5.4vw, 46px);
+  }
+  .sp-title-accent {
+    font-size: clamp(44px, 7.2vw, 60px);
+  }
+  .sp-slogan {
+    margin-top: 10px;
+    padding: 5px 20px;
+    font-size: 15px;
+  }
+  .sp-card {
+    gap: 14px;
+    padding: 24px 26px 20px;
+  }
+  .sp-welcome b {
+    font-size: 40px;
+  }
+}
+
+/* ---------- Máy tính: hai cột, cảnh cao bằng màn hình ---------- */
+@media (min-width: 1024px) {
+  .sp {
+    grid-template-columns: minmax(0, 1fr) clamp(400px, 37vw, 520px);
+    align-items: center;
+    gap: clamp(20px, 3.4vw, 64px);
+    padding: 24px clamp(20px, 3.6vw, 72px);
+  }
+  .sp-logo {
+    width: clamp(64px, 6vw, 84px);
+    height: clamp(64px, 6vw, 84px);
+  }
+  .sp-school {
+    font-size: clamp(16px, 1.55vw, 22px);
+  }
+  .sp-class {
+    font-size: clamp(12px, 1.1vw, 14px);
+  }
+  .sp-title {
+    margin-top: 14px;
+  }
+  .sp-title-img {
+    height: clamp(120px, 20vh, 210px);
+  }
+  .sp-moon {
+    display: block;
+  }
+  .sp-robot,
+  .sp-books,
+  .sp-saturn-2 {
+    bottom: 0;
+  }
+  .sp-scene {
+    height: calc(100dvh - 48px);
+    min-height: 600px;
+    max-height: 900px;
+    justify-content: space-between;
+  }
+  .sp-art {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+  }
+  .sp-title-top {
+    font-size: clamp(40px, 6.4vh, 62px);
+  }
+  .sp-title-accent {
+    font-size: clamp(54px, 9.4vh, 92px);
+  }
+  .sp-saturn {
+    width: clamp(110px, 13vw, 170px);
+  }
+  .sp-saturn-2 {
+    width: clamp(100px, 11vw, 150px);
+  }
+  .sp-rocket {
+    width: clamp(70px, 8vw, 110px);
+    right: 7%;
+  }
+  .sp-trail {
+    right: 15%;
+    top: 14%;
+    width: clamp(130px, 16vw, 220px);
+  }
+  .sp-mascot {
+    width: clamp(64px, 7vw, 100px);
+    left: 4%;
+    top: 30%;
+  }
+  .sp-robot {
+    width: clamp(80px, 9vw, 130px);
+    left: 2%;
+  }
+  .sp-books {
+    width: clamp(90px, 10vw, 140px);
+    right: 3%;
+  }
+  .sp-card {
+    padding: 34px 32px 28px;
+  }
+}
+
+/* Màn hình thấp (iPad ngang, laptop nhỏ): nén bớt cho khỏi tràn. */
+@media (min-width: 1024px) and (max-height: 820px) {
+  .sp-demo-title {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+  .sp-demo-btn {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .sp-card [role="tab"] {
+    min-height: 46px;
+  }
+  .sp-card {
+    gap: 12px;
+    padding: 26px 28px 22px;
+  }
+  .sp-welcome b {
+    font-size: 36px;
+  }
+  .sp-sub {
+    font-size: 15px;
+  }
+  .sp-demo {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .sp-card .clay-field {
+    min-height: 48px;
+  }
+  .sp-slogan {
+    margin-top: 8px;
+    padding: 6px 22px;
+    font-size: 15px;
+  }
+}
+
+@keyframes sp-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes sp-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes sp-hover {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 3px -9px;
+  }
+}
+@keyframes sp-drift {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 8px 6px;
+  }
+}
+@keyframes sp-stripes {
+  to {
+    background-position: 56px 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp::before,
+  .sp::after,
+  .sp *,
+  .sp-card-rocket {
+    animation: none !important;
+  }
+}

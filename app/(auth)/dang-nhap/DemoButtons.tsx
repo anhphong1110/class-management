@@ -13,9 +13,9 @@ const LABELS: Record<Role, string> = {
 export default function DemoButtons({ roles, next }: { roles: Role[]; next?: string }) {
   const [state, action, pending] = useActionState<SignInState, FormData>(demoSignIn, {})
   return (
-    <form action={action} data-testid="demo-login" className="flex flex-col gap-3 rounded-panel border-2 border-dashed border-primary-strong bg-primary-soft p-4">
+    <form action={action} data-testid="demo-login" className="sp-demo">
       <input type="hidden" name="next" value={next ?? ''} />
-      <div className="text-[15px] font-extrabold text-primary-deep">Dành cho ban giám khảo: bấm để vào ngay, không cần mật khẩu</div>
+      <div className="sp-demo-title">Dành cho ban giám khảo: bấm để vào ngay, không cần mật khẩu</div>
       <div className="flex flex-wrap gap-2.5">
         {roles.map((r) => (
           <button
@@ -24,7 +24,7 @@ export default function DemoButtons({ roles, next }: { roles: Role[]; next?: str
             name="role"
             value={r}
             disabled={pending}
-            className="clay-press inline-flex min-h-12 flex-[1_1_180px] items-center justify-center gap-2 rounded-ctl border-0 bg-primary-strong px-4 text-[15px] font-extrabold text-white [--edge:var(--primary-deep)] hover:bg-primary-ink disabled:cursor-not-allowed disabled:opacity-60"
+            className="sp-demo-btn clay-press inline-flex min-h-12 flex-[1_1_180px] items-center justify-center gap-2 rounded-ctl border-0 px-4 text-[15px] font-extrabold disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Icon d={ICONS.rocket} size={18} />
             {LABELS[r]}

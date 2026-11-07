@@ -1,5 +1,4 @@
 {
- "app/(auth)/dang-nhap/page.tsx": 6,
  "app/(teacher)/bao-cao/ReportsClient.tsx": 3,
  "app/(teacher)/doi-qua/RewardsClient.tsx": 2,
  "app/(teacher)/goi-ten/RandomClient.tsx": 8,
