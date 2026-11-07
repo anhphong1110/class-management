@@ -8,24 +8,13 @@ const DIR = '/brand/login'
 const ARROW = 'M5 12h14M13 6l6 6-6 6'
 const STAR = '12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9'
 // Kích thước avatar theo hạng; dưới 640px .ov-ava được thu nhỏ bằng CSS.
+const WREATH = { 1: 'nguyet-que-vang', 2: 'nguyet-que-bac', 3: 'nguyet-que-dong' } as const
 const BASE = { 1: 'bug-vang', 2: 'bug-bac', 3: 'bug-dong' } as const
 const AVATAR_SIZE = { 1: 104, 2: 84, 3: 84 } as const
 
 function Deco({ src, className }: { src: string; className: string }) {
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={`${DIR}/${src}`} alt="" aria-hidden="true" decoding="async" loading="lazy" draggable={false} className={`ov-top3-deco ${className}`} />
-}
-
-/** Vương miện hạng nhất (màu nằm trong overview.css). */
-function Crown() {
-  return (
-    <svg className="ov-crown" viewBox="0 0 48 34" aria-hidden="true">
-      <path d="M4 29 L7 9 L17 19 L24 5 L31 19 L41 9 L44 29 Z" />
-      <circle cx="7" cy="8" r="3" />
-      <circle cx="24" cy="4" r="3.4" />
-      <circle cx="41" cy="8" r="3" />
-    </svg>
-  )
 }
 
 /** Bục Top 3: `order` đã xếp sẵn [hạng 2, hạng 1, hạng 3]. */
@@ -51,8 +40,13 @@ export function Top3Podium({ order }: { order: Top3Row[] }) {
           return (
             <div key={t.id} data-testid="top3-card" data-rank={rank} className="ov-pcard">
               <div className="ov-stage">
-                {rank === 1 && t.stars > 0 ? <Crown /> : null}
                 <div className="ov-ava">
+                  {/* eslint-disable @next/next/no-img-element */}
+                  <img src={`/brand/overview/${WREATH[rank]}.webp`} alt="" aria-hidden="true" width={400} height={360} loading="lazy" decoding="async" draggable={false} className="ov-wreath" />
+                  {rank === 1 && t.stars > 0 ? (
+                    <img src="/brand/overview/vuong-mien.webp" alt="" aria-hidden="true" width={240} height={166} loading="lazy" decoding="async" draggable={false} className="ov-crown" />
+                  ) : null}
+                  {/* eslint-enable @next/next/no-img-element */}
                   <AvatarImage avatar={t.avatar} size={AVATAR_SIZE[rank]} />
                 </div>
                 <div className="ov-base">

@@ -16,6 +16,7 @@ function Deco({ src, className }: { src: string; className: string }) {
 export function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl: string | null; brand: string }) {
   return (
     <div className="ov ov-hero" data-testid="hero">
+      <Deco src="may.webp" className="ov-clouds" />
       <div className="ov-hero-text">
         <p className="ov-ribbon">CÙNG HỌC – CÙNG CHƠI – CÙNG TỎA SÁNG</p>
         <h2 className="ov-title">Xin chào, {greeting}!</h2>
@@ -32,7 +33,6 @@ export function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl
 
       {coverUrl ? (
         <div className="ov-art">
-          <Deco src="may.webp" className="ov-clouds" />
           <div className="ov-cover-frame">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img data-testid="hero-cover" src={coverUrl} alt="" />
@@ -48,7 +48,6 @@ export function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl
           <Deco src="ten-lua.webp" className="ov-rocket" />
           <Deco src="lap-lanh.svg" className="ov-star" />
           <Deco src="nhom-nhan-vat.webp" className="ov-group" />
-          <Deco src="may.webp" className="ov-clouds" />
         </div>
       )}
     </div>

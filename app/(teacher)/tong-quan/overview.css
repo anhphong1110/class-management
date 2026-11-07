@@ -139,7 +139,7 @@
   filter: drop-shadow(0 8px 12px rgb(18 14 90 / 0.35));
 }
 .ov-earth {
-  left: 50%;
+  left: 46%;
   bottom: -22%;
   height: 112%;
   width: auto;
@@ -147,9 +147,9 @@
   filter: drop-shadow(0 0 28px rgb(50 217 245 / 0.45));
 }
 .ov-group {
-  left: 50%;
+  left: 46%;
   bottom: -3%;
-  height: 106%;
+  height: 110%;
   width: auto;
   max-width: none;
   transform: translateX(-50%);
@@ -181,14 +181,17 @@
   width: 38px;
   animation: ov-float 5s ease-in-out -1.5s infinite;
 }
-.ov-clouds {
+/* Mây trải suốt chân banner (không bị cắt theo cột), nằm sau chữ và nhân vật. */
+.ov-hero > .ov-clouds {
+  position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
+  z-index: 0;
   width: 100%;
   height: auto;
-  translate: 0 32%;
-  z-index: 0;
+  translate: 0 46%;
+  opacity: 0.95;
 }
 
 /* Ảnh bìa lớp do cô tải lên: nằm trong khung bo góc, thay cụm nhân vật. */
@@ -319,51 +322,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 7px;
+  padding: 6px;
   border-radius: 9999px;
   background: linear-gradient(145deg, #fff, var(--m-soft));
   box-shadow:
-    0 0 0 5px var(--m),
-    0 0 0 8px rgb(255 255 255 / 0.9),
+    0 0 0 4px #fff,
     0 10px 22px -6px var(--m-deep);
 }
-.ov-ava::before,
-.ov-ava::after {
-  content: "";
+.ov-wreath {
   position: absolute;
-  bottom: 12%;
-  width: 22%;
-  height: 46%;
-  border-radius: 100% 0 100% 0;
-  background: linear-gradient(160deg, var(--m-soft), var(--m) 55%, var(--m-deep));
-  box-shadow: 0 2px 4px rgb(36 36 107 / 0.25);
-}
-.ov-ava::before {
-  left: -17%;
-  transform: rotate(-24deg);
-}
-.ov-ava::after {
-  right: -17%;
-  transform: scaleX(-1) rotate(-24deg);
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: 162%;
+  height: auto;
+  max-width: none;
+  transform: translate(-50%, -47%);
+  filter: drop-shadow(0 6px 8px rgb(36 36 107 / 0.25));
+  pointer-events: none;
 }
 .ov-crown {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: -42%;
   z-index: 3;
-  width: 46px;
+  width: 74%;
   height: auto;
-  margin-bottom: -10px;
-  filter: drop-shadow(0 4px 6px rgb(217 154 31 / 0.6));
+  transform: translateX(-50%);
+  filter: drop-shadow(0 4px 6px rgb(217 154 31 / 0.55));
+  pointer-events: none;
   animation: ov-float 4s ease-in-out infinite;
 }
-.ov-crown path {
-  fill: var(--ov-gold);
-  stroke: #d99a1f;
-  stroke-width: 1.4;
-  stroke-linejoin: round;
-}
-.ov-crown circle {
-  fill: var(--ov-pink);
-}
+
 .ov-stage {
   position: relative;
   display: flex;
@@ -376,10 +366,12 @@
   width: 86%;
 }
 /* Avatar đứng trên mặt bục: kéo avatar xuống chồng lên mặt bục (phần trăm = theo bề ngang bục). */
-.ov-ava {
+.ov-stage .ov-ava {
+  margin-top: 22%;
   margin-bottom: -15%;
 }
-.ov-pcard[data-rank="1"] .ov-ava {
+.ov-pcard[data-rank="1"] .ov-stage .ov-ava {
+  margin-top: 24%;
   margin-bottom: -13%;
 }
 .ov-base {

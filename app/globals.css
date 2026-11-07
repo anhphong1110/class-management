@@ -255,8 +255,8 @@ textarea::placeholder {
 .sidebar-mascot {
   position: relative;
   flex: none;
-  height: 124px;
-  margin: -6px -14px -20px;
+  height: 168px;
+  margin: -2px -14px -20px;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
@@ -268,21 +268,21 @@ textarea::placeholder {
   height: auto;
 }
 .sidebar-mascot-moon {
-  left: -34px;
-  bottom: -52px;
-  width: 190px;
+  left: -40px;
+  bottom: -96px;
+  width: 200px;
   transform: scaleX(-1);
 }
 .sidebar-mascot-robot {
-  left: 34px;
-  bottom: 58px;
-  width: 66px;
+  left: 52px;
+  bottom: 56px;
+  width: 58px;
   filter: drop-shadow(0 6px 8px rgb(36 36 107 / 0.35));
   animation: sidebar-bob 5s ease-in-out infinite;
 }
 .sidebar-mascot-star {
-  left: 112px;
-  bottom: 84px;
+  left: 138px;
+  bottom: 96px;
   width: 30px;
   animation: sidebar-bob 4s ease-in-out -1.2s infinite;
 }
