@@ -1,7 +1,14 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { RewardVisual } from '@/components/rewards/RewardVisual'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Icon, ICONS } from '@/components/ui/Icon'
+import { Notice } from '@/components/ui/Notice'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import { giftButton, requestSuccessMessage } from '@/lib/student/gifts'
 import type { GiftView } from '@/lib/student/queries'
 import { requestReward } from './actions'
@@ -24,6 +31,12 @@ export function GiftsClient({
   const [asking, setAsking] = useState<GiftView | null>(null)
   const [msg, setMsg] = useState<Msg | null>(null)
   const [pending, start] = useTransition()
+  const msgRef = useRef<HTMLDivElement>(null)
+
+  // Kết quả hiện ở đầu danh sách; cuộn tới để em thấy ngay dù đang ở cuối trang.
+  useEffect(() => {
+    if (msg) msgRef.current?.scrollIntoView?.({ block: 'center' })
+  }, [msg])
 
   function confirm() {
     if (!asking || pending) return
@@ -38,68 +51,62 @@ export function GiftsClient({
   return (
     <>
       {msg && (
-        <div
-          role={msg.tone === 'error' ? 'alert' : 'status'}
-          className={`rounded-[14px] px-4 py-3 text-[15px] font-bold ${msg.tone === 'error' ? 'bg-[#FFE3EA] text-[#8E1B3B]' : 'bg-[#DDF6F1] text-[#0B5A4D]'}`}
-        >
-          {msg.text}
+        <div ref={msgRef} className="scroll-mt-24">
+          <Notice tone={msg.tone}>{msg.text}</Notice>
         </div>
       )}
-      {asking && (
-        <div
-          role="alertdialog"
-          aria-label="Xác nhận đổi quà"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border-2 border-primary-strong bg-primary-soft px-[18px] py-4"
-        >
-          <div className="text-base font-bold">
-            Em muốn đổi &quot;{asking.name}&quot; với {asking.cost} sao?
-          </div>
-          <div className="flex gap-2.5">
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => setAsking(null)}
-              className="min-h-12 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-5 font-extrabold text-[#4A476E] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Hủy
-            </button>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={confirm}
-              className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-[22px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Gửi yêu cầu
-            </button>
-          </div>
-        </div>
+      <ConfirmDialog
+        open={!!asking}
+        title="Em có chắc không?"
+        message={asking ? `Em muốn đổi "${asking.name}" với ${asking.cost} sao?` : ''}
+        confirmLabel="Gửi yêu cầu"
+        cancelLabel="Hủy"
+        pending={pending}
+        onConfirm={confirm}
+        onCancel={() => {
+          if (!pending) setAsking(null)
+        }}
+      />
+      {gifts.length === 0 && (
+        <EmptyState title="Chưa có món quà nào." icon={ICONS.gift}>
+          Cô giáo sẽ sớm thêm quà để em đổi nhé.
+        </EmptyState>
       )}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-4">
         {gifts.map((g) => {
           const btn = giftButton(g, available, enforceStars)
           // Khóa mọi nút khi đang gửi yêu cầu để không mở hộp xác nhận thứ hai.
           const locked = btn.disabled || preview || pending
+          const missing = g.cost - available
+          // Chỉ hiện thanh tiến độ khi thiếu sao là lý do duy nhất khiến nút bị khóa.
+          const showProgress = g.left > 0 && enforceStars && missing > 0
           return (
-            <div key={g.id} data-testid="gift" className="flex flex-col gap-2.5 rounded-3xl bg-white p-3.5 shadow-[0_6px_20px_rgba(102,117,232,0.10)]">
-              <RewardVisual visual={g.visual} iconSize={58} className="h-[110px] w-full rounded-[18px]" />
+            <div key={g.id} data-testid="gift" className="clay-card flex flex-col gap-3 p-3.5">
+              <RewardVisual visual={g.visual} iconSize={58} className="h-[120px] w-full rounded-[18px]" />
               <div className="flex items-start justify-between gap-2">
-                <div className="font-display text-lg font-extrabold leading-[1.2]">{g.name}</div>
-                <div className="flex-none rounded-full bg-[#FFF1CC] px-2.5 py-1 text-[15px] font-extrabold text-[#7A4E00]">{g.cost} sao</div>
+                <div className="min-w-0 font-display text-xl font-extrabold leading-[1.2]">{g.name}</div>
+                <Badge tone="star">
+                  <Icon d={ICONS.star} size={14} />
+                  {g.cost} sao
+                </Badge>
               </div>
-              <div className="text-[13.5px] leading-[1.4] text-[#5B5890]">{g.description}</div>
-              <button
-                type="button"
-                disabled={locked}
-                onClick={() => {
-                  setMsg(null)
-                  setAsking(g)
-                }}
-                className={`min-h-12 rounded-[14px] border-0 text-[15px] font-extrabold ${
-                  btn.disabled ? 'cursor-not-allowed bg-[#E4E0F7] text-[#4A476E]' : 'cursor-pointer bg-primary-strong text-white'
-                } ${preview && !btn.disabled ? 'cursor-not-allowed opacity-60' : ''}`}
-              >
-                {btn.label}
-              </button>
+              {g.description && <div className="text-base leading-[1.4] text-muted">{g.description}</div>}
+              <div className="mt-auto flex flex-col gap-2.5">
+                {showProgress && <ProgressBar value={available} max={g.cost} tone="star" label={`Còn ${missing} sao nữa là đổi được`} />}
+                <Button
+                  size="lg"
+                  variant={btn.disabled ? 'secondary' : 'primary'}
+                  disabled={locked}
+                  onClick={() => {
+                    setMsg(null)
+                    setAsking(g)
+                  }}
+                  className={`w-full text-center leading-tight ${btn.disabled ? 'border-edge! text-muted! disabled:opacity-100!' : ''}`}
+                >
+                  {btn.label}
+                </Button>
+                {preview && !btn.disabled && <p className="m-0 text-[15px] font-semibold text-muted">Đang xem thử nên chưa đổi quà được.</p>}
+              </div>
             </div>
           )
         })}
