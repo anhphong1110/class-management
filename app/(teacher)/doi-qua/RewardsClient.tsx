@@ -19,7 +19,6 @@ import { RewardEditor } from './RewardEditor'
 type Editing = { kind: 'new' } | { kind: 'edit'; id: string } | null
 type Msg = { tone: 'success' | 'error'; text: string } | null
 
-const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 const CLOCK = 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18'
 
 /** Trạng thái luôn có icon và chữ, không chỉ màu. Nhãn lấy từ STAT dùng chung. */
@@ -163,10 +162,9 @@ export function RewardsClient({
                   <Button
                     variant="secondary"
                     className="flex-1"
-                    disabled={busy.has(hiddenKey)}
+                    loading={busy.has(hiddenKey)}
                     onClick={() => run(hiddenKey, () => setRewardHidden(w.id, !w.hidden))}
                   >
-                    {busy.has(hiddenKey) && <Icon d={SPIN} size={16} className="motion-safe:animate-spin" />}
                     {w.hidden ? 'Hiện' : 'Ẩn'}
                   </Button>
                 </div>
@@ -220,8 +218,8 @@ export function RewardsClient({
                 <div className="flex flex-wrap justify-start gap-2 md:justify-end">
                   {q.status === 'pending' && (
                     <>
-                      <Button disabled={locked} onClick={() => run(key, () => approveRequest(q.id))}>
-                        {locked ? <Icon d={SPIN} size={16} className="motion-safe:animate-spin" /> : <Icon d={ICONS.check} size={18} />}
+                      <Button loading={locked} onClick={() => run(key, () => approveRequest(q.id))}>
+                        {!locked && <Icon d={ICONS.check} size={18} />}
                         Duyệt
                       </Button>
                       <Button variant="secondary" disabled={locked} onClick={() => setRejecting(q)}>
@@ -231,8 +229,8 @@ export function RewardsClient({
                     </>
                   )}
                   {q.status === 'approved' && (
-                    <Button disabled={locked} onClick={() => run(key, () => deliverRequest(q.id))}>
-                      {locked ? <Icon d={SPIN} size={16} className="motion-safe:animate-spin" /> : <Icon d={ICONS.gift} size={18} />}
+                    <Button loading={locked} onClick={() => run(key, () => deliverRequest(q.id))}>
+                      {!locked && <Icon d={ICONS.gift} size={18} />}
                       Đã trao quà
                     </Button>
                   )}

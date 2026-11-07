@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button, ButtonLink } from '@/components/ui/Button'
 import { Icon, ICONS } from '@/components/ui/Icon'
 import { Notice } from '@/components/ui/Notice'
 import { exportMonthCsv } from './actions'
@@ -61,8 +61,7 @@ export function MonthCalendar({
     })
   }
 
-  const nav =
-    'clay-press inline-flex min-h-11 items-center rounded-ctl border-2 border-primary-strong bg-white px-4 text-sm font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep'
+  const nav = '!px-4 !text-sm'
 
   return (
     <section className="clay-card flex flex-col gap-3 p-6">
@@ -74,12 +73,12 @@ export function MonthCalendar({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link href={href(shiftMonth(month, -1))} className={nav}>
+          <ButtonLink variant="secondary" href={href(shiftMonth(month, -1))} className={nav}>
             Tháng trước
-          </Link>
-          <Link href={href(shiftMonth(month, 1))} className={nav}>
+          </ButtonLink>
+          <ButtonLink variant="secondary" href={href(shiftMonth(month, 1))} className={nav}>
             Tháng sau
-          </Link>
+          </ButtonLink>
           <Button onClick={exportCsv} disabled={pending}>
             Xuất CSV
           </Button>

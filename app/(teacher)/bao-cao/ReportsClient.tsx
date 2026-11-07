@@ -17,7 +17,6 @@ import type { ReportData } from '@/lib/reports/types'
 import { exportReport } from './actions'
 
 const H2 = 'm-0 font-display text-[22px] font-extrabold'
-const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 /** Sao trừ có sọc chéo, để phân biệt với sao cộng không chỉ bằng màu. */
 const STRIPES = 'repeating-linear-gradient(135deg, rgba(255,255,255,.5) 0 3px, transparent 3px 7px)'
 const ATTEND = [
@@ -118,12 +117,10 @@ export function ReportsClient({
           </Button>
         </div>
         <div className="flex flex-wrap gap-2.5">
-          <Button variant="secondary" disabled={pending || !data} onClick={() => download('csv')}>
-            {pending && <Icon d={SPIN} size={16} className="motion-safe:animate-spin" />}
+          <Button variant="secondary" disabled={!data} loading={pending} onClick={() => download('csv')}>
             Xuất CSV
           </Button>
-          <Button disabled={pending || !data} onClick={() => download('xlsx')}>
-            {pending && <Icon d={SPIN} size={16} className="motion-safe:animate-spin" />}
+          <Button disabled={!data} loading={pending} onClick={() => download('xlsx')}>
             Xuất Excel
           </Button>
         </div>

@@ -19,7 +19,6 @@ type Result = { error?: string; message?: string }
 type Student = { id: string; fullName: string }
 type Note = { tone: 'success' | 'error'; text: string } | null
 
-const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 const PAUSE = 'M10 5v14M14 5v14'
 
 export function MissionsClient({ data, students }: { data: MissionsData; students: Student[] }) {
@@ -155,7 +154,6 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
       ))}
     </Select>
   )
-  const spinner = busy ? <Icon d={SPIN} size={16} className="motion-safe:animate-spin" /> : null
 
   return (
     <div className="flex flex-col gap-5">
@@ -249,8 +247,7 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
           </Field>
         </fieldset>
         <div className="flex justify-end">
-          <Button size="lg" onClick={add} disabled={busy}>
-            {spinner}
+          <Button size="lg" onClick={add} loading={busy}>
             + Thêm nhiệm vụ
           </Button>
         </div>

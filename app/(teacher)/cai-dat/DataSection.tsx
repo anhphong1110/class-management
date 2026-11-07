@@ -19,7 +19,6 @@ import { deleteDemoData, openNewYear, restoreBackup } from './data-actions'
 const card = 'clay-card flex flex-col gap-3.5 px-6 py-[22px]'
 const action =
   'clay-press flex min-h-24 cursor-pointer flex-col gap-1 rounded-panel border-2 border-edge bg-field px-4 py-3.5 text-left text-ink no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50'
-const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 
 const NEW_YEAR_NOTE =
   'Năm học hiện tại được lưu trữ và năm mới bắt đầu từ 0 sao. Học sinh không được chép sang; các yêu cầu đổi quà đang chờ sẽ bị từ chối và sao được trả lại.'
@@ -182,7 +181,6 @@ export function DataSection({
     })
   }
 
-  const spinner = pending ? <Icon d={SPIN} size={16} className="motion-safe:animate-spin" /> : null
 
   return (
     <section className={card} aria-labelledby="data-h">
@@ -356,8 +354,7 @@ export function DataSection({
             <Button variant="secondary" onClick={closeYear} disabled={pending}>
               Hủy
             </Button>
-            <Button type="submit" disabled={pending || !yearForm.schoolYear.trim() || !yearForm.className.trim()}>
-              {spinner}
+            <Button type="submit" loading={pending} disabled={!yearForm.schoolYear.trim() || !yearForm.className.trim()}>
               Lưu trữ và mở năm mới
             </Button>
           </div>
@@ -400,8 +397,7 @@ export function DataSection({
               <Button variant="secondary" onClick={() => setDeleteStep(1)} disabled={pending}>
                 Quay lại
               </Button>
-              <Button variant="danger" onClick={removeDemo} disabled={pending || !deleteSure}>
-                {spinner}
+              <Button variant="danger" onClick={removeDemo} loading={pending} disabled={!deleteSure}>
                 Xóa dữ liệu demo
               </Button>
             </div>
@@ -427,8 +423,7 @@ export function DataSection({
               <Button variant="secondary" onClick={close} disabled={pending}>
                 Hủy
               </Button>
-              <Button onClick={restore} disabled={pending}>
-                {spinner}
+              <Button onClick={restore} loading={pending}>
                 Khôi phục
               </Button>
             </div>

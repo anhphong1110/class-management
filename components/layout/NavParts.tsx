@@ -1,3 +1,5 @@
+import { Icon } from '@/components/ui/Icon'
+import { TONES, type Tone } from '@/components/ui/tones'
 import { brandLines, schoolLabel } from '@/lib/classes/brand'
 
 type BrandProps = {
@@ -43,5 +45,30 @@ export function BrandBlocks({ classLogoUrl, schoolLogoUrl, className, schoolName
         </div>
       </div>
     </>
+  )
+}
+
+/** Ô icon pastel của một mục menu; khi mục đang chọn thì chuyển sang nền trắng mờ. */
+export function NavIconChip({
+  icon,
+  on,
+  tone,
+  className = '',
+  onClassName = 'bg-white/25 text-[#FFE08A]',
+}: {
+  icon: string
+  on: boolean
+  tone: Tone
+  className?: string
+  onClassName?: string
+}) {
+  return (
+    <span
+      className={`flex size-[30px] flex-none items-center justify-center rounded-[10px] ${className} ${
+        on ? onClassName : TONES[tone]
+      }`}
+    >
+      <Icon d={icon} size={20} />
+    </span>
   )
 }

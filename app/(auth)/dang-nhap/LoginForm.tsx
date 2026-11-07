@@ -1,8 +1,10 @@
 'use client'
 
 import { useActionState, useEffect, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Field'
 import { Icon, ICONS } from '@/components/ui/Icon'
+import { SegmentedTabs } from '@/components/ui/SegmentedTabs'
 import { signIn, type SignInState } from '../actions'
 
 const TABS = [
@@ -62,38 +64,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
   return (
     <form action={action} className="flex flex-col gap-[18px]">
       <input type="hidden" name="next" value={next ?? ''} />
-      <div role="tablist" aria-label="Loại tài khoản" className="flex gap-2 rounded-panel bg-primary-soft p-1.5 pb-[9px]">
-        {TABS.map((x) => {
-          const on = x.key === tab
-          return (
-            <button
-              key={x.key}
-              type="button"
-              role="tab"
-              id={`tab-${x.key}`}
-              aria-selected={on}
-              aria-controls="login-panel"
-              tabIndex={on ? 0 : -1}
-              onKeyDown={(e) => {
-                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
-                e.preventDefault()
-                const next = TABS[(TABS.findIndex((y) => y.key === x.key) + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length]
-                choose(next.key)
-                document.getElementById(`tab-${next.key}`)?.focus()
-              }}
-              onClick={() => choose(x.key)}
-              className={`clay-press inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-ctl border-2 text-[15px] font-extrabold ${
-                on
-                  ? 'border-primary-strong bg-primary-strong text-white [--edge:var(--primary-deep)]'
-                  : 'border-edge bg-white text-ink [--edge:var(--primary-edge)] hover:border-primary-strong hover:bg-primary-soft hover:text-primary-deep'
-              }`}
-            >
-              <Icon d={x.icon} size={18} />
-              {x.label}
-            </button>
-          )
-        })}
-      </div>
+      <SegmentedTabs items={TABS} value={tab} onChange={choose} idPrefix="tab" panelId="login-panel" label="Loại tài khoản" />
       <div id="login-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-[18px]">
         <Field label={t.userLabel}>
           {(p) => (
@@ -141,18 +112,10 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
           </p>
         )}
       </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className="clay-press flex min-h-[56px] items-center justify-center gap-2 rounded-ctl border-0 bg-primary-strong text-lg font-extrabold text-white [--edge:var(--primary-deep)] hover:bg-primary-ink disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {pending ? (
-          <span aria-hidden="true" className="size-5 animate-[spin_0.8s_linear_infinite] rounded-full border-[3px] border-white/40 border-t-white" />
-        ) : (
-          <Icon d={ICONS.rocket} size={22} />
-        )}
+      <Button type="submit" size="lg" loading={pending} className="min-h-[56px]! w-full disabled:opacity-60!">
+        {!pending && <Icon d={ICONS.rocket} size={22} />}
         {pending ? 'Đang bay…' : 'Cất cánh'}
-      </button>
+      </Button>
       <div className="rounded-ctl bg-primary-soft px-3 py-2.5 text-[14px] font-semibold leading-normal text-primary-deep">{t.note}</div>
     </form>
   )

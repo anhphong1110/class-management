@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Icon, ICONS } from '@/components/ui/Icon'
-import { BrandBlocks } from './NavParts'
-import { NAV_TONES, TEACHER_NAV, TEACHER_NAV_META } from './nav'
+import { BrandBlocks, NavIconChip } from './NavParts'
+import { TEACHER_NAV, TEACHER_NAV_META } from './nav'
 
 type Props = {
   active?: string
@@ -68,25 +68,7 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
                       : 'font-bold text-ink hover:bg-primary-soft hover:text-primary-deep'
                   }`}
                 >
-                  <span
-                    className={`flex size-[30px] flex-none items-center justify-center rounded-chip ${
-                      on ? 'bg-white/25 text-[#FFE08A]' : NAV_TONES[meta?.tone ?? 'blue']
-                    }`}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="20"
-                      height="20"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d={it.icon} />
-                    </svg>
-                  </span>
+                  <NavIconChip icon={it.icon} on={on} tone={meta?.tone ?? 'blue'} />
                   {it.label}
                 </Link>
               </li>

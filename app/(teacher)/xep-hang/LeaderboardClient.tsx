@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
+import { ButtonLink } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Icon, ICONS } from '@/components/ui/Icon'
 import { PERIOD_LABELS, type Period } from '@/lib/domain/period'
@@ -111,15 +112,16 @@ export function LeaderboardClient({ rows, period, showAll }: { rows: RankRow[]; 
           <h2 className="m-0 font-display text-2xl font-extrabold">
             {showAll ? `Toàn bộ bảng xếp hạng (${rows.length} bạn)` : 'Top 5 ngôi sao sáng nhất'}
           </h2>
-          <Link
+          <ButtonLink
+            variant="secondary"
             role="button"
             href={href(period, !showAll)}
             replace
             scroll={false}
-            className="clay-press flex min-h-11 items-center rounded-ctl border-2 border-primary-strong bg-white px-5 text-[14.5px] font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep"
+            className="!text-[14.5px]"
           >
             {showAll ? 'Chỉ xem Top 5' : 'Xem toàn bộ bảng'}
-          </Link>
+          </ButtonLink>
         </div>
         <div className="text-[13.5px] font-semibold text-muted">
           Bằng điểm thì cùng thứ hạng. Hệ thống không ưu tiên theo giới tính hay tên.

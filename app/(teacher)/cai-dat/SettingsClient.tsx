@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button, ButtonLink } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, Input } from '@/components/ui/Field'
 import { Icon, ICONS } from '@/components/ui/Icon'
@@ -25,9 +25,6 @@ const SAVED = 'Đã lưu cài đặt.'
 const card = 'clay-card flex flex-col gap-3.5 px-6 py-[22px]'
 const h2 = 'm-0 font-display text-[22px] font-extrabold'
 const row = 'rounded-2xl border-2 border-edge bg-field px-3.5 py-1.5'
-const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
-const LINK_BTN =
-  'clay-press inline-flex min-h-11 items-center justify-center gap-2 rounded-ctl border-2 border-primary-strong bg-white px-5 text-base font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep'
 
 const INFO_FIELDS: [keyof InfoValues, string][] = [
   ['school_name', 'Tên trường'],
@@ -249,10 +246,10 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
         <p className="m-0 flex-1 basis-64 text-[15px] font-bold text-primary-deep">
           Muốn biết học sinh nhìn thấy gì sau khi cô đổi cài đặt? Cô xem thử rồi quay lại nhé.
         </p>
-        <Link href="/em" className={LINK_BTN}>
+        <ButtonLink href="/em" variant="secondary">
           <Icon d={ICONS.eye} size={20} />
           Xem như học sinh
-        </Link>
+        </ButtonLink>
       </div>
 
       {msg && (
@@ -307,8 +304,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
           />
         </div>
         <div>
-          <Button size="lg" onClick={saveInfo} disabled={pending}>
-            {pending && <Icon d={SPIN} size={18} className="motion-safe:animate-spin" />}
+          <Button size="lg" onClick={saveInfo} loading={pending}>
             Lưu thông tin
           </Button>
         </div>

@@ -205,8 +205,7 @@ export function ProfileClient({
           {msg ? <Notice tone={msg.tone}>{msg.text}</Notice> : null}
           <div className="flex flex-wrap items-center justify-between gap-2.5">
             <div className="text-sm font-bold text-muted">Đang chọn: {pendingItem?.label || 'Chưa chọn'}</div>
-            <Button size="lg" onClick={save} disabled={busy || !pendingId}>
-              {busy && <Icon d="M21 12a9 9 0 1 1-6.2-8.6" size={18} className="motion-safe:animate-spin" />}
+            <Button size="lg" onClick={save} loading={busy} disabled={!pendingId}>
               Lưu avatar
             </Button>
           </div>

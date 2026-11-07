@@ -16,7 +16,6 @@ import { createStudentAccounts, resetStudentPassword, setStudentLogin, type Temp
 type Shown = { rows: TempAccount[]; failed: { name: string; reason: string }[] }
 
 const card = 'clay-card flex flex-col gap-3.5 px-6 py-[22px]'
-const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 
 /** Khi in: ẩn mọi thứ ngoài bảng mật khẩu (bảng được đưa thẳng vào <body> nên chỉ cần ẩn các phần tử anh em). */
 const PRINT_CSS = '@media print { body > *:not(#pw-print) { display: none !important } #pw-print { display: block !important } }'
@@ -102,8 +101,8 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
         <h2 id="acc-h" className="m-0 font-display text-[22px] font-extrabold">
           Tài khoản học sinh
         </h2>
-        <Button onClick={createAll} disabled={pending || missing === 0}>
-          {pending ? <Icon d={SPIN} size={16} className="motion-safe:animate-spin" /> : <Icon d={ICONS.plus} size={18} />}
+        <Button onClick={createAll} loading={pending} disabled={missing === 0}>
+          {!pending && <Icon d={ICONS.plus} size={18} />}
           Tạo tài khoản hàng loạt
         </Button>
       </div>

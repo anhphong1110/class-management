@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icon, ICONS } from '@/components/ui/Icon'
 import { STUDENT_NAV, type StudentPageId } from '@/lib/student/flags'
-import { BrandBlocks } from './NavParts'
-import { NAV_TONES, STUDENT_NAV_TONES } from './nav'
+import { BrandBlocks, NavIconChip } from './NavParts'
+import { STUDENT_NAV_TONES } from './nav'
 
 const MAX_TABS = 5
 
@@ -45,7 +45,6 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, scho
           {items.map((it) => {
             const on = it.id === activeId
             const hiddenOnMobile = overflow && !tabs.includes(it)
-            const tone = NAV_TONES[STUDENT_NAV_TONES[it.id] ?? 'blue']
             return (
               <li key={it.id} className={`max-lg:min-w-0 max-lg:flex-1 ${hiddenOnMobile ? 'max-lg:hidden' : ''}`}>
                 <Link
@@ -58,13 +57,13 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, scho
                   }`}
                   onClick={() => setMore(false)}
                 >
-                  <span
-                    className={`flex size-[30px] flex-none items-center justify-center rounded-chip max-lg:size-9 max-lg:rounded-chip ${
-                      on ? 'bg-white/25 text-[#FFE08A] max-lg:bg-primary-strong max-lg:text-white' : tone
-                    }`}
-                  >
-                    <Icon d={it.icon} size={20} />
-                  </span>
+                  <NavIconChip
+                    icon={it.icon}
+                    on={on}
+                    tone={STUDENT_NAV_TONES[it.id] ?? 'blue'}
+                    className="max-lg:size-9 max-lg:rounded-chip"
+                    onClassName="bg-white/25 text-[#FFE08A] max-lg:bg-primary-strong max-lg:text-white"
+                  />
                   {it.label}
                 </Link>
               </li>
@@ -102,9 +101,7 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, scho
                       it.id === activeId ? 'bg-primary-strong text-white' : 'text-ink hover:bg-primary-soft'
                     }`}
                   >
-                    <span className={`flex size-9 items-center justify-center rounded-chip ${NAV_TONES[STUDENT_NAV_TONES[it.id] ?? 'blue']}`}>
-                      <Icon d={it.icon} size={20} />
-                    </span>
+                    <NavIconChip icon={it.icon} on={false} tone={STUDENT_NAV_TONES[it.id] ?? 'blue'} className="size-9 rounded-chip" />
                     {it.label}
                   </Link>
                 </li>

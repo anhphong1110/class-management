@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ButtonLink } from '@/components/ui/Button'
 import { NAV_TONES, STUDENT_NAV_TONES } from '@/components/layout/nav'
 import { Card } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -10,7 +11,6 @@ import { announcementColors } from '@/lib/announcements/types'
 import { STUDENT_NAV, visibleStudentPages, type StudentPageId } from '@/lib/student/flags'
 import { getAvatarLibrary, getHomeData, getStudentContext, getStudentProfile } from '@/lib/student/queries'
 import { AvatarPicker } from './AvatarPicker'
-import { LinkButton } from './LinkButton'
 import { StudentStats } from './StudentStats'
 
 /** Tên gọi và lời gợi ý ngắn cho từng ô lối tắt (không trùng nhãn menu để không nhầm hai liên kết). */
@@ -47,16 +47,16 @@ export default async function StudentHome() {
             Hôm nay em còn {available} sao khả dụng. Cố gắng thêm nhé, phi hành gia nhí!
           </p>
           {mainId === 'gifts' && (
-            <LinkButton href="/em/doi-qua" className="mt-1">
+            <ButtonLink size="lg" href="/em/doi-qua" className="mt-1">
               <Icon d={ICONS.gift} size={22} />
               Đi đổi quà
-            </LinkButton>
+            </ButtonLink>
           )}
           {mainId === 'stars' && (
-            <LinkButton href="/em/sao" className="mt-1">
+            <ButtonLink size="lg" href="/em/sao" className="mt-1">
               <Icon d={ICONS.star} size={22} />
               Xem lịch sử sao
-            </LinkButton>
+            </ButtonLink>
           )}
         </div>
         {profile && (

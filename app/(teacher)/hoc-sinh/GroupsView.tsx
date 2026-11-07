@@ -1,9 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
-import { Button } from '@/components/ui/Button'
+import { Button, ButtonLink } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Field, Input, Select } from '@/components/ui/Field'
@@ -75,13 +74,10 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
                       Xóa tổ
                     </Button>
                   ) : (
-                    <Link
-                      href={`/thi-dua?to=${g.id}`}
-                      className="clay-press inline-flex min-h-11 items-center gap-2 rounded-ctl bg-star px-4 text-sm font-extrabold text-star-ink no-underline [--edge:var(--color-star-edge)] hover:bg-[#FFD65E]"
-                    >
+                    <ButtonLink variant="accent" href={`/thi-dua?to=${g.id}`} className="!px-4 !text-sm">
                       <Icon d={ICONS.star} size={18} />
                       Cộng sao cả tổ
-                    </Link>
+                    </ButtonLink>
                   )}
                 </div>
               </div>

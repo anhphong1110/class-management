@@ -15,7 +15,6 @@ import { addSubject, cycleSubjectColor, deleteSubject, exportTimetable, renameSu
 type View = 'week' | 'day'
 type Edit = { weekday: number; session: Session; period: number }
 
-const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 export function TimetableClient({
@@ -113,8 +112,7 @@ export function TimetableClient({
           <Button variant="secondary" onClick={() => window.print()}>
             In thời khóa biểu
           </Button>
-          <Button variant="secondary" disabled={pending} onClick={exportFile}>
-            {pending && <Icon d={SPIN} size={16} className="motion-safe:animate-spin" />}
+          <Button variant="secondary" loading={pending} onClick={exportFile}>
             Tải Excel (.xlsx)
           </Button>
         </Card>
@@ -226,7 +224,7 @@ export function TimetableClient({
                     const isToday = d === todayWeekday
                     const style: CSSProperties = {
                       background: pal?.bg ?? (isToday ? 'var(--primary-soft)' : '#F6F4FF'),
-                      color: pal?.ink ?? '#5B5890',
+                      color: pal?.ink ?? 'var(--color-muted)',
                       borderColor: on ? 'var(--primary-strong)' : isToday ? 'var(--primary)' : 'transparent',
                     }
                     return (
@@ -331,10 +329,9 @@ export function TimetableClient({
           <Button
             id="add-subject"
             size="lg"
-            disabled={pending}
+            loading={pending}
             onClick={() => run(() => addSubject(newName), { onOk: () => setNewName('') })}
           >
-            {pending && <Icon d={SPIN} size={16} className="motion-safe:animate-spin" />}
             + Thêm môn
           </Button>
         </div>

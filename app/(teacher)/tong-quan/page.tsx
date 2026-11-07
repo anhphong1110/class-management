@@ -4,6 +4,7 @@ import { brandSentence } from '@/lib/classes/brand'
 import { getClassHeaderInfo } from '@/lib/classes/queries'
 import { Header } from '@/components/layout/Header'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
+import { ButtonLink } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Icon, ICONS } from '@/components/ui/Icon'
 import { StatCard } from '@/components/ui/StatCard'
@@ -48,7 +49,7 @@ const DELTA_STYLE = {
   request: 'bg-[#F0E8FF] text-[#5E35B1]',
 } as const
 
-const heroBtn = 'clay-press inline-flex min-h-12 items-center justify-center gap-2 rounded-ctl px-6 text-base font-extrabold no-underline'
+const heroBtn = '!min-h-12 !px-6'
 
 function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl: string | null; brand: string }) {
   return (
@@ -70,12 +71,12 @@ function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl: strin
           Chào mừng cô trở lại {brand}. Hôm nay cả phi hành đoàn đã sẵn sàng cất cánh.
         </p>
         <div className="mt-2 flex flex-wrap gap-3">
-          <Link href="/diem-danh" className={`${heroBtn} bg-primary-strong text-white [--edge:var(--primary-deep)]`}>
+          <ButtonLink href="/diem-danh" className={heroBtn}>
             Bắt đầu điểm danh
-          </Link>
-          <Link href="/thi-dua" className={`${heroBtn} border-2 border-primary-strong bg-white text-primary-strong [--edge:var(--primary-edge)]`}>
+          </ButtonLink>
+          <ButtonLink variant="secondary" href="/thi-dua" className={heroBtn}>
             Cộng sao cho lớp
-          </Link>
+          </ButtonLink>
         </div>
       </div>
       {coverUrl ? null : (
@@ -207,9 +208,7 @@ export default async function Page() {
               <h2 className="m-0 font-display text-[26px] font-extrabold">Top 3 phi hành gia xuất sắc</h2>
               <div className="text-sm font-semibold text-muted">Xếp theo sao thi đua tích lũy, không bị trừ khi đổi quà</div>
             </div>
-            <Link href="/xep-hang" className="clay-press inline-flex min-h-11 items-center rounded-ctl bg-primary-strong px-5 font-extrabold text-white no-underline [--edge:var(--primary-deep)]">
-              Xem bảng xếp hạng
-            </Link>
+            <ButtonLink href="/xep-hang">Xem bảng xếp hạng</ButtonLink>
           </div>
           <div className="flex flex-wrap items-end justify-center gap-4 pt-1.5">
             {order.map((t) => {

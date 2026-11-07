@@ -25,7 +25,6 @@ import {
 
 type Result = { error?: string; message?: string }
 
-const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 const PIN = 'M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z'
 
 export function AnnouncementsClient({ items, now }: { items: AnnouncementView[]; now: string }) {
@@ -278,8 +277,7 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
                 Hủy sửa
               </Button>
             )}
-            <Button size="lg" disabled={busy} onClick={submit}>
-              {busy && <Icon d={SPIN} size={18} className="motion-safe:animate-spin" />}
+            <Button size="lg" loading={busy} onClick={submit}>
               {editId ? 'Lưu thay đổi' : 'Đăng thông báo'}
             </Button>
           </div>

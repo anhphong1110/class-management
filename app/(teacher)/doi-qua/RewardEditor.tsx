@@ -223,8 +223,7 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
         </div>
         {msg && <Notice tone="error">{msg}</Notice>}
         <div className="flex gap-3">
-          <Button disabled={busy} onClick={done}>
-            {busy && <Icon d="M21 12a9 9 0 1 1-6.2-8.6" size={16} className="motion-safe:animate-spin" />}
+          <Button loading={busy} onClick={done}>
             Xong
           </Button>
           <Button variant="secondary" disabled={busy} onClick={onClose}>
