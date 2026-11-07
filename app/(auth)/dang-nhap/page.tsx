@@ -1,12 +1,12 @@
 import type { CSSProperties } from 'react'
-import { schoolLabel } from '@/lib/classes/brand'
-import Image from 'next/image'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { toVietnameseMessage } from '@/lib/errors'
 import { brandLines } from '@/lib/classes/brand'
 import { themeVars } from '@/lib/domain/theme'
 import { demoRoles } from '@/lib/auth/demo'
 import LoginForm from './LoginForm'
+import LoginScene from './LoginScene'
+import './login.css'
 import DemoButtons from './DemoButtons'
 
 export const dynamic = 'force-dynamic'
@@ -50,74 +50,34 @@ export default async function LoginPage({
       : undefined
 
   return (
-    <main style={themeVars(cls?.theme) as CSSProperties} className="relative box-border flex min-h-screen flex-wrap items-center justify-center gap-6 overflow-hidden bg-[radial-gradient(circle_at_20%_20%,#4B4FB5_0%,#2B2E7E_45%,#1E2160_100%)] p-6 font-body">
-      <svg
-        viewBox="0 0 1000 600"
-        preserveAspectRatio="xMidYMid slice"
-        aria-hidden="true"
-        className="absolute left-0 top-0 h-full w-full"
-      >
-        <g style={{ animation: 'tw 3s ease-in-out infinite' }}>
-          <circle cx="80" cy="70" r="3" fill="#FFE08A" />
-          <circle cx="260" cy="40" r="2" fill="#fff" />
-          <circle cx="520" cy="90" r="3" fill="#FFE08A" />
-          <circle cx="780" cy="50" r="2" fill="#fff" />
-          <circle cx="930" cy="140" r="3" fill="#FFE08A" />
-          <circle cx="40" cy="330" r="2" fill="#fff" />
-          <circle cx="960" cy="420" r="2.5" fill="#fff" />
-          <circle cx="120" cy="540" r="3" fill="#FFE08A" />
-          <circle cx="600" cy="570" r="2" fill="#fff" />
-        </g>
-      </svg>
+    <main style={themeVars(cls?.theme) as CSSProperties} className="sp font-body">
+      {/* eslint-disable @next/next/no-img-element */}
+      <img src="/brand/login/mat-trang.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="sp-moon" />
+      <img src="/brand/login/may.webp" alt="" aria-hidden="true" decoding="async" draggable={false} className="sp-clouds" />
+      {/* eslint-enable @next/next/no-img-element */}
+      <LoginScene
+        school={school}
+        className={className}
+        teacher={teacher}
+        logoUrl={cls?.logoUrl ?? null}
+        accent={brand.accent ? brand.accent.slice(4) : ''}
+        slogan={slogan}
+      />
 
-      <section className="relative flex w-full max-w-[560px] flex-[1_1_380px] flex-col items-center gap-3.5 text-center text-white">
-        <div className="flex items-center gap-3">
-          <div className="relative h-[88px] w-[88px] flex-none overflow-hidden rounded-full bg-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={cls?.logoUrl ?? '/brand/logo-truong.jpg'}
-              alt={`Logo trường ${school}`}
-              width={92}
-              height={92}
-              className="absolute -left-0.5 -top-0.5 h-[92px] w-[92px] max-w-none object-cover"
-            />
+      <section className="sp-cockpit">
+        <div className="sp-card">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/login/ten-lua.webp" alt="" aria-hidden="true" className="sp-card-rocket" />
+          <div>
+            <h2 className="sp-welcome">
+              Chào mừng đến
+              <b>{brand.accent ? `Trạm Năm ${brand.accent.slice(4)}!` : 'Trạm không gian!'}</b>
+            </h2>
+            <p className="sp-sub">Chọn vai trò của bạn để bắt đầu hành trình khám phá nhé!</p>
           </div>
+          {demo.length > 0 && <DemoButtons roles={demo} next={sp.next} />}
+          <LoginForm next={sp.next} initialError={initialError} />
         </div>
-        <div className="font-display text-[22px] font-extrabold tracking-[0.06em]">
-          {schoolLabel(school).toLocaleUpperCase('vi-VN')}
-        </div>
-        <div className="text-sm font-extrabold tracking-[0.18em] text-[#FFE08A]">
-          {[className && `LỚP ${className}`, teacher && `TEAM ${teacher}`].filter(Boolean).join(' · ').toLocaleUpperCase('vi-VN')}
-        </div>
-        <div className="w-full max-w-[520px]" style={{ animation: 'fl 5s ease-in-out infinite' }}>
-          <Image
-            src="/brand/ba-ban-nho.png"
-            alt="Ba bạn học sinh chibi"
-            width={1100}
-            height={447}
-            priority
-            className="block h-auto w-full"
-          />
-        </div>
-        <h1 className="m-0 font-display text-[46px] font-extrabold leading-[1.05]">
-          Trạm không gian
-          {brand.accent && (
-            <>
-              <br />
-              {`Năm ${brand.accent.slice(4)}`}
-            </>
-          )}
-        </h1>
-        <p className="m-0 text-[17px] text-[#E4E7FF]">{slogan}</p>
-      </section>
-
-      <section className="clay-card relative flex w-full max-w-[460px] flex-[1_1_360px] flex-col gap-[18px] rounded-[32px] px-[30px] py-8 shadow-[0_4px_0_var(--primary-edge),0_30px_60px_rgba(10,12,60,0.45)]">
-        <div>
-          <h2 className="m-0 font-display text-[28px] font-extrabold">Đăng nhập</h2>
-          <div className="text-[15px] font-semibold text-muted">Chọn tài khoản để vào trạm không gian</div>
-        </div>
-        {demo.length > 0 && <DemoButtons roles={demo} next={sp.next} />}
-        <LoginForm next={sp.next} initialError={initialError} />
       </section>
     </main>
   )

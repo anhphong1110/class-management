@@ -11,7 +11,7 @@ const TABS = [
   {
     key: 'teacher',
     label: 'Giáo viên',
-    icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
+    avatar: '/brand/login/avatar-co.webp',
     userLabel: 'Tên đăng nhập của cô',
     userHint: 'Ví dụ: co.ten',
     note: 'Tài khoản giáo viên có toàn quyền quản trị lớp học.',
@@ -19,7 +19,7 @@ const TABS = [
   {
     key: 'student',
     label: 'Học sinh',
-    icon: 'M6 8a6 6 0 0 1 12 0v10a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3zM9 14h6M10 3v3M14 3v3',
+    avatar: '/brand/login/avatar-hs.webp',
     userLabel: 'Tên đăng nhập của em',
     userHint: 'Ví dụ: hs.minhanh',
     note: 'Tài khoản học sinh do cô giáo tạo. Em chỉ xem được sao, bảng xếp hạng, quà tặng và thời khóa biểu.',
@@ -27,6 +27,18 @@ const TABS = [
 ] as const
 
 type TabKey = (typeof TABS)[number]['key']
+
+// Nhãn tab kèm hình đại diện chibi (hình trang trí nên alt rỗng; tên truy cập vẫn là "Giáo viên"/"Học sinh").
+const TAB_ITEMS = TABS.map((x) => ({
+  key: x.key,
+  label: (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={x.avatar} alt="" aria-hidden="true" width={32} height={32} className="sp-tab-ava" />
+      {x.label}
+    </>
+  ),
+}))
 
 const TAB_STORAGE = 'login-tab'
 
@@ -64,24 +76,28 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
   return (
     <form action={action} className="flex flex-col gap-[18px]">
       <input type="hidden" name="next" value={next ?? ''} />
-      <SegmentedTabs items={TABS} value={tab} onChange={choose} idPrefix="tab" panelId="login-panel" label="Loại tài khoản" />
+      <SegmentedTabs items={TAB_ITEMS} value={tab} onChange={choose} idPrefix="tab" panelId="login-panel" label="Loại tài khoản" />
       <div id="login-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-[18px]">
         <Field label={t.userLabel}>
           {(p) => (
-            <Input
-              {...p}
-              type="text"
-              name="username"
-              placeholder={t.userHint}
-              autoComplete="username"
-              autoCapitalize="none"
-              required
-            />
+            <div className="sp-input">
+              <Icon d={ICONS.user} size={20} />
+              <Input
+                {...p}
+                type="text"
+                name="username"
+                placeholder={t.userHint}
+                autoComplete="username"
+                autoCapitalize="none"
+                required
+              />
+            </div>
           )}
         </Field>
         <Field label="Mật khẩu">
           {(p) => (
-            <div className="relative">
+            <div className="sp-input">
+              <Icon d={ICONS.lock} size={20} />
               <Input
                 {...p}
                 type={show ? 'text' : 'password'}
@@ -96,7 +112,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
                 onClick={() => setShow((v) => !v)}
                 aria-pressed={show}
                 aria-label={show ? 'Ẩn ký tự đã nhập' : 'Hiện ký tự đã nhập'}
-                className="absolute right-1.5 top-1.5 flex size-10 items-center justify-center rounded-chip bg-transparent text-muted transition-colors hover:bg-primary-soft hover:text-primary-deep"
+                className="sp-eye absolute right-1.5 top-1.5 flex size-10 items-center justify-center rounded-chip bg-transparent transition-colors"
               >
                 <Icon d={show ? ICONS.eyeOff : ICONS.eye} size={20} />
               </button>
@@ -112,11 +128,14 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
           </p>
         )}
       </div>
-      <Button type="submit" size="lg" loading={pending} className="min-h-[56px]! w-full disabled:opacity-60!">
+      <Button type="submit" size="lg" loading={pending} className="sp-cta min-h-[56px]! w-full">
         {!pending && <Icon d={ICONS.rocket} size={22} />}
         {pending ? 'Đang bay…' : 'Cất cánh'}
       </Button>
-      <div className="rounded-ctl bg-primary-soft px-3 py-2.5 text-[14px] font-semibold leading-normal text-primary-deep">{t.note}</div>
+      <p className="sp-note">
+        <Icon d={ICONS.lock} size={16} />
+        {t.note}
+      </p>
     </form>
   )
 }
