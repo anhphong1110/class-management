@@ -14,10 +14,11 @@ type Props = {
   classLogoUrl: string | null
   schoolLogoUrl?: string | null
   className: string
+  brandName?: string | null
   schoolName?: string | null
 }
 
-export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, className, schoolName }: Props) {
+export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, className, brandName, schoolName }: Props) {
   const pathname = usePathname()
   const activeId =
     active ??
@@ -37,6 +38,7 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
         classLogoUrl={classLogoUrl}
         schoolLogoUrl={schoolLogoUrl}
         className={className}
+        brandName={brandName}
         schoolName={schoolName}
       />
       <nav

@@ -1,27 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { generateTempPassword, TEMP_PASSWORD_ALPHABET } from '@/lib/accounts/password'
+import { generateInternalPassword, validateNewPassword } from '@/lib/accounts/password'
 import { pickUsername } from '@/lib/accounts/username'
 import { normalizeUsername } from '@/lib/auth/username'
 
-describe('generateTempPassword', () => {
-  it('dài 10 ký tự và chỉ dùng bộ chữ cho phép', () => {
-    expect(TEMP_PASSWORD_ALPHABET).toBe('abcdefghjkmnpqrstuvwxyz23456789')
-    for (let i = 0; i < 200; i++) {
-      const p = generateTempPassword()
-      expect(p).toHaveLength(10)
-      for (const ch of p) expect(TEMP_PASSWORD_ALPHABET).toContain(ch)
+describe('generateInternalPassword', () => {
+  it('đủ dài, hợp lệ với luật mật khẩu và không lặp lại', () => {
+    const seen = new Set<string>()
+    for (let i = 0; i < 100; i++) {
+      const p = generateInternalPassword()
+      expect(p.length).toBeGreaterThanOrEqual(32)
+      expect(validateNewPassword(p)).toBeNull()
+      seen.add(p)
     }
-  })
-  it('rand cố định cho kết quả cố định', () => {
-    expect(generateTempPassword(() => 0)).toBe('aaaaaaaaaa')
-    expect(generateTempPassword((n) => n - 1)).toBe('9999999999')
-    let i = 0
-    expect(generateTempPassword((n) => i++ % n)).toBe('abcdefghjk')
-  })
-  it('gọi rand với kích thước bộ chữ', () => {
-    const sizes = new Set<number>()
-    generateTempPassword((n) => (sizes.add(n), 0))
-    expect([...sizes]).toEqual([TEMP_PASSWORD_ALPHABET.length])
+    expect(seen.size).toBe(100)
   })
 })
 
@@ -60,5 +51,19 @@ describe('signInErrorKey', () => {
     expect(signInErrorKey({ status: 400, code: 'user_banned' })).toBe('account_banned')
     expect(signInErrorKey({ status: 400, code: 'invalid_credentials' })).toBe('invalid_credentials')
     expect(signInErrorKey({})).toBe('invalid_credentials')
+  })
+})
+
+describe('validateNewPassword', () => {
+  it('dưới 6 ký tự thì quá ngắn', () => {
+    expect(validateNewPassword('')).toBe('password_too_short')
+    expect(validateNewPassword('abcde')).toBe('password_too_short')
+  })
+  it('từ 6 đến 72 ký tự thì hợp lệ', () => {
+    expect(validateNewPassword('abcdef')).toBeNull()
+    expect(validateNewPassword('a'.repeat(72))).toBeNull()
+  })
+  it('trên 72 ký tự thì quá dài', () => {
+    expect(validateNewPassword('a'.repeat(73))).toBe('password_too_long')
   })
 })

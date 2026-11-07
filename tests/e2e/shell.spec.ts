@@ -91,7 +91,7 @@ test('theme pink đổi --primary và bg-primary', async ({ page }) => {
     const accent = page.getByTestId('hero-window')
     const bg = () => accent.evaluate((el) => getComputedStyle(el).fill)
     const before = await bg()
-    expect(before).toBe('rgb(102, 117, 232)')
+    expect(before).toBe('rgb(77, 163, 255)')
     const { error } = await a.from('classes').update({ theme: 'pink' }).eq('id', CLASS_ID)
     expect(error).toBeNull()
     await page.reload()

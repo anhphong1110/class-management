@@ -6,18 +6,20 @@ import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { usernameToEmail } from '@/lib/auth/username'
-import { generateTempPassword } from '@/lib/accounts/password'
+import { generateInternalPassword, validateNewPassword } from '@/lib/accounts/password'
 import { pickUsername } from '@/lib/accounts/username'
 import { toVietnameseMessage } from '@/lib/errors'
 
-export type TempAccount = { name: string; username: string; password: string }
-export type CreateAccountsResult = { created: TempAccount[]; failed: { name: string; reason: string }[] }
+export type CreatedAccount = { studentId: string; name: string; username: string }
+export type CreateAccountsResult = { created: CreatedAccount[]; failed: { name: string; reason: string }[] }
+export type SetPasswordsResult = { updated: number; failed: string[] } | { error: string }
 
 const guid = z.guid()
+const guidList = z.array(z.guid()).min(1).max(200)
 // GoTrue chặn đăng nhập của tài khoản bị khóa bằng ban_duration; 876000h ≈ 100 năm.
 const BAN_FOREVER = '876000h'
 
-/** Mật khẩu tạm chỉ trả về trình duyệt một lần, không lưu và không ghi log. */
+/** Tạo tài khoản với mật khẩu nội bộ không ai biết; cô đặt mật khẩu cho các em ở bước sau (`setStudentPasswords`). */
 export async function createStudentAccounts(): Promise<CreateAccountsResult> {
   const user = await requireTeacher()
   const supabase = await createServerSupabase()
@@ -42,7 +44,7 @@ export async function createStudentAccounts(): Promise<CreateAccountsResult> {
     if (hasAccount.has(s.id)) continue
     const username = pickUsername(s.full_name, taken)
     taken.add(username)
-    const password = generateTempPassword()
+    const password = generateInternalPassword()
 
     const { data: made, error: authError } = await admin.auth.admin.createUser({
       email: usernameToEmail(username),
@@ -74,7 +76,7 @@ export async function createStudentAccounts(): Promise<CreateAccountsResult> {
       })
       continue
     }
-    result.created.push({ name: s.full_name, username, password })
+    result.created.push({ studentId: s.id, name: s.full_name, username })
   }
 
   // Chỉ ghi số lượng. Nếu ghi nhật ký lỗi cũng không ném: ném lúc này sẽ làm mất mật khẩu vừa tạo.
@@ -121,17 +123,45 @@ async function findStudentProfile(classId: string, studentId: string) {
   return data
 }
 
-export async function resetStudentPassword(studentId: string): Promise<TempAccount | { error: string }> {
+/**
+ * Cô đặt cùng một mật khẩu cho nhiều em (các em tự đổi lại sau). Mật khẩu không được trả lại hay ghi log;
+ * nhật ký chỉ ghi số lượng. Chỉ đụng tới học sinh của lớp cô.
+ */
+export async function setStudentPasswords(studentIds: string[], password: string): Promise<SetPasswordsResult> {
   const user = await requireTeacher()
-  if (!guid.safeParse(studentId).success) return { error: toVietnameseMessage('invalid_input') }
-  const profile = await findStudentProfile(user.classId, studentId)
-  if (!profile) return { error: toVietnameseMessage('account_not_found') }
+  const ids = guidList.safeParse(studentIds)
+  if (!ids.success || typeof password !== 'string') return { error: toVietnameseMessage('invalid_input') }
+  const invalid = validateNewPassword(password)
+  if (invalid) return { error: toVietnameseMessage(invalid) }
 
-  const password = generateTempPassword()
-  const { error } = await createAdminSupabase().auth.admin.updateUserById(profile.id, { password })
-  if (error) return { error: toVietnameseMessage('account_update_failed') }
-  await audit(user, 'account_password_reset', studentId)
-  return { name: profile.display_name, username: profile.username, password }
+  const supabase = await createServerSupabase()
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('id, display_name')
+    .eq('class_id', user.classId)
+    .eq('role', 'student')
+    .in('student_id', [...new Set(ids.data)])
+  if (error) throw new Error(error.message)
+  if (!profiles || profiles.length === 0) return { error: toVietnameseMessage('account_not_found') }
+
+  const admin = createAdminSupabase()
+  let updated = 0
+  const failed: string[] = []
+  for (const p of profiles) {
+    const { error: updateError } = await admin.auth.admin.updateUserById(p.id, { password })
+    if (updateError) failed.push(p.display_name)
+    else updated++
+  }
+
+  const { error: auditError } = await admin.from('audit_logs').insert({
+    class_id: user.classId,
+    actor_id: user.userId,
+    action: 'account_passwords_set',
+    entity: 'profiles',
+    payload: { count: updated, failed: failed.length },
+  })
+  if (auditError) console.error('audit_logs account_passwords_set:', auditError.message)
+  return { updated, failed }
 }
 
 export async function setStudentLogin(studentId: string, enabled: boolean): Promise<{ error?: string }> {

@@ -10,7 +10,7 @@ const FLAGS = [
   'student_can_view_rewards', 'student_can_view_timetable', 'student_can_view_news', 'student_can_view_attendance',
   'weekly_redeem_limit', 'star_steps', 'timetable_saturday',
 ]
-const INFO = 'school_name, class_name, school_year, teacher_name, slogan, theme, term1_start, term1_end, term2_start, term2_end, logo_path, class_logo_path, cover_path'
+const INFO = 'school_name, class_name, brand_title, school_year, teacher_name, slogan, theme, term1_start, term1_end, term2_start, term2_end, logo_path, class_logo_path, cover_path'
 
 let flags: Record<string, unknown> = {}
 let info: Record<string, unknown> = {}
@@ -46,6 +46,8 @@ async function open(page: Page) {
   await expect(page).toHaveURL(/\/tong-quan$/)
   await page.goto('/cai-dat')
   await expect(page.getByRole('heading', { level: 1, name: 'Cài đặt' })).toBeVisible()
+  // Chờ trang hydrate xong: điền ô trước đó sẽ bị React ghi đè bằng giá trị ban đầu.
+  await page.waitForLoadState('networkidle')
 }
 
 const saved = (page: Page) => page.getByRole('status').filter({ hasText: 'Đã lưu cài đặt.' })
@@ -75,7 +77,7 @@ test('ngày học kỳ sai thứ tự báo lỗi', async ({ page }) => {
 test('chọn "Xanh mint" thì nút chính đổi màu', async ({ page }) => {
   await open(page)
   const save = page.getByRole('button', { name: 'Lưu thông tin' })
-  await expect(save).toHaveCSS('background-color', 'rgb(79, 91, 213)')
+  await expect(save).toHaveCSS('background-color', 'rgb(37, 99, 235)')
   await page.getByRole('button', { name: 'Xanh mint' }).click()
   await expect(saved(page)).toBeVisible()
   await expect(save).toHaveCSS('background-color', 'rgb(18, 121, 107)')
@@ -168,4 +170,42 @@ test('tải ảnh bìa thì /tong-quan hiện ảnh đó', async ({ page }) => {
   await expect(page.getByTestId('hero-cover')).toBeVisible()
   const { data } = await admin().from('classes').select('cover_path').eq('id', CLASS_ID).single()
   expect(data?.cover_path).toMatch(new RegExp(`^${CLASS_ID}/branding/`))
+})
+
+test('đổi tên trạm thì thanh bên cập nhật, để trống thì về tên suy ra từ tên lớp', async ({ page }) => {
+  await open(page)
+  const sidebar = page.locator('aside').first()
+  await expect(sidebar).toContainText('NĂM 8')
+  await page.getByLabel('Tên trạm (chủ đề của lớp)').fill('Trạm không gian Năm 9')
+  await page.getByRole('button', { name: 'Lưu thông tin' }).click()
+  await expect(saved(page)).toBeVisible()
+  await page.reload()
+  await expect(page.locator('aside').first()).toContainText('NĂM 9')
+  const { data } = await admin().from('classes').select('brand_title').eq('id', CLASS_ID).single()
+  expect(data?.brand_title).toBe('Trạm không gian Năm 9')
+
+  await page.getByLabel('Tên trạm (chủ đề của lớp)').fill('')
+  await page.getByRole('button', { name: 'Lưu thông tin' }).click()
+  await expect(saved(page)).toBeVisible()
+  await page.reload()
+  await expect(page.locator('aside').first()).toContainText('NĂM 8')
+  const after = await admin().from('classes').select('brand_title').eq('id', CLASS_ID).single()
+  expect(after.data?.brand_title).toBeNull()
+})
+
+test('gỡ ảnh bìa lớp: nút chỉ hiện khi đang có ảnh, gỡ xong về mặc định', async ({ page }) => {
+  await open(page)
+  await expect(page.getByRole('button', { name: 'Gỡ ảnh bìa lớp' })).toHaveCount(0)
+  await page.getByTestId('upload-cover').setInputFiles('tests/e2e/fixtures/avatar.png')
+  await expect(saved(page)).toBeVisible()
+  const before = await admin().from('classes').select('cover_path').eq('id', CLASS_ID).single()
+  expect(before.data?.cover_path).toMatch(new RegExp(`^${CLASS_ID}/branding/`))
+
+  await page.getByRole('button', { name: 'Gỡ ảnh bìa lớp' }).click()
+  await expect(saved(page)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Gỡ ảnh bìa lớp' })).toHaveCount(0)
+  const after = await admin().from('classes').select('cover_path').eq('id', CLASS_ID).single()
+  expect(after.data?.cover_path).toBeNull()
+  await page.goto('/tong-quan')
+  await expect(page.getByTestId('hero-cover')).toHaveCount(0)
 })

@@ -17,7 +17,7 @@ export type DisplayWeekRow = { id: string; name: string; stars: number }
 export type { DisplayLesson }
 
 export type DisplayData = {
-  cls: { schoolYear: string; className: string; slogan: string; schoolName: string }
+  cls: { schoolYear: string; className: string; brandTitle: string | null; slogan: string; schoolName: string }
   schoolLogoUrl: string | null
   dateLabel: string
   top5: DisplayTop5Row[]
@@ -34,7 +34,7 @@ export async function getDisplayData(classId: string, now: Date = new Date()): P
   const { from, to } = periodRange('week', now, NO_TERMS)
 
   const [clsRes, yearRes, weekRes, totalsRes, groups, timetable, announcements] = await Promise.all([
-    supabase.from('classes').select('school_year, class_name, slogan, school_name, logo_path').eq('id', classId).single(),
+    supabase.from('classes').select('school_year, class_name, brand_title, slogan, school_name, logo_path').eq('id', classId).single(),
     supabase.rpc('leaderboard_between', { p_from: null, p_to: null }),
     supabase.rpc('leaderboard_between', { p_from: from!, p_to: to! }),
     supabase.rpc('class_star_totals_between', { p_from: from!, p_to: to! }),
@@ -82,7 +82,7 @@ export async function getDisplayData(classId: string, now: Date = new Date()): P
   const today = buildTodayLessons(timetable.slots, timetable.subjects, now, timetable.saturday)
 
   return {
-    cls: { schoolYear: cls.school_year, className: cls.class_name, slogan: cls.slogan, schoolName: cls.school_name },
+    cls: { schoolYear: cls.school_year, className: cls.class_name, brandTitle: cls.brand_title, slogan: cls.slogan, schoolName: cls.school_name },
     schoolLogoUrl,
     dateLabel: formatVietnameseDate(now),
     top5,

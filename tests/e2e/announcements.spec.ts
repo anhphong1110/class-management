@@ -67,8 +67,8 @@ test('đăng, ghim, sửa, bỏ ghim, xóa hai bước', async ({ page }) => {
 
   const del = card(page, 'Ôn tập Toán').getByRole('button', { name: 'Xóa' })
   await del.click()
-  await expect(card(page, 'Ôn tập Toán').getByRole('button', { name: 'Bấm lần nữa để xóa' })).toBeVisible()
-  await card(page, 'Ôn tập Toán').getByRole('button', { name: 'Bấm lần nữa để xóa' }).click()
+  await expect(page.getByRole('dialog', { name: 'Xóa thông báo này?' })).toBeVisible()
+  await page.getByRole('dialog', { name: 'Xóa thông báo này?' }).getByRole('button', { name: 'Xóa thông báo' }).click()
   await expect(status(page, 'Đã xóa thông báo.')).toBeVisible()
   await expect(card(page, 'Ôn tập Toán')).toHaveCount(0)
   await expect(cards(page)).toHaveCount(1)
@@ -101,7 +101,7 @@ test('Tổng quan hiện thông báo ghim, không hiện thông báo đã xóa',
   await post(page, 'Thông báo sẽ xóa', 'Nội dung tạm.')
   await expect(cards(page)).toHaveCount(4)
   await card(page, 'Thông báo sẽ xóa').getByRole('button', { name: 'Xóa' }).click()
-  await card(page, 'Thông báo sẽ xóa').getByRole('button', { name: 'Bấm lần nữa để xóa' }).click()
+  await page.getByRole('dialog', { name: 'Xóa thông báo này?' }).getByRole('button', { name: 'Xóa thông báo' }).click()
   await expect(card(page, 'Thông báo sẽ xóa')).toHaveCount(0)
 
   if (info.project.name === 'desktop') {

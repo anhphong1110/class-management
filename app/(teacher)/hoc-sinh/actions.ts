@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { createAdminSupabase } from '@/lib/supabase/admin'
 import { toVietnameseMessage } from '@/lib/errors'
 import { formatDayLabel } from '@/lib/domain/relative-time'
 import { classShortName } from '@/lib/classes/short-name'
@@ -138,6 +139,33 @@ export async function archiveStudent(id: string): Promise<Result> {
   const { error } = await supabase.rpc('archive_student', { p_student_id: id })
   if (error) return { error: toVietnameseMessage(error.message) }
   refresh()
+  return {}
+}
+
+/**
+ * Xóa hẳn học sinh và mọi dữ liệu của em (RPC), rồi xóa tài khoản đăng nhập của em bằng client admin.
+ * Không xóa được tài khoản Auth thì báo lỗi nhưng học sinh đã mất (tài khoản đó không còn hồ sơ nên không vào được).
+ */
+export async function deleteStudent(id: string): Promise<Result> {
+  await requireTeacher()
+  if (!uuid.safeParse(id).success) return { error: toVietnameseMessage('student_not_found') }
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase.rpc('delete_student', { p_student_id: id })
+  if (error) return { error: toVietnameseMessage(error.message) }
+  const authIds = z.array(uuid).parse(data ?? [])
+  let failed = 0
+  if (authIds.length) {
+    const admin = createAdminSupabase()
+    for (const authId of authIds) {
+      const { error: deleteError } = await admin.auth.admin.deleteUser(authId)
+      if (deleteError) {
+        failed += 1
+        console.error('delete-student: không xóa được tài khoản Auth:', authId, deleteError.message)
+      }
+    }
+  }
+  refresh()
+  if (failed > 0) return { error: toVietnameseMessage('student_account_left') }
   return {}
 }
 

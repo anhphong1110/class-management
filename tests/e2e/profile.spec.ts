@@ -39,7 +39,7 @@ test.describe.configure({ mode: 'serial' })
 
 const CLASS_ID = '00000000-0000-0000-0000-000000000058'
 const HAMY_ID = '00000000-0000-0000-0000-0000000b0005'
-const HAMY_AVATAR = '00000000-0000-0000-0000-0000000a0005'
+const HAMY_AVATAR = '00000000-0000-0000-0000-0000000a0001'
 
 async function open(page: Page) {
   await login(page, 'Giáo viên', 'co.khanh')
@@ -80,34 +80,71 @@ test('liệt kê người và chọn Võ Hà My', async ({ page }, info) => {
 test('đổi avatar cho Hà My và giữ sau khi tải lại', async ({ page }) => {
   await open(page)
   await page.getByTestId('people').getByRole('button', { name: /Võ Hà My/ }).click()
-  await page.getByTestId('library').getByRole('button', { name: 'Phi hành gia 3', exact: true }).click()
-  await expect(page.getByText('Đang chọn: Phi hành gia 3')).toBeVisible()
+  await page.getByTestId('library').getByRole('button', { name: 'Bạn nam', exact: true }).click()
+  await expect(page.getByText('Đang chọn: Bạn nam')).toBeVisible()
   await page.getByRole('button', { name: 'Lưu avatar' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Đã đổi avatar của Võ Hà My.' })).toBeVisible()
   await page.reload()
   await page.getByTestId('people').getByRole('button', { name: /Võ Hà My/ }).click()
-  await expect(page.getByTestId('current')).toContainText('Avatar hiện tại: Phi hành gia 3')
+  await expect(page.getByTestId('current')).toContainText('Avatar hiện tại: Bạn nam')
 })
 
 test('tải ảnh lên thư viện và từ chối ảnh quá lớn', async ({ page }) => {
   await open(page)
   const tiles = page.getByTestId('library').locator('button[aria-pressed]')
-  await expect(tiles).toHaveCount(12)
-  await expect(tiles).toHaveText(['Phi hành gia 1', 'Phi hành gia 2', 'Phi hành gia 3', 'Phi hành gia 4', 'Phi hành gia 5', 'Phi hành gia 6', 'Cô giáo', 'Phi hành gia 8', 'Phi hành gia 9', 'Phi hành gia 10', 'Phi hành gia 11', 'Phi hành gia 12'])
+  await expect(tiles).toHaveCount(2)
+  await expect(tiles).toHaveText(['Bạn nữ', 'Bạn nam'])
   const input = page.locator('input[type=file]')
   await input.setInputFiles('tests/e2e/fixtures/avatar.png')
-  await expect(tiles).toHaveCount(13)
+  await expect(tiles).toHaveCount(3)
   await expect(page.getByTestId('library').getByRole('button', { name: 'avatar', exact: true })).toBeVisible()
   await expect(page.getByTestId('library').locator('img')).toHaveCount(1)
-  await expect(tiles.nth(12)).toHaveText('avatar')
+  await expect(tiles.nth(2)).toHaveText('avatar')
 
   await input.setInputFiles({ name: 'lon.png', mimeType: 'image/png', buffer: Buffer.alloc(6 * 1024 * 1024) })
   await expect(page.getByText('Ảnh lớn hơn 2 MB, cô chọn ảnh nhỏ hơn nhé.')).toBeVisible()
-  await expect(tiles).toHaveCount(13)
+  await expect(tiles).toHaveCount(3)
 
   await input.setInputFiles({ name: 'a.gif', mimeType: 'image/gif', buffer: Buffer.alloc(10) })
   await expect(page.getByText('Chỉ nhận ảnh JPG, PNG hoặc WEBP.')).toBeVisible()
-  await expect(tiles).toHaveCount(13)
+  await expect(tiles).toHaveCount(3)
+})
+
+test('gỡ avatar của Hà My về mặc định', async ({ page }) => {
+  await open(page)
+  await page.getByTestId('people').getByRole('button', { name: /Võ Hà My/ }).click()
+  await expect(page.getByTestId('current')).not.toContainText('Chưa chọn')
+  await page.getByRole('button', { name: 'Gỡ avatar' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Đã gỡ avatar của Võ Hà My.' })).toBeVisible()
+  await expect(page.getByTestId('current')).toContainText('Avatar hiện tại: Chưa chọn')
+  await expect(page.getByRole('button', { name: 'Gỡ avatar' })).toHaveCount(0)
+  const { data } = await admin().from('students').select('avatar_id').eq('id', HAMY_ID).single()
+  expect(data!.avatar_id).toBeNull()
+})
+
+test('xóa ảnh tải lên khỏi thư viện, người đang dùng về mặc định', async ({ page }) => {
+  await open(page)
+  const lib = page.getByTestId('library')
+  const tiles = lib.locator('button[aria-pressed]')
+  await expect(lib.getByRole('button', { name: /^Xóa ảnh/ })).toHaveCount(0)
+  await page.locator('input[type=file]').setInputFiles('tests/e2e/fixtures/avatar.png')
+  await expect(tiles).toHaveCount(3)
+  const { data: up } = await admin().from('avatar_library').select('id, image_path').eq('class_id', CLASS_ID).eq('kind', 'upload').single()
+  await admin().from('students').update({ avatar_id: up!.id }).eq('id', HAMY_ID)
+
+  await lib.getByRole('button', { name: 'Xóa ảnh avatar' }).click()
+  const confirm = page.getByRole('dialog', { name: 'Xóa ảnh avatar?' })
+  await confirm.getByRole('button', { name: 'Xóa ảnh' }).click()
+  await expect(confirm).toHaveCount(0)
+  await expect(tiles).toHaveCount(2)
+
+  const { data: rows } = await admin().from('avatar_library').select('id').eq('class_id', CLASS_ID).eq('kind', 'upload')
+  expect(rows).toHaveLength(0)
+  const { data: hamy } = await admin().from('students').select('avatar_id').eq('id', HAMY_ID).single()
+  expect(hamy!.avatar_id).toBeNull()
+  const dir = up!.image_path!.split('/').slice(0, -1).join('/')
+  const { data: files } = await admin().storage.from('class-media').list(dir)
+  expect((files ?? []).map((f) => f.name)).not.toContain(up!.image_path!.split('/').pop())
 })
 
 test('tải ảnh PNG ~2 MB lên được nhờ nén phía trình duyệt', async ({ page }) => {
@@ -116,11 +153,11 @@ test('tải ảnh PNG ~2 MB lên được nhờ nén phía trình duyệt', asyn
   expect(buffer.length).toBeLessThan(5 * 1024 * 1024)
   await open(page)
   const tiles = page.getByTestId('library').locator('button[aria-pressed]')
-  await expect(tiles).toHaveCount(12)
+  await expect(tiles).toHaveCount(2)
   await page.locator('input[type=file]').setInputFiles({ name: 'anh-lon.png', mimeType: 'image/png', buffer })
   await expect(page.getByRole('status').filter({ hasText: 'Đã thêm avatar vào thư viện của lớp.' })).toBeVisible()
-  await expect(tiles).toHaveCount(13)
-  await expect(tiles.nth(12)).toHaveText('anh-lon')
+  await expect(tiles).toHaveCount(3)
+  await expect(tiles.nth(2)).toHaveText('anh-lon')
   const { data: uploaded } = await admin().from('avatar_library').select('image_path').eq('class_id', CLASS_ID).eq('kind', 'upload')
   expect(uploaded).toHaveLength(1)
   expect(uploaded![0].image_path).toMatch(/\.(webp|jpg)$/)

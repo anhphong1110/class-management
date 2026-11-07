@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { createAdminSupabase } from '@/lib/supabase/admin'
 import { toVietnameseMessage } from '@/lib/errors'
-import { brandLines } from '@/lib/classes/brand'
+import { brandSentence } from '@/lib/classes/brand'
 import { themeVars } from '@/lib/domain/theme'
 import { demoRoles } from '@/lib/auth/demo'
 import LoginForm from './LoginForm'
@@ -15,7 +15,7 @@ async function loadClass() {
   const admin = createAdminSupabase()
   const { data } = await admin
     .from('classes')
-    .select('id, school_name, class_name, teacher_name, slogan, theme, logo_path')
+    .select('id, school_name, class_name, brand_title, teacher_name, slogan, theme, logo_path')
     .is('archived_at', null)
     .order('created_at', { ascending: true })
     .limit(1)
@@ -42,7 +42,9 @@ export default async function LoginPage({
   const school = cls?.school_name || 'Tiểu học Chính Nghĩa'
   const className = cls?.class_name ?? ''
   const teacher = cls?.teacher_name ?? ''
-  const brand = brandLines({ class_name: className })
+  // Tiêu đề hai dòng: "Trạm không gian" / "Năm N" (hoặc một dòng nếu tên cô đặt không có tiền tố này).
+  const sentence = brandSentence({ class_name: className, brand_title: cls?.brand_title })
+  const brandParts = /^(trạm không gian)\s+(.+)$/iu.exec(sentence)
   const slogan = cls?.slogan || 'Cùng học – Cùng chơi – Cùng tỏa sáng'
   const initialError =
     sp.error === 'no_profile' || sp.error === 'class_archived' || sp.error === 'account_banned'
@@ -60,7 +62,7 @@ export default async function LoginPage({
         className={className}
         teacher={teacher}
         logoUrl={cls?.logoUrl ?? null}
-        accent={brand.accent ? brand.accent.slice(4) : ''}
+        title={sentence}
         slogan={slogan}
       />
 
@@ -71,7 +73,7 @@ export default async function LoginPage({
           <div>
             <h2 className="sp-welcome">
               Chào mừng đến
-              <b>{brand.accent ? `Trạm Năm ${brand.accent.slice(4)}!` : 'Trạm không gian!'}</b>
+              <b>{`${brandParts ? `Trạm ${brandParts[2]}` : sentence}!`}</b>
             </h2>
             <p className="sp-sub">Chọn vai trò của bạn để bắt đầu hành trình khám phá nhé!</p>
           </div>

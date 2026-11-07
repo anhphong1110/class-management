@@ -17,6 +17,7 @@ const infoInput = z
   .object({
     school_name: text,
     class_name: text,
+    brand_title: z.string().max(60),
     school_year: text,
     teacher_name: text,
     slogan: text,
@@ -126,6 +127,25 @@ export async function uploadBranding(form: FormData): Promise<Result> {
     return { error: toVietnameseMessage(error.message) }
   }
   if (oldPath) await supabase.storage.from('class-media').remove([oldPath])
+  refresh()
+  return {}
+}
+
+/** Gỡ logo trường / logo lớp / ảnh bìa: đặt cột về null (giao diện dùng ảnh mặc định) rồi xóa file cũ. */
+export async function clearBranding(kind: string): Promise<Result> {
+  const user = await requireTeacher()
+  const parsed = kindInput.safeParse(kind)
+  if (!parsed.success) return invalid()
+  const column = BRANDING[parsed.data]
+  const supabase = await createServerSupabase()
+  const { data: before, error: readError } = await supabase.from('classes').select(column).eq('id', user.classId).single()
+  if (readError) throw new Error(readError.message)
+  const oldPath = (before as Record<string, string | null>)[column]
+  if (!oldPath) return {}
+
+  const { error } = await supabase.rpc('save_class_info', { p: { [column]: null } })
+  if (error) return { error: toVietnameseMessage(error.message) }
+  await supabase.storage.from('class-media').remove([oldPath])
   refresh()
   return {}
 }

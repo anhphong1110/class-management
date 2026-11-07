@@ -11,7 +11,7 @@ import { Notice } from '@/components/ui/Notice'
 import { givenNameKey, matchesSearch } from '@/lib/domain/vn-text'
 import type { StarGroup } from '@/lib/stars/queries'
 import type { StudentCard, TodayStatus } from '@/lib/students/queries'
-import { archiveStudent, exportStudents, loadProfile, type ProfileDetail } from './actions'
+import { archiveStudent, deleteStudent, exportStudents, loadProfile, type ProfileDetail } from './actions'
 import { CLOCK, X_CIRCLE } from '../diem-danh/status-icons'
 import { GroupsView } from './GroupsView'
 import { ImportDialog } from './ImportDialog'
@@ -65,6 +65,7 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
   const [detail, setDetail] = useState<{ id: string; data: ProfileDetail | null; failed: boolean } | null>(null)
   const [form, setForm] = useState<{ open: boolean; student: EditTarget | null }>({ open: false, student: null })
   const [confirming, setConfirming] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [importing, setImporting] = useState(false)
@@ -110,6 +111,19 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
         setSelId(null)
         setError('')
         setNotice('Đã lưu trữ học sinh. Sổ sao và lịch sử vẫn được giữ lại.')
+      }
+    })
+  }
+
+  function confirmDelete() {
+    if (!sel) return
+    startTransition(async () => {
+      const res = await deleteStudent(sel.id)
+      if (res.error) setError(res.error)
+      else {
+        setConfirmingDelete(false)
+        setSelId(null)
+        setError('')
       }
     })
   }
@@ -205,7 +219,7 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
         ))}
       </div>
 
-      {error && !confirming && <Notice tone="error">{error}</Notice>}
+      {error && !confirming && !confirmingDelete && <Notice tone="error">{error}</Notice>}
       {notice && <Notice tone="success">{notice}</Notice>}
 
       {view === 'groups' && <GroupsView students={students} groups={groups} />}
@@ -220,6 +234,10 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
           onArchive={() => {
             setError('')
             setConfirming(true)
+          }}
+          onDelete={() => {
+            setError('')
+            setConfirmingDelete(true)
           }}
         />
       )}
@@ -326,6 +344,27 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
           </Button>
           <Button variant="danger" onClick={confirmArchive} disabled={pending}>
             {pending ? 'Đang lưu trữ…' : 'Lưu trữ'}
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal open={confirmingDelete && !!sel} onClose={() => setConfirmingDelete(false)} title="Xóa học sinh?">
+        <p className="m-0 mb-2 flex items-start gap-3 text-base font-semibold text-muted">
+          <Icon d={ICONS.alert} size={22} className="mt-0.5 text-danger" />
+          <span>
+            {sel?.fullName} sẽ bị xóa hẳn cùng toàn bộ sao, lịch sử đổi quà, điểm danh, huy hiệu và tài khoản đăng nhập của em. Việc này không hoàn tác được.
+          </span>
+        </p>
+        <p className="m-0 mb-4 text-base font-semibold text-muted">
+          Nếu em chỉ chuyển lớp hoặc nghỉ học và cô muốn giữ lịch sử, hãy chọn Lưu trữ thay vì Xóa.
+        </p>
+        {error && <Notice tone="error">{error}</Notice>}
+        <div className="mt-3 flex flex-wrap justify-end gap-3">
+          <Button variant="secondary" onClick={() => setConfirmingDelete(false)} disabled={pending}>
+            Hủy
+          </Button>
+          <Button variant="danger" onClick={confirmDelete} loading={pending}>
+            Xóa vĩnh viễn
           </Button>
         </div>
       </Modal>

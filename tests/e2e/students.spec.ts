@@ -134,6 +134,36 @@ test('thêm, sửa, lưu trữ học sinh', async ({ page }) => {
   expect(data![0].archived_at).not.toBeNull()
 })
 
+test('xóa hẳn một học sinh vừa thêm, kể cả sổ sao', async ({ page }) => {
+  await open(page)
+  await page.getByRole('button', { name: '+ Thêm học sinh' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Thêm học sinh' })
+  await dialog.getByLabel('Họ và tên').fill('Trần Bảo Xóa')
+  await dialog.getByRole('button', { name: 'Lưu' }).click()
+  await expect(dialog).toHaveCount(0)
+  const card = cards(page).filter({ hasText: 'Trần Bảo Xóa' })
+  await expect(card).toHaveCount(1)
+
+  const created = await admin().from('students').select('id').eq('class_id', CLASS_ID).eq('code', 'HS11').single()
+  await admin().from('star_transactions').insert({
+    class_id: CLASS_ID, student_id: created.data!.id, delta: 3, kind: 'award', note: 'thử xóa', batch_id: crypto.randomUUID(),
+  })
+
+  await card.click()
+  await profile(page).getByRole('button', { name: 'Xóa học sinh' }).click()
+  const confirm = page.getByRole('dialog', { name: 'Xóa học sinh?' })
+  await expect(confirm).toContainText('Trần Bảo Xóa')
+  await confirm.getByRole('button', { name: 'Xóa vĩnh viễn' }).click()
+  await expect(confirm).toHaveCount(0)
+  await expect(cards(page).filter({ hasText: 'Trần Bảo Xóa' })).toHaveCount(0)
+  await expect(cards(page)).toHaveCount(10)
+
+  const { data } = await admin().from('students').select('id').eq('class_id', CLASS_ID).eq('code', 'HS11')
+  expect(data).toHaveLength(0)
+  const stars = await admin().from('star_transactions').select('id').eq('student_id', created.data!.id)
+  expect(stars.data).toHaveLength(0)
+})
+
 test('tên rỗng bị chặn', async ({ page }) => {
   await open(page)
   await page.getByRole('button', { name: '+ Thêm học sinh' }).click()
@@ -201,6 +231,7 @@ test.describe('Chia tổ', () => {
     await expect(gcard(page, 'Tổ 5')).toHaveCount(1)
     await expect(gcard(page, 'Tổ 5').getByTestId('group-summary')).toHaveText('0 bạn · 0 sao tích lũy')
     await gcard(page, 'Tổ 5').getByRole('button', { name: 'Xóa tổ' }).click()
+    await page.getByRole('dialog', { name: 'Xóa tổ này?' }).getByRole('button', { name: 'Xóa tổ' }).click()
     await expect(gcard(page, 'Tổ 5')).toHaveCount(0)
     await expect(page.getByTestId('group-card')).toHaveCount(4)
   })

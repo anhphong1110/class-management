@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { admin, login } from './helpers'
+import { admin, login, pw } from './helpers'
 import {
   CLASS_ID,
   resetAnnouncements,
@@ -53,7 +53,18 @@ test.beforeAll(async () => {
   originalAvatar = s?.avatar_id ?? null
 })
 test.beforeEach(reset)
+
+/** Trả mật khẩu của tài khoản seed về như cũ để các spec khác còn đăng nhập được. */
+async function restorePassword() {
+  const db = admin()
+  const { data, error } = await db.from('profiles').select('id').eq('username', 'hs.hamy').single()
+  expect(error).toBeNull()
+  const res = await db.auth.admin.updateUserById(data!.id, { password: pw('hs.hamy') })
+  expect(res.error).toBeNull()
+}
+
 test.afterAll(async () => {
+  await restorePassword()
   resetStars()
   resetMissions()
   resetTimetable()
@@ -71,8 +82,15 @@ async function open(page: Page, path = '/em') {
 
 const menu = (page: Page) => page.getByRole('navigation', { name: 'Menu học sinh' })
 
+// Dưới lg menu là thanh tab đáy: 4 mục đầu + "Thêm" mở bảng chứa các mục còn lại (khi có hơn 5 mục).
+async function showAllLinks(page: Page) {
+  const more = menu(page).getByRole('button', { name: 'Thêm' })
+  if (await more.isVisible()) await more.click()
+}
+
 test('menu 7 mục theo thứ tự khi bật hết', async ({ page }) => {
   await open(page)
+  await showAllLinks(page)
   await expect(menu(page).getByRole('link')).toHaveText([
     'Trang chủ',
     'Sao của em',
@@ -85,11 +103,25 @@ test('menu 7 mục theo thứ tự khi bật hết', async ({ page }) => {
   await expect(menu(page).getByRole('link', { name: 'Trang chủ' })).toHaveAttribute('aria-current', 'page')
 })
 
+test('dưới lg menu là thanh tab đáy, trên lg là thanh bên', async ({ page }) => {
+  await open(page)
+  const width = page.viewportSize()!.width
+  const pos = await menu(page).evaluate((el) => getComputedStyle(el).position)
+  if (width < 1024) {
+    expect(pos).toBe('fixed')
+    await expect(menu(page).getByRole('button', { name: 'Thêm' })).toBeVisible()
+  } else {
+    expect(pos).not.toBe('fixed')
+    await expect(menu(page).getByRole('button', { name: 'Thêm' })).toBeHidden()
+  }
+})
+
 test('cô tắt bảng xếp hạng: mục biến mất và /em/xep-hang trả 404', async ({ page }) => {
   await open(page)
   await expect(menu(page).getByRole('link', { name: 'Bảng xếp hạng' })).toBeVisible()
   await setFlags({ student_can_view_rank: false })
   await page.reload()
+  await showAllLinks(page)
   await expect(menu(page).getByRole('link', { name: 'Bảng xếp hạng' })).toHaveCount(0)
   await expect(menu(page).getByRole('link')).toHaveCount(6)
   const res = await page.goto('/em/xep-hang')
@@ -189,8 +221,8 @@ test('Bảng xếp hạng: Top 5, dòng của em tô màu và "(em)"', async ({ 
   await expect(me).toHaveCount(1)
   await expect(me).toContainText('Võ Hà My')
   await expect(me).toContainText('50 sao')
-  await expect(me).toHaveCSS('background-color', 'rgb(238, 240, 255)')
-  await expect(me).toHaveCSS('border-top-color', 'rgb(79, 91, 213)')
+  await expect(me).toHaveCSS('background-color', 'rgb(224, 238, 255)')
+  await expect(me).toHaveCSS('border-top-color', 'rgb(37, 99, 235)')
 })
 
 test('Bảng xếp hạng: em ngoài Top 5 thì thêm dòng của em ở cuối', async ({ page }) => {
@@ -226,6 +258,58 @@ test('đổi avatar khi cờ bật; không có nút khi cờ tắt', async ({ pa
   await expect(page.getByRole('button', { name: 'Đổi avatar' })).toHaveCount(0)
 })
 
+async function studentLogin(page: Page, password: string) {
+  await page.context().clearCookies()
+  await page.goto('/dang-nhap')
+  await page.getByRole('tab', { name: 'Học sinh' }).click()
+  await page.getByLabel(/Tên đăng nhập/).fill('hs.hamy')
+  await page.getByLabel('Mật khẩu').fill(password)
+  await page.getByRole('button', { name: 'Cất cánh' }).click()
+}
+
+test('em đổi mật khẩu: mật khẩu cũ hết dùng, mật khẩu mới đăng nhập được', async ({ page }) => {
+  const next = 'em-doi-mk-7'
+  try {
+    await open(page)
+    await page.getByRole('button', { name: 'Đổi mật khẩu' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Đổi mật khẩu' })
+    await dialog.getByLabel('Mật khẩu mới', { exact: true }).fill(next)
+    await dialog.getByLabel('Nhập lại mật khẩu mới').fill(next)
+    await dialog.getByRole('button', { name: 'Lưu' }).click()
+    await expect(dialog.getByText('Đã đổi mật khẩu. Lần sau em đăng nhập bằng mật khẩu mới nhé.')).toBeVisible()
+    await dialog.getByRole('button', { name: 'Đóng' }).click()
+    await expect(dialog).toBeHidden()
+
+    await studentLogin(page, pw('hs.hamy'))
+    await expect(page.getByText('Tên đăng nhập hoặc mật khẩu chưa đúng.')).toBeVisible()
+    await studentLogin(page, next)
+    await expect(page).toHaveURL(/\/em$/)
+  } finally {
+    await restorePassword()
+  }
+})
+
+test('em đổi mật khẩu: hai ô không khớp hoặc dưới 6 ký tự thì báo lỗi, mật khẩu cũ giữ nguyên', async ({ page }) => {
+  await open(page)
+  await page.getByRole('button', { name: 'Đổi mật khẩu' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Đổi mật khẩu' })
+
+  await dialog.getByLabel('Mật khẩu mới', { exact: true }).fill('abcdef')
+  await dialog.getByLabel('Nhập lại mật khẩu mới').fill('abcdeg')
+  await dialog.getByRole('button', { name: 'Lưu' }).click()
+  await expect(dialog.getByText('Hai ô mật khẩu chưa giống nhau.')).toBeVisible()
+
+  await dialog.getByLabel('Mật khẩu mới', { exact: true }).fill('abc12')
+  await dialog.getByLabel('Nhập lại mật khẩu mới').fill('abc12')
+  await dialog.getByRole('button', { name: 'Lưu' }).click()
+  await expect(dialog.getByText('Mật khẩu cần ít nhất 6 ký tự.')).toBeVisible()
+
+  await dialog.getByRole('button', { name: 'Hủy' }).click()
+  await expect(dialog).toBeHidden()
+  await studentLogin(page, pw('hs.hamy'))
+  await expect(page).toHaveURL(/\/em$/)
+})
+
 test('Đăng xuất về /dang-nhap', async ({ page }) => {
   await open(page)
   await page.getByRole('button', { name: 'Đăng xuất' }).click()
@@ -246,4 +330,5 @@ test('giáo viên xem thử /em thấy dữ liệu học sinh đầu tiên', asy
   await expect(page.getByText('Đây là bản xem thử giao diện học sinh.')).toBeVisible()
   await expect(page.getByText('Hôm nay em còn 7 sao khả dụng.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Đổi avatar' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Đổi mật khẩu' })).toHaveCount(0)
 })

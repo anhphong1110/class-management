@@ -23,24 +23,25 @@ export default function LoginScene({
   className,
   teacher,
   logoUrl,
-  accent,
+  title,
   slogan,
 }: {
   school: string
   className: string
   teacher: string
   logoUrl: string | null
-  /** Số lớp, ví dụ "8" (rỗng nếu tên lớp không theo mẫu "Năm N"). */
-  accent: string
+  /** Câu tiêu đề đã chốt, ví dụ "Trạm không gian Năm 8" (xem brandSentence). */
+  title: string
   slogan: string
 }) {
   const classLine = [className && `LỚP ${className}`, teacher && `TEAM ${teacher}`]
     .filter(Boolean)
     .join(' – ')
     .toLocaleUpperCase('vi-VN')
-  const titleText = accent ? `Trạm không gian Năm ${accent}` : 'Trạm không gian'
-  // Ảnh chữ 3D chỉ có bản "Năm 8"; lớp khác thì dùng chữ web có viền.
-  const useTitleImage = accent === '8'
+  // Tiêu đề hai dòng: "Trạm không gian" / "Năm N"; không theo mẫu này thì hiện nguyên câu.
+  const parts = /^(trạm không gian)\s+(.+)$/iu.exec(title)
+  // Ảnh chữ 3D chỉ có bản "Trạm không gian Năm 8"; tiêu đề khác thì dùng chữ web có viền.
+  const useTitleImage = /^trạm không gian năm 8$/iu.test(title.trim())
 
   return (
     <section className="sp-scene" aria-label="Trạm không gian">
@@ -84,14 +85,14 @@ export default function LoginScene({
       </div>
 
       <div className="sp-titlebox">
-        <h1 className="sp-title" aria-label={titleText}>
+        <h1 className="sp-title" aria-label={title}>
           {useTitleImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={`${DIR}/tieu-de.webp`} alt="" aria-hidden="true" width={1100} height={470} fetchPriority="high" className="sp-title-img" />
           ) : (
             <>
-              <span className="sp-title-top">Trạm không gian</span>
-              {accent && <span className="sp-title-accent">{`Năm ${accent}`}</span>}
+              <span className="sp-title-top">{parts ? parts[1] : title}</span>
+              {parts && <span className="sp-title-accent">{parts[2]}</span>}
             </>
           )}
         </h1>

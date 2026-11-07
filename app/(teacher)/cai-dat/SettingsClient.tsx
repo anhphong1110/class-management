@@ -12,7 +12,7 @@ import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { addStep, infoPayload, parseStepInput, removeStep, type InfoValues } from '@/lib/settings/form'
 import type { SettingsClass, SettingsData, SettingsFlags } from '@/lib/settings/queries'
-import { saveClassInfo, saveClassSettings, setSaturday, uploadBranding } from './actions'
+import { clearBranding, saveClassInfo, saveClassSettings, setSaturday, uploadBranding } from './actions'
 import { BrandingSection } from './settings/BrandingSection'
 import { ClassInfoSection } from './settings/ClassInfoSection'
 import { FeaturesSection } from './settings/FeaturesSection'
@@ -25,6 +25,7 @@ function toInfo(c: SettingsClass): InfoValues {
   return {
     school_name: c.school_name,
     class_name: c.class_name,
+    brand_title: c.brand_title ?? '',
     school_year: c.school_year,
     teacher_name: c.teacher_name,
     slogan: c.slogan,
@@ -190,6 +191,14 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
     })
   }
 
+  function onClear(kind: UploadKind) {
+    startTransition(async () => {
+      const res = await call(() => clearBranding(kind))
+      if (res.error) fail(res.error)
+      else ok()
+    })
+  }
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel border-2 border-edge bg-primary-soft px-5 py-3">
@@ -217,7 +226,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
         onSave={saveInfo}
       />
 
-      <BrandingSection fileRefs={fileRefs} theme={theme} pending={pending} onFile={onFile} onPickTheme={pickTheme} />
+      <BrandingSection fileRefs={fileRefs} cls={cls} theme={theme} pending={pending} onFile={onFile} onClear={onClear} onPickTheme={pickTheme} />
 
       <div className="flex flex-wrap items-stretch gap-4">
         <RulesSection

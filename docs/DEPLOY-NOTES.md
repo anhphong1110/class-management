@@ -77,3 +77,19 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
     - [ ] Cộng sao cho học sinh.
     - [ ] Học sinh đổi quà.
     - [ ] Cô duyệt yêu cầu đổi quà.
+
+## Chế độ chấm thi (vào không cần mật khẩu)
+
+Bật khi cần cho ban giám khảo vào xem nhanh. Trang đăng nhập hiện thêm hai nút "Vào với tư cách Cô giáo" và "Vào với tư cách Học sinh". Đăng nhập bằng tên và mật khẩu vẫn dùng bình thường.
+
+**Lưu ý:** khi bật, ai có đường link cũng vào được quyền giáo viên trên dữ liệu thật (xem và sửa được). Chỉ bật trong thời gian chấm, chấm xong tắt ngay.
+
+**Bật** (Vercel → Settings → Environment Variables, chọn Production), rồi Redeploy:
+
+- `DEMO_MODE` = `true`
+- `DEMO_TEACHER_USERNAME`, `DEMO_TEACHER_PASSWORD`: tài khoản giáo viên dùng để vào
+- `DEMO_STUDENT_USERNAME`, `DEMO_STUDENT_PASSWORD`: tài khoản một học sinh dùng để vào
+
+Mật khẩu chỉ đọc ở server, không gửi xuống trình duyệt. Thiếu cặp tên và mật khẩu của vai nào thì nút của vai đó không hiện.
+
+**Tắt:** xóa `DEMO_MODE` (hoặc để trống), rồi Redeploy. Nếu nghi mật khẩu đã lộ, đổi mật khẩu hai tài khoản đó rồi xóa luôn các biến `DEMO_*`.

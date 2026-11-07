@@ -84,7 +84,7 @@ export function TimetableClient({
 
   return (
     <div className="flex flex-col gap-5">
-      <style>{`@page{size:landscape;margin:10mm}@media print{[data-testid=teacher-shell]>div:first-child,main>header{display:none!important}[data-testid=teacher-shell]{display:block;padding:0}#timetable-print{box-shadow:none;border:0;padding:0}#timetable-print [data-testid=timetable-scroll]{overflow:visible}#timetable-print [data-testid=timetable-inner]{min-width:0!important}}`}</style>
+      <style>{`@page{size:landscape;margin:10mm}@media print{[data-testid=teacher-shell]>div:first-of-type,main>header{display:none!important}[data-testid=teacher-shell]{display:block;padding:0}#timetable-print{box-shadow:none;border:0;padding:0}#timetable-print [data-testid=timetable-scroll]{overflow:visible}#timetable-print [data-testid=timetable-inner]{min-width:0!important}}`}</style>
 
       <Card className="flex flex-wrap items-center justify-between gap-3 !py-4 print:hidden">
         <div className="flex flex-wrap gap-2">

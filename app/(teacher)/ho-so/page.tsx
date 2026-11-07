@@ -38,6 +38,7 @@ export default async function Page() {
     id: r.id,
     label: r.label,
     avatar: toAvatarValue(r, urls),
+    removable: r.kind === 'upload',
   }))
 
   const people: Person[] = [

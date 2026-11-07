@@ -1,7 +1,15 @@
 import type { MutableRefObject } from 'react'
+import { Button } from '@/components/ui/Button'
 import type { ThemeKey } from '@/lib/domain/theme'
+import type { SettingsClass } from '@/lib/settings/queries'
 import { ThemePicker } from './ThemePicker'
 import { card, h2, type UploadKind } from './shared'
+
+const CLEAR_LABELS: Record<UploadKind, string> = {
+  logo_path: 'Gỡ logo trường',
+  class_logo_path: 'Gỡ logo lớp',
+  cover_path: 'Gỡ ảnh bìa lớp',
+}
 
 const UPLOADS: [UploadKind, string, string, number][] = [
   ['logo_path', 'Tải lên logo trường', 'upload-logo', 512],
@@ -11,15 +19,19 @@ const UPLOADS: [UploadKind, string, string, number][] = [
 
 export function BrandingSection({
   fileRefs,
+  cls,
   theme,
   pending,
   onFile,
+  onClear,
   onPickTheme,
 }: {
   fileRefs: MutableRefObject<Partial<Record<UploadKind, HTMLInputElement | null>>>
+  cls: SettingsClass
   theme: ThemeKey
   pending: boolean
   onFile: (kind: UploadKind, maxSide: number, file: File | undefined) => void
+  onClear: (kind: UploadKind) => void
   onPickTheme: (key: ThemeKey) => void
 }) {
   return (
@@ -53,6 +65,16 @@ export function BrandingSection({
               </svg>
               {label}
             </button>
+            {cls[kind] && (
+              <Button
+                variant="secondary"
+                disabled={pending}
+                onClick={() => onClear(kind)}
+                className="mt-2 w-full !border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft"
+              >
+                {CLEAR_LABELS[kind]}
+              </Button>
+            )}
           </div>
         ))}
       </div>

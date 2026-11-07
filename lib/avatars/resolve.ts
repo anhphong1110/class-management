@@ -6,6 +6,9 @@ import type { AvatarPreset } from '@/components/avatar/presets'
 export type { AvatarValue }
 
 const SIGNED_URL_TTL = 3600
+// Dùng lại URL đã ký trong 50 phút để token không đổi giữa các trang (đổi token thì trình duyệt tải lại ảnh).
+const REUSE_MS = 50 * 60 * 1000
+const signedCache = new Map<string, { url: string; at: number }>()
 
 type SupabaseServer = Awaited<ReturnType<typeof createServerSupabase>>
 type AvatarRow = { kind: string; preset: unknown; image_path: string | null }
@@ -16,12 +19,22 @@ export async function signAvatarPaths(
   paths: string[],
 ): Promise<Map<string, string>> {
   const urls = new Map<string, string>()
-  const unique = [...new Set(paths)]
+  const now = Date.now()
+  const unique: string[] = []
+  for (const p of new Set(paths)) {
+    const hit = signedCache.get(p)
+    if (hit && now - hit.at < REUSE_MS) urls.set(p, hit.url)
+    else unique.push(p)
+  }
   if (!unique.length) return urls
   const { data, error } = await supabase.storage.from('class-media').createSignedUrls(unique, SIGNED_URL_TTL)
   // Ảnh lỗi thì vẫn trả avatar mặc định, nhưng phải để lại dấu vết để biết vì sao.
   if (error) console.error('signAvatarPaths: createSignedUrls failed', error.message)
-  for (const s of data ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl)
+  for (const s of data ?? []) {
+    if (!s.path || !s.signedUrl) continue
+    urls.set(s.path, s.signedUrl)
+    signedCache.set(s.path, { url: s.signedUrl, at: now })
+  }
   return urls
 }
 
@@ -54,4 +67,9 @@ export async function resolveAvatars(ids: (string | null)[]): Promise<Map<string
 export async function resolveAvatar(avatarId: string | null): Promise<AvatarValue> {
   if (!avatarId) return null
   return (await resolveAvatars([avatarId])).get(avatarId) ?? null
+}
+
+/** Chỉ cho test: xóa bộ nhớ đệm URL đã ký. */
+export function clearSignedAvatarCache() {
+  signedCache.clear()
 }

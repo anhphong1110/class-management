@@ -6,12 +6,13 @@ type BrandProps = {
   classLogoUrl: string | null
   schoolLogoUrl?: string | null
   className: string
+  brandName?: string | null
   schoolName?: string | null
 }
 
 /** Hai khối logo (trường, lớp) dùng chung cho thanh bên cô giáo và học sinh. */
-export function BrandBlocks({ classLogoUrl, schoolLogoUrl, className, schoolName }: BrandProps) {
-  const brand = brandLines({ class_name: className })
+export function BrandBlocks({ classLogoUrl, schoolLogoUrl, className, brandName, schoolName }: BrandProps) {
+  const brand = brandLines({ class_name: className, brand_title: brandName })
   return (
     <>
       <div className="flex items-center gap-2.5 px-1.5">
