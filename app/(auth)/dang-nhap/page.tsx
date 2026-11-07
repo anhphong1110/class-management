@@ -108,10 +108,10 @@ export default async function LoginPage({
         <p className="m-0 text-[17px] text-[#E4E7FF]">{slogan}</p>
       </section>
 
-      <section className="relative flex w-full max-w-[460px] flex-[1_1_360px] flex-col gap-[18px] rounded-[32px] bg-white px-[30px] py-8 shadow-[0_30px_60px_rgba(10,12,60,0.45)]">
+      <section className="clay-card relative flex w-full max-w-[460px] flex-[1_1_360px] flex-col gap-[18px] rounded-[32px] px-[30px] py-8 shadow-[0_4px_0_var(--primary-edge),0_30px_60px_rgba(10,12,60,0.45)]">
         <div>
           <h2 className="m-0 font-display text-[28px] font-extrabold">Đăng nhập</h2>
-          <div className="text-[14.5px] text-muted">Chọn tài khoản để vào trạm không gian</div>
+          <div className="text-[15px] font-semibold text-muted">Chọn tài khoản để vào trạm không gian</div>
         </div>
         <LoginForm next={sp.next} initialError={initialError} />
       </section>

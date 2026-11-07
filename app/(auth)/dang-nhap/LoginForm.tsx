@@ -1,12 +1,15 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
+import { Field, Input } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { signIn, type SignInState } from '../actions'
 
 const TABS = [
   {
     key: 'teacher',
     label: 'Giáo viên',
+    icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
     userLabel: 'Tên đăng nhập của cô',
     userHint: 'Ví dụ: co.ten',
     note: 'Tài khoản giáo viên có toàn quyền quản trị lớp học.',
@@ -14,26 +17,52 @@ const TABS = [
   {
     key: 'student',
     label: 'Học sinh',
+    icon: 'M6 8a6 6 0 0 1 12 0v10a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3zM9 14h6M10 3v3M14 3v3',
     userLabel: 'Tên đăng nhập của em',
     userHint: 'Ví dụ: hs.minhanh',
     note: 'Tài khoản học sinh do cô giáo tạo. Em chỉ xem được sao, bảng xếp hạng, quà tặng và thời khóa biểu.',
   },
 ] as const
 
-const INPUT =
-  'min-h-[52px] box-border rounded-[14px] border-2 border-[#D9D5F2] px-4 text-base font-semibold text-ink focus:border-primary-strong focus:outline-none'
+type TabKey = (typeof TABS)[number]['key']
+
+const TAB_STORAGE = 'login-tab'
+
+function rememberTab(key: TabKey) {
+  try {
+    localStorage.setItem(TAB_STORAGE, key)
+  } catch {
+    // Không lưu được (chế độ riêng tư, chặn lưu trữ) thì bỏ qua.
+  }
+}
 
 export default function LoginForm({ next, initialError }: { next?: string; initialError?: string }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]['key']>('teacher')
+  const [tab, setTab] = useState<TabKey>('teacher')
+  const [show, setShow] = useState(false)
   const [state, action, pending] = useActionState<SignInState, FormData>(signIn, {
     error: initialError,
   })
   const t = TABS.find((x) => x.key === tab)!
 
+  // Nhớ tab lần trước để học sinh không phải chọn lại mỗi lần.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(TAB_STORAGE)
+      if (saved === 'teacher' || saved === 'student') setTab(saved)
+    } catch {
+      // Bỏ qua: vẫn dùng tab mặc định.
+    }
+  }, [])
+
+  const choose = (key: TabKey) => {
+    setTab(key)
+    rememberTab(key)
+  }
+
   return (
     <form action={action} className="flex flex-col gap-[18px]">
       <input type="hidden" name="next" value={next ?? ''} />
-      <div role="tablist" aria-label="Loại tài khoản" className="flex gap-1.5 rounded-2xl bg-[#F1EFFC] p-[5px]">
+      <div role="tablist" aria-label="Loại tài khoản" className="flex gap-2 rounded-[20px] bg-primary-soft p-1.5 pb-[9px]">
         {TABS.map((x) => {
           const on = x.key === tab
           return (
@@ -49,47 +78,65 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
                 if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
                 e.preventDefault()
                 const next = TABS[(TABS.findIndex((y) => y.key === x.key) + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length]
-                setTab(next.key)
+                choose(next.key)
                 document.getElementById(`tab-${next.key}`)?.focus()
               }}
-              onClick={() => setTab(x.key)}
-              className={`min-h-[46px] flex-1 cursor-pointer rounded-xl border-0 text-[15px] font-extrabold ${
-                on ? 'bg-primary-strong text-white' : 'bg-transparent text-[#3A3769]'
+              onClick={() => choose(x.key)}
+              className={`clay-press inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[14px] border-2 text-[15px] font-extrabold ${
+                on
+                  ? 'border-primary-strong bg-primary-strong text-white [--edge:var(--primary-deep)]'
+                  : 'border-edge bg-white text-ink [--edge:var(--primary-edge)] hover:border-primary-strong hover:bg-primary-soft hover:text-primary-deep'
               }`}
             >
+              <Icon d={x.icon} size={18} />
               {x.label}
             </button>
           )
         })}
       </div>
       <div id="login-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-[18px]">
-      <label className="flex flex-col gap-1.5 text-[14.5px] font-extrabold text-[#4A476E]">
-        {t.userLabel}
-        <input
-          type="text"
-          name="username"
-          placeholder={t.userHint}
-          autoComplete="username"
-          autoCapitalize="none"
-          required
-          className={INPUT}
-        />
-      </label>
-      <label className="flex flex-col gap-1.5 text-[14.5px] font-extrabold text-[#4A476E]">
-        Mật khẩu
-        <input
-          type="password"
-          name="password"
-          placeholder="Nhập mật khẩu"
-          autoComplete="current-password"
-          required
-          className={INPUT}
-        />
-      </label>
+        <Field label={t.userLabel}>
+          {(p) => (
+            <Input
+              {...p}
+              type="text"
+              name="username"
+              placeholder={t.userHint}
+              autoComplete="username"
+              autoCapitalize="none"
+              required
+            />
+          )}
+        </Field>
+        <Field label="Mật khẩu">
+          {(p) => (
+            <div className="relative">
+              <Input
+                {...p}
+                type={show ? 'text' : 'password'}
+                name="password"
+                placeholder="Nhập mật khẩu"
+                autoComplete="current-password"
+                required
+                className="pr-14"
+              />
+              <button
+                type="button"
+                onClick={() => setShow((v) => !v)}
+                aria-pressed={show}
+                aria-label={show ? 'Ẩn ký tự đã nhập' : 'Hiện ký tự đã nhập'}
+                className="absolute right-1.5 top-1.5 flex size-10 items-center justify-center rounded-[12px] bg-transparent text-muted transition-colors hover:bg-primary-soft hover:text-primary-deep"
+              >
+                <Icon d={show ? ICONS.eyeOff : ICONS.eye} size={20} />
+              </button>
+            </div>
+          )}
+        </Field>
       </div>
       <div role="alert" aria-live="polite">
         {state.error && (
-          <p className="m-0 rounded-xl bg-[#FFE9F1] px-3 py-2.5 text-sm font-bold text-[#B3235F]">
+          <p className="m-0 flex items-start gap-2 rounded-[14px] bg-danger-soft px-3 py-2.5 text-[15px] font-bold text-danger-deep">
+            <Icon d={ICONS.alert} size={18} className="mt-0.5" />
             {state.error}
           </p>
         )}
@@ -97,11 +144,16 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
       <button
         type="submit"
         disabled={pending}
-        className="flex min-h-[56px] cursor-pointer items-center justify-center rounded-2xl border-0 bg-gradient-to-r from-primary-strong to-[#7A58E0] text-lg font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        className="clay-press flex min-h-[56px] items-center justify-center gap-2 rounded-[16px] border-0 bg-primary-strong text-lg font-extrabold text-white [--edge:var(--primary-deep)] hover:bg-primary-ink disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Cất cánh
+        {pending ? (
+          <span aria-hidden="true" className="size-5 animate-[spin_0.8s_linear_infinite] rounded-full border-[3px] border-white/40 border-t-white" />
+        ) : (
+          <Icon d={ICONS.rocket} size={22} />
+        )}
+        {pending ? 'Đang bay…' : 'Cất cánh'}
       </button>
-      <div className="rounded-xl bg-bg px-3 py-2.5 text-[13px] leading-normal text-muted">{t.note}</div>
+      <div className="rounded-[14px] bg-primary-soft px-3 py-2.5 text-[14px] font-semibold leading-normal text-primary-deep">{t.note}</div>
     </form>
   )
 }
