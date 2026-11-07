@@ -13,7 +13,7 @@ function contrast(a: string, b: string): number {
 
 describe('THEMES', () => {
   it('giữ đúng màu nút theo thiết kế', () => {
-    expect(THEMES.indigo.strong).toBe('#4F5BD5')
+    expect(THEMES.indigo.strong).toBe('#2563EB')
     expect(THEMES.pink.strong).toBe('#C2407A')
     expect(THEMES.mint.strong).toBe('#12796B')
     expect(THEMES.gold.strong).toBe('#8F5A00')
@@ -28,10 +28,16 @@ describe('THEMES', () => {
     expect(contrast(THEMES[k].deep, THEMES[k].soft)).toBeGreaterThanOrEqual(4.5)
   })
 
-  it('indigo giữ nguyên các màu nhạt cũ', () => {
-    expect(THEMES.indigo.soft).toBe('#EEF0FF')
-    expect(THEMES.indigo.ink).toBe('#3441B5')
-    expect(THEMES.indigo.deep).toBe('#2C37A8')
+  it('indigo là xanh trời với bộ màu nhạt mới', () => {
+    expect(THEMES.indigo.label).toBe('Xanh trời')
+    expect(THEMES.indigo.soft).toBe('#E0EEFF')
+    expect(THEMES.indigo.ink).toBe('#1D4ED8')
+    expect(THEMES.indigo.deep).toBe('#1E40AF')
+    expect(THEMES.indigo.bg).toBe('#EEF7FF')
+  })
+
+  it.each(Object.keys(THEMES) as (keyof typeof THEMES)[])('%s: chữ ink trên nền trang đạt 4.5', (k) => {
+    expect(contrast('#231F4D', THEMES[k].bg)).toBeGreaterThanOrEqual(4.5)
   })
 
   it('themeVars đặt đủ biến CSS', () => {
@@ -41,11 +47,13 @@ describe('THEMES', () => {
       '--primary-soft': THEMES.mint.soft,
       '--primary-ink': THEMES.mint.ink,
       '--primary-deep': THEMES.mint.deep,
+      '--primary-bg': THEMES.mint.bg,
+      '--primary-edge': THEMES.mint.edge,
     })
   })
 
   it('themeVars rơi về indigo khi tên lạ hoặc rỗng', () => {
-    expect(themeVars(undefined)['--primary-strong']).toBe('#4F5BD5')
-    expect(themeVars('xyz')['--primary-strong']).toBe('#4F5BD5')
+    expect(themeVars(undefined)['--primary-strong']).toBe('#2563EB')
+    expect(themeVars('xyz')['--primary-strong']).toBe('#2563EB')
   })
 })

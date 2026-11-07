@@ -28,7 +28,7 @@ export function Switch({
       onClick={() => {
         if (!disabled) onChange(!checked);
       }}
-      className="flex min-h-[50px] w-full items-center justify-between gap-4 rounded-2xl text-left disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+      className="flex min-h-[50px] w-full items-center justify-between gap-4 rounded-2xl text-left disabled:cursor-not-allowed disabled:opacity-50"
     >
       <span className="block">
         <span id={`${id}-l`} className="block font-extrabold text-ink">
@@ -47,7 +47,7 @@ export function Switch({
         }`}
       >
         <span
-          className="absolute top-[3px] size-[21px] rounded-full bg-white transition-[left]"
+          className="absolute top-[3px] size-[21px] rounded-full bg-white shadow-[0_1px_2px_rgba(35,31,77,0.25)] transition-[left]"
           style={{ left: checked ? 22 : 3 }}
         />
       </span>

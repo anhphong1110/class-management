@@ -3,16 +3,18 @@ export type ThemeKey = 'indigo' | 'pink' | 'mint' | 'gold'
 /**
  * strong: nền nút và mục đang chọn (chữ trắng trên đó đạt tương phản >= 4.5).
  * soft/ink/deep: màu nhạt và màu chữ đi kèm, đặt sẵn cho từng màu chủ đạo
- * (không dùng color-mix, để indigo giữ đúng các giá trị của thiết kế).
+ * (không dùng color-mix, để giữ đúng giá trị đã kiểm tra tương phản).
+ * bg: nền trang pastel; edge: màu viền và gờ đáy của thẻ/nút "đất sét".
+ * Khóa `indigo` được giữ nguyên vì đã lưu trong cơ sở dữ liệu; nhãn hiển thị là "Xanh trời".
  */
 export const THEMES: Record<
   ThemeKey,
-  { label: string; primary: string; strong: string; soft: string; ink: string; deep: string }
+  { label: string; primary: string; strong: string; soft: string; ink: string; deep: string; bg: string; edge: string }
 > = {
-  indigo: { label: 'Xanh tím', primary: '#6675E8', strong: '#4F5BD5', soft: '#EEF0FF', ink: '#3441B5', deep: '#2C37A8' },
-  pink: { label: 'Hồng sen', primary: '#F46FA5', strong: '#C2407A', soft: '#F9ECF2', ink: '#9B3362', deep: '#882D55' },
-  mint: { label: 'Xanh mint', primary: '#2BB5A4', strong: '#12796B', soft: '#E7F2F0', ink: '#0E6156', deep: '#0D554B' },
-  gold: { label: 'Vàng sao', primary: '#F5A81C', strong: '#8F5A00', soft: '#F4EFE6', ink: '#724800', deep: '#643F00' },
+  indigo: { label: 'Xanh trời', primary: '#4DA3FF', strong: '#2563EB', soft: '#E0EEFF', ink: '#1D4ED8', deep: '#1E40AF', bg: '#EEF7FF', edge: '#CFE3FF' },
+  pink: { label: 'Hồng sen', primary: '#F46FA5', strong: '#C2407A', soft: '#FFE6F1', ink: '#9B3362', deep: '#882D55', bg: '#FFF4F8', edge: '#F7CADF' },
+  mint: { label: 'Xanh mint', primary: '#2BB5A4', strong: '#12796B', soft: '#DDF7F1', ink: '#0E6156', deep: '#0D554B', bg: '#EEFBF8', edge: '#BDEBE2' },
+  gold: { label: 'Vàng sao', primary: '#F5A81C', strong: '#8F5A00', soft: '#FFF1CC', ink: '#724800', deep: '#643F00', bg: '#FFF9EA', edge: '#F3DDA0' },
 }
 
 export function themeVars(theme: string | null | undefined): Record<string, string> {
@@ -23,5 +25,7 @@ export function themeVars(theme: string | null | undefined): Record<string, stri
     '--primary-soft': t.soft,
     '--primary-ink': t.ink,
     '--primary-deep': t.deep,
+    '--primary-bg': t.bg,
+    '--primary-edge': t.edge,
   }
 }

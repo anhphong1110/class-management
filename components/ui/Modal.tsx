@@ -118,9 +118,9 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="w-full max-w-md rounded-card bg-white p-6 text-ink shadow-[0_6px_20px_rgba(102,117,232,0.10)] outline-none"
+        className="clay-card w-full max-w-md p-6 text-ink outline-none"
       >
-        <h2 id={titleId} className="mb-3 font-display text-xl font-bold">
+        <h2 id={titleId} className="mb-3 font-display text-2xl font-extrabold leading-tight">
           {title}
         </h2>
         {children}

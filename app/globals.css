@@ -1,11 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #6675e8;
-  --primary-strong: #4f5bd5;
-  --primary-soft: #eef0ff;
-  --primary-ink: #3441b5;
-  --primary-deep: #2c37a8;
+  --primary: #4da3ff;
+  --primary-strong: #2563eb;
+  --primary-soft: #e0eeff;
+  --primary-ink: #1d4ed8;
+  --primary-deep: #1e40af;
+  --primary-bg: #eef7ff;
+  --primary-edge: #cfe3ff;
 }
 
 @theme inline {
@@ -14,20 +16,34 @@
   --color-primary-soft: var(--primary-soft);
   --color-primary-ink: var(--primary-ink);
   --color-primary-deep: var(--primary-deep);
+  --color-bg: var(--primary-bg);
+  --color-edge: var(--primary-edge);
 }
 
 @theme {
   --color-lavender: #b9a7f8;
-  --color-pink: #f46fa5;
-  --color-star: #ffc857;
-  --color-mint: #80ddd0;
-  --color-bg: #f6f4ff;
+  --color-pink: #ff6fae;
+  --color-star: #ffc93c;
+  --color-star-edge: #f0b100;
+  --color-star-soft: #fff3c4;
+  --color-star-ink: #7a4e00;
+  --color-orange: #ff9f43;
+  --color-mint: #5edcc5;
   --color-ink: #231f4d;
   --color-muted: #5b5890;
+  --color-field: #f7fbff;
+  --color-placeholder: #7c79ae;
+  --color-danger: #c0314e;
+  --color-danger-deep: #8e1b3b;
+  --color-danger-soft: #ffe3ea;
+  --color-success: #12796b;
+  --color-success-deep: #0b5a4d;
+  --color-success-soft: #ddf6f1;
   --color-navy-from: #25286a;
   --color-navy-to: #33378f;
 
   --radius-card: 24px;
+  --radius-ctl: 16px;
 
   --font-display: var(--font-baloo);
   --font-body: var(--font-nunito);
@@ -37,6 +53,89 @@ body {
   background: var(--color-bg);
   color: var(--color-ink);
   font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Trạng thái bấm/focus được đặt tường minh, không để trình duyệt tự đổi màu. */
+button:not(:disabled),
+[role="button"],
+summary,
+select {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--primary-strong);
+  outline-offset: 2px;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-placeholder);
+  opacity: 1;
+}
+
+/* Thành phần "đất sét": viền 2px, gờ đáy 4px, bo lớn. */
+@layer components {
+  .clay-card {
+    background: #fff;
+    border: 2px solid var(--primary-edge);
+    border-radius: var(--radius-card);
+    box-shadow:
+      0 4px 0 var(--primary-edge),
+      0 14px 24px -14px rgba(35, 31, 77, 0.22);
+  }
+  .clay-press {
+    --edge: var(--primary-deep);
+    box-shadow: 0 4px 0 var(--edge);
+    transition:
+      transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.2s ease-out,
+      background-color 0.2s ease-out,
+      border-color 0.2s ease-out,
+      color 0.2s ease-out;
+  }
+  .clay-press:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--edge);
+  }
+  .clay-press:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 var(--edge);
+  }
+  .clay-field {
+    min-height: 52px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 2px solid var(--primary-edge);
+    border-radius: var(--radius-ctl);
+    background: var(--color-field);
+    padding: 0 16px;
+    font-weight: 600;
+    color: var(--color-ink);
+    transition:
+      border-color 0.2s ease-out,
+      box-shadow 0.2s ease-out;
+  }
+  .clay-field:hover:not(:disabled) {
+    border-color: var(--primary);
+  }
+  .clay-field:focus {
+    outline: none;
+    border-color: var(--primary-strong);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+  }
+  .clay-field:focus-visible {
+    outline: none;
+  }
+  .clay-field[aria-invalid="true"] {
+    border-color: var(--color-danger);
+  }
+  .clay-field:disabled {
+    opacity: 0.6;
+  }
 }
 
 @keyframes tw {
@@ -87,12 +186,6 @@ body {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .star-burst {
-    display: none;
-  }
-}
-
 @keyframes pop {
   0% {
     transform: scale(0.7);
@@ -105,12 +198,48 @@ body {
   }
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
 .pop {
   animation: pop 0.5s ease-out 1;
 }
 
+.skeleton {
+  border-radius: 16px;
+  background: linear-gradient(90deg, var(--primary-soft) 0, #fff 50%, var(--primary-soft) 100%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .star-burst {
+    display: none;
+  }
   .pop {
     animation: none;
+  }
+  .skeleton {
+    animation: none;
+  }
+  .clay-press,
+  .clay-field {
+    transition: none;
+  }
+  .clay-press:hover:not(:disabled),
+  .clay-press:active:not(:disabled) {
+    transform: none;
   }
 }
