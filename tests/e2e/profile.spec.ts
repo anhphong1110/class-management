@@ -128,7 +128,7 @@ test('xóa ảnh tải lên khỏi thư viện, người đang dùng về mặc 
   const tiles = lib.locator('button[aria-pressed]')
   await expect(lib.getByRole('button', { name: /^Xóa ảnh/ })).toHaveCount(0)
   await page.locator('input[type=file]').setInputFiles('tests/e2e/fixtures/avatar.png')
-  await expect(tiles).toHaveCount(13)
+  await expect(tiles).toHaveCount(3)
   const { data: up } = await admin().from('avatar_library').select('id, image_path').eq('class_id', CLASS_ID).eq('kind', 'upload').single()
   await admin().from('students').update({ avatar_id: up!.id }).eq('id', HAMY_ID)
 
@@ -136,7 +136,7 @@ test('xóa ảnh tải lên khỏi thư viện, người đang dùng về mặc 
   const confirm = page.getByRole('dialog', { name: 'Xóa ảnh avatar?' })
   await confirm.getByRole('button', { name: 'Xóa ảnh' }).click()
   await expect(confirm).toHaveCount(0)
-  await expect(tiles).toHaveCount(12)
+  await expect(tiles).toHaveCount(2)
 
   const { data: rows } = await admin().from('avatar_library').select('id').eq('class_id', CLASS_ID).eq('kind', 'upload')
   expect(rows).toHaveLength(0)

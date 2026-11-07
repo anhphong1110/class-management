@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Icon, ICONS } from '@/components/ui/Icon'
+import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { formatRelative } from '@/lib/domain/relative-time'
 import type { RewardRequestStatus, RewardRequestView, RewardView } from '@/lib/rewards/queries'
@@ -281,18 +282,23 @@ export function RewardsClient({
         onCancel={() => setRejecting(null)}
       />
 
-      <ConfirmDialog
-        open={!!deleting}
-        title="Xóa phần thưởng?"
-        message={`${deleting?.name ?? ''} sẽ bị xóa hẳn khỏi trạm đổi quà. Quà đã có học sinh đổi thì không xóa được; khi đó cô dùng nút Ẩn nhé.`}
-        confirmLabel="Xóa vĩnh viễn"
-        cancelLabel="Hủy"
-        danger
-        pending={deletePending}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleting(null)}
-      />
-      {deleting && deleteError && <Notice tone="error">{deleteError}</Notice>}
+      <Modal open={!!deleting} onClose={() => setDeleting(null)} title="Xóa phần thưởng?">
+        <p className="m-0 mb-4 flex items-start gap-3 text-base font-semibold text-muted">
+          <Icon d={ICONS.alert} size={22} className="mt-0.5 text-danger" />
+          <span>
+            {deleting?.name} sẽ bị xóa hẳn khỏi trạm đổi quà. Quà đã có học sinh đổi thì không xóa được; khi đó cô dùng nút Ẩn nhé.
+          </span>
+        </p>
+        {deleteError && <Notice tone="error">{deleteError}</Notice>}
+        <div className="mt-3 flex flex-wrap justify-end gap-3">
+          <Button variant="secondary" onClick={() => setDeleting(null)} disabled={deletePending}>
+            Hủy
+          </Button>
+          <Button variant="danger" onClick={confirmDelete} loading={deletePending}>
+            Xóa vĩnh viễn
+          </Button>
+        </div>
+      </Modal>
     </>
   )
 }
