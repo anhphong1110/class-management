@@ -87,16 +87,16 @@ describe('buildClassRow', () => {
 })
 
 describe('avatar preset', () => {
-  it('có 12 dòng, is_demo=false, kind preset', () => {
+  it('có 2 dòng (bạn nam, bạn nữ), is_demo=false, kind preset', () => {
     const rows = buildAvatarRows('c1')
-    expect(rows).toHaveLength(12)
+    expect(rows).toHaveLength(2)
     expect(rows.every((r) => r.class_id === 'c1' && r.kind === 'preset' && r.is_demo === false)).toBe(true)
   })
   it('khớp avatar_library trong supabase/seed.sql', () => {
     const sql = readFileSync(path.resolve(import.meta.dirname, '../../supabase/seed.sql'), 'utf8')
     const re = /'preset', '(\{[^']*\})', '([^']*)', false\)/g
     const fromSeed = [...sql.matchAll(re)].map((m) => ({ preset: JSON.parse(m[1]), label: m[2] }))
-    expect(fromSeed).toHaveLength(12)
+    expect(fromSeed).toHaveLength(2)
     expect(AVATAR_PRESETS).toEqual(fromSeed)
   })
 })
