@@ -118,7 +118,7 @@ export function DisplayClient({ data, brand }: { data: DisplayData; brand: { top
                 setIndex(0)
                 setAuto((v) => !v)
               }}
-              className={`inline-flex min-h-12 cursor-pointer items-center rounded-[14px] border-2 px-5 text-base font-extrabold text-white transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-white ${
+              className={`inline-flex min-h-12 cursor-pointer items-center rounded-ctl border-2 px-5 text-base font-extrabold text-white transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-white ${
                 auto ? 'border-[#FFE08A] bg-white/20' : 'border-white/60 bg-transparent'
               }`}
             >
@@ -126,7 +126,7 @@ export function DisplayClient({ data, brand }: { data: DisplayData; brand: { top
             </button>
             <Link
               href="/tong-quan"
-              className="inline-flex min-h-12 items-center rounded-[14px] border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-white"
+              className="inline-flex min-h-12 items-center rounded-ctl border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-white"
             >
               Thoát trình chiếu
             </Link>
@@ -143,7 +143,7 @@ export function DisplayClient({ data, brand }: { data: DisplayData; brand: { top
                 <div
                   key={r.id}
                   data-testid="top5-row"
-                  className="flex items-center gap-[18px] rounded-[22px] px-5 py-2.5 text-[#231F4D]"
+                  className="flex items-center gap-[18px] rounded-card px-5 py-2.5 text-[#231F4D]"
                   style={{ background: r.crown ? '#FFF4D1' : '#fff' }}
                 >
                   <div

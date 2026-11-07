@@ -198,7 +198,7 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
             type="button"
             aria-pressed={view === k}
             onClick={() => setView(k)}
-            className={`min-h-12 rounded-[16px] px-6 text-[15px] ${pill(view === k)}`}
+            className={`min-h-12 rounded-ctl px-6 text-[15px] ${pill(view === k)}`}
           >
             {label}
           </button>

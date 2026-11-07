@@ -53,13 +53,13 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, scho
                   aria-current={on ? 'page' : undefined}
                   className={`flex items-center gap-3 rounded-2xl px-2.5 py-1.5 text-[15px] transition-colors lg:min-h-[48px] max-lg:min-h-[64px] max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-1 max-lg:text-[12.5px] max-lg:leading-tight max-lg:text-center ${
                     on
-                      ? 'bg-primary-strong font-extrabold text-white lg:shadow-[0_3px_0_var(--primary-deep)] max-lg:bg-primary-soft max-lg:text-primary-deep'
+                      ? 'bg-primary-strong font-extrabold text-white lg:shadow-ledge-active max-lg:bg-primary-soft max-lg:text-primary-deep'
                       : 'font-bold text-ink hover:bg-primary-soft hover:text-primary-deep'
                   }`}
                   onClick={() => setMore(false)}
                 >
                   <span
-                    className={`flex size-[30px] flex-none items-center justify-center rounded-[10px] max-lg:size-9 max-lg:rounded-[12px] ${
+                    className={`flex size-[30px] flex-none items-center justify-center rounded-chip max-lg:size-9 max-lg:rounded-chip ${
                       on ? 'bg-white/25 text-[#FFE08A] max-lg:bg-primary-strong max-lg:text-white' : tone
                     }`}
                   >
@@ -81,7 +81,7 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, scho
                   restActive || more ? 'bg-primary-soft text-primary-deep' : 'text-ink hover:bg-primary-soft'
                 }`}
               >
-                <span className={`flex size-9 items-center justify-center rounded-[12px] ${restActive || more ? 'bg-primary-strong text-white' : 'bg-primary-soft text-primary-ink'}`}>
+                <span className={`flex size-9 items-center justify-center rounded-chip ${restActive || more ? 'bg-primary-strong text-white' : 'bg-primary-soft text-primary-ink'}`}>
                   <Icon d={ICONS.more} size={20} />
                 </span>
                 Thêm
@@ -102,7 +102,7 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, scho
                       it.id === activeId ? 'bg-primary-strong text-white' : 'text-ink hover:bg-primary-soft'
                     }`}
                   >
-                    <span className={`flex size-9 items-center justify-center rounded-[12px] ${NAV_TONES[STUDENT_NAV_TONES[it.id] ?? 'blue']}`}>
+                    <span className={`flex size-9 items-center justify-center rounded-chip ${NAV_TONES[STUDENT_NAV_TONES[it.id] ?? 'blue']}`}>
                       <Icon d={it.icon} size={20} />
                     </span>
                     {it.label}
@@ -113,7 +113,7 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, scho
           </div>
         )}
       </nav>
-      <div className="rounded-[14px] bg-primary-soft px-3 py-2.5 text-[13px] font-semibold leading-[1.4] text-primary-deep max-lg:hidden">
+      <div className="rounded-ctl bg-primary-soft px-3 py-2.5 text-[13px] font-semibold leading-[1.4] text-primary-deep max-lg:hidden">
         Giao diện học sinh: chỉ xem và gửi yêu cầu đổi quà.
       </div>
     </aside>

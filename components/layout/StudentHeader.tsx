@@ -31,7 +31,7 @@ export function StudentHeader({ subtitle, name, avatar, showBell }: Props) {
           <Link
             href="/em/thong-bao"
             aria-label="Thông báo"
-            className="flex size-12 items-center justify-center rounded-[14px] bg-primary-soft text-primary-ink transition-colors hover:bg-primary-strong hover:text-white"
+            className="flex size-12 items-center justify-center rounded-ctl bg-primary-soft text-primary-ink transition-colors hover:bg-primary-strong hover:text-white"
           >
             <Icon d={ICONS.bell} />
           </Link>

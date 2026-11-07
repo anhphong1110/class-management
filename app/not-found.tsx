@@ -12,7 +12,7 @@ export default function NotFound() {
         <p className="m-0 text-base font-semibold text-muted">Có vẻ phi thuyền đã bay lạc đường rồi.</p>
         <Link
           href="/"
-          className="clay-press mt-2 inline-flex min-h-12 items-center gap-2 rounded-[16px] bg-primary-strong px-6 text-base font-extrabold text-white no-underline [--edge:var(--primary-deep)] hover:bg-primary-ink"
+          className="clay-press mt-2 inline-flex min-h-12 items-center gap-2 rounded-ctl bg-primary-strong px-6 text-base font-extrabold text-white no-underline [--edge:var(--primary-deep)] hover:bg-primary-ink"
         >
           <Icon d={ICONS.home} size={20} />
           Về trang chủ

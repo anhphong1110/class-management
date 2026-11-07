@@ -46,7 +46,7 @@ export default async function NewsPage() {
             <div className="whitespace-pre-line text-base leading-normal text-ink">{n.body}</div>
             {n.imageUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={n.imageUrl} alt="" className="mt-1 max-h-[320px] w-full rounded-[18px] object-cover" />
+              <img src={n.imageUrl} alt="" className="mt-1 max-h-[320px] w-full rounded-panel object-cover" />
             )}
           </article>
         )

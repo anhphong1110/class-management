@@ -195,7 +195,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
         </div>
         <div className="flex flex-wrap gap-2.5">
           {toggles.map((t) => (
-            <div key={t.label} className="rounded-[16px] border-2 border-edge bg-field px-4">
+            <div key={t.label} className="rounded-ctl border-2 border-edge bg-field px-4">
               <Switch checked={t.on} onChange={t.flip} label={t.label} disabled={spinning} />
             </div>
           ))}
@@ -241,7 +241,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
             variant="accent"
             onClick={spin}
             disabled={spinning}
-            className="!min-h-[76px] !rounded-[24px] !px-12 !text-2xl"
+            className="!min-h-[76px] !rounded-card !px-12 !text-2xl"
           >
             <Icon d={ICONS.rocket} size={30} />
             {spinning ? 'Đang quay...' : result ? 'Gọi bạn tiếp theo' : 'Quay số'}
@@ -252,7 +252,7 @@ export function RandomClient({ today, students, groups }: { today: string; stude
               size="lg"
               onClick={reward}
               disabled={pending || rewarded}
-              className="!min-h-[76px] !rounded-[24px] !px-8"
+              className="!min-h-[76px] !rounded-card !px-8"
             >
               <Icon d={ICONS.star} size={24} />
               +1 sao cho bạn này

@@ -28,12 +28,12 @@ const ATTEND = [
 ] as const
 
 const TAB =
-  'clay-press flex min-h-12 items-center gap-2 rounded-[16px] border-2 px-5 text-[15px] font-extrabold no-underline [--edge:var(--primary-edge)]'
+  'clay-press flex min-h-12 items-center gap-2 rounded-ctl border-2 px-5 text-[15px] font-extrabold no-underline [--edge:var(--primary-edge)]'
 const TAB_ON = 'border-primary-strong bg-primary-strong text-white'
 const TAB_OFF = 'border-primary-strong bg-white text-primary-strong hover:bg-primary-soft'
 
 function Empty({ children }: { children: string }) {
-  return <p className="m-0 rounded-[12px] bg-field px-3 py-2.5 text-[15px] font-semibold text-muted">{children}</p>
+  return <p className="m-0 rounded-chip bg-field px-3 py-2.5 text-[15px] font-semibold text-muted">{children}</p>
 }
 
 export function ReportsClient({

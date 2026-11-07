@@ -77,7 +77,7 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
                   ) : (
                     <Link
                       href={`/thi-dua?to=${g.id}`}
-                      className="clay-press inline-flex min-h-11 items-center gap-2 rounded-[16px] bg-star px-4 text-sm font-extrabold text-star-ink no-underline [--edge:var(--color-star-edge)] hover:bg-[#FFD65E]"
+                      className="clay-press inline-flex min-h-11 items-center gap-2 rounded-ctl bg-star px-4 text-sm font-extrabold text-star-ink no-underline [--edge:var(--color-star-edge)] hover:bg-[#FFD65E]"
                     >
                       <Icon d={ICONS.star} size={18} />
                       Cộng sao cả tổ
@@ -88,7 +88,7 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
               {members.map((m) => {
                 const [label, tone, icon] = ROLE_STYLE[m.groupRole ?? 'member']
                 return (
-                  <div key={m.id} data-testid="group-member" className="flex flex-col gap-2 rounded-[18px] bg-bg px-3 py-2.5">
+                  <div key={m.id} data-testid="group-member" className="flex flex-col gap-2 rounded-panel bg-bg px-3 py-2.5">
                     <div className="flex items-center gap-2.5">
                       <AvatarImage avatar={m.avatar} size={44} />
                       <div className="min-w-0 flex-1">
@@ -138,7 +138,7 @@ export function GroupsView({ students, groups }: { students: StudentCard[]; grou
               </div>
             </div>
             {unassigned.map((m) => (
-              <div key={m.id} data-testid="group-member" className="flex flex-col gap-2 rounded-[18px] bg-bg px-3 py-2.5">
+              <div key={m.id} data-testid="group-member" className="flex flex-col gap-2 rounded-panel bg-bg px-3 py-2.5">
                 <div className="flex items-center gap-2.5">
                   <AvatarImage avatar={m.avatar} size={44} />
                   <div className="min-w-0 flex-1 text-[15px] font-extrabold">{m.fullName}</div>

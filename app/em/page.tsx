@@ -124,7 +124,7 @@ export default async function StudentHome() {
               {home.morning.map((l) => (
                 <div key={l.label} data-testid="lesson" className="flex items-center gap-3">
                   <span className="min-w-[60px] text-center text-base font-extrabold text-muted">{l.label}</span>
-                  <span className="flex-1 rounded-[14px] px-3.5 py-2.5 text-base font-extrabold" style={{ background: l.bg, color: l.ink }}>
+                  <span className="flex-1 rounded-ctl px-3.5 py-2.5 text-base font-extrabold" style={{ background: l.bg, color: l.ink }}>
                     {l.subject}
                   </span>
                 </div>

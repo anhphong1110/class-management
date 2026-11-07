@@ -177,7 +177,7 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
 
       <Card className="flex flex-col gap-4">
         <h2 className="m-0 font-display text-[22px] font-extrabold">Tạo nhiệm vụ mới</h2>
-        <fieldset className="m-0 flex flex-col gap-3 rounded-[16px] border-2 border-edge px-4 pb-4 pt-2">
+        <fieldset className="m-0 flex flex-col gap-3 rounded-ctl border-2 border-edge px-4 pb-4 pt-2">
           <legend className="px-2 text-sm font-extrabold text-primary-deep">Nội dung nhiệm vụ</legend>
           <div className="flex flex-wrap gap-3">
             <Field label="Tên nhiệm vụ" className="flex-[2_1_240px]">
@@ -225,7 +225,7 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
             )}
           </Field>
         </fieldset>
-        <fieldset className="m-0 flex flex-col gap-3 rounded-[16px] border-2 border-edge px-4 pb-4 pt-2">
+        <fieldset className="m-0 flex flex-col gap-3 rounded-ctl border-2 border-edge px-4 pb-4 pt-2">
           <legend className="px-2 text-sm font-extrabold text-primary-deep">Phần thưởng</legend>
           <Field
             label="Thưởng (sao)"
@@ -352,7 +352,7 @@ export function MissionsClient({ data, students }: { data: MissionsData; student
             <div
               key={b.id}
               data-testid="badge-card"
-              className="flex flex-col items-center gap-1.5 rounded-[20px] border-2 border-edge bg-field p-4 text-center"
+              className="flex flex-col items-center gap-1.5 rounded-panel border-2 border-edge bg-field p-4 text-center"
             >
               <div
                 className="flex h-[68px] w-[68px] items-center justify-center rounded-full"

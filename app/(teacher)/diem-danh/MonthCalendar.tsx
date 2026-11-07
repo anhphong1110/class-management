@@ -62,7 +62,7 @@ export function MonthCalendar({
   }
 
   const nav =
-    'clay-press inline-flex min-h-11 items-center rounded-[16px] border-2 border-primary-strong bg-white px-4 text-sm font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep'
+    'clay-press inline-flex min-h-11 items-center rounded-ctl border-2 border-primary-strong bg-white px-4 text-sm font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep'
 
   return (
     <section className="clay-card flex flex-col gap-3 p-6">
@@ -113,7 +113,7 @@ export function MonthCalendar({
                 </span>
               </>
             )
-            const base = `flex min-h-16 flex-col items-center justify-center gap-0.5 rounded-[16px] border-2 text-ink sm:min-h-20 ${
+            const base = `flex min-h-16 flex-col items-center justify-center gap-0.5 rounded-ctl border-2 text-ink sm:min-h-20 ${
               isSel ? 'border-primary-strong shadow-[0_0_0_3px_var(--primary-soft)]' : d === today ? 'border-star-edge' : 'border-transparent'
             } ${marked ? 'bg-success-soft' : 'bg-bg'}`
             if (d > today) return <div key={d} aria-disabled="true" className={`${base} opacity-40`}>{body}</div>

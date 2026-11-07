@@ -18,7 +18,7 @@ import { deleteDemoData, openNewYear, restoreBackup } from './data-actions'
 
 const card = 'clay-card flex flex-col gap-3.5 px-6 py-[22px]'
 const action =
-  'clay-press flex min-h-24 cursor-pointer flex-col gap-1 rounded-[20px] border-2 border-edge bg-field px-4 py-3.5 text-left text-ink no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50'
+  'clay-press flex min-h-24 cursor-pointer flex-col gap-1 rounded-panel border-2 border-edge bg-field px-4 py-3.5 text-left text-ink no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50'
 const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 
 const NEW_YEAR_NOTE =
@@ -232,14 +232,14 @@ export function DataSection({
               <li
                 key={c.id}
                 aria-label={`${c.className} · ${c.schoolYear}`}
-                className="flex flex-wrap items-center justify-between gap-2.5 rounded-[14px] border-2 border-edge bg-field px-3.5 py-1.5"
+                className="flex flex-wrap items-center justify-between gap-2.5 rounded-ctl border-2 border-edge bg-field px-3.5 py-1.5"
               >
                 <span className="text-[15px] font-extrabold">
                   {c.className} · {c.schoolYear}
                 </span>
                 <a
                   href={`/cai-dat/sao-luu?lop=${c.id}`}
-                  className="inline-flex min-h-11 items-center rounded-[14px] border-2 border-primary-strong bg-white px-5 font-extrabold text-primary-strong no-underline hover:bg-primary-soft"
+                  className="inline-flex min-h-11 items-center rounded-ctl border-2 border-primary-strong bg-white px-5 font-extrabold text-primary-strong no-underline hover:bg-primary-soft"
                 >
                   Tải sao lưu
                 </a>
@@ -249,7 +249,7 @@ export function DataSection({
         </>
       )}
 
-      <div className="mt-2 flex flex-col gap-3 rounded-[20px] border-2 border-danger bg-danger-soft/40 p-4">
+      <div className="mt-2 flex flex-col gap-3 rounded-panel border-2 border-danger bg-danger-soft/40 p-4">
         <h3 className="m-0 flex items-center gap-2 font-display text-lg font-extrabold text-danger-deep">
           <Icon d={ICONS.alert} size={22} />
           Khu vực nguy hiểm

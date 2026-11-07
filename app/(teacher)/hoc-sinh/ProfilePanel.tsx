@@ -9,7 +9,7 @@ import { Notice } from '@/components/ui/Notice'
 import type { StudentCard } from '@/lib/students/queries'
 import type { ProfileDetail } from './actions'
 
-const box = 'flex flex-[1_1_300px] flex-col gap-2 rounded-[20px] border-2 border-edge bg-white px-[18px] py-4'
+const box = 'flex flex-[1_1_300px] flex-col gap-2 rounded-panel border-2 border-edge bg-white px-[18px] py-4'
 const h3 = 'm-0 font-display text-lg font-extrabold'
 
 export function ProfilePanel({
@@ -78,7 +78,7 @@ export function ProfilePanel({
 
       <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))' }}>
         {stats.map((s) => (
-          <div key={s.label} className="rounded-[18px] border-2 border-edge bg-white px-4 py-3.5">
+          <div key={s.label} className="rounded-panel border-2 border-edge bg-white px-4 py-3.5">
             <div className="text-[13px] font-bold text-muted">{s.label}</div>
             <div data-testid={`stat-${s.label}`} className="font-display text-[28px] font-extrabold leading-[1.15]">
               {s.value}
@@ -96,7 +96,7 @@ export function ProfilePanel({
           {detail?.history.map((h) => (
             <div key={h.key} data-testid="star-history-row" className="flex items-center gap-2.5">
               <span
-                className={`min-w-10 rounded-[10px] px-2 py-1 text-center font-extrabold ${
+                className={`min-w-10 rounded-chip px-2 py-1 text-center font-extrabold ${
                   h.delta >= 0 ? 'bg-star-soft text-star-ink' : 'bg-danger-soft text-danger-deep'
                 }`}
               >

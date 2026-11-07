@@ -21,7 +21,7 @@ export function SkipLink() {
   return (
     <a
       href="#main"
-      className="sr-only rounded-[14px] bg-primary-strong px-4 py-3 font-extrabold text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50"
+      className="sr-only rounded-ctl bg-primary-strong px-4 py-3 font-extrabold text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50"
     >
       Bỏ qua tới nội dung chính
     </a>

@@ -82,7 +82,7 @@ export function GiftsClient({
           const showProgress = g.left > 0 && enforceStars && missing > 0
           return (
             <div key={g.id} data-testid="gift" className="clay-card flex flex-col gap-3 p-3.5">
-              <RewardVisual visual={g.visual} iconSize={58} className="h-[120px] w-full rounded-[18px]" />
+              <RewardVisual visual={g.visual} iconSize={58} className="h-[120px] w-full rounded-panel" />
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 font-display text-xl font-extrabold leading-[1.2]">{g.name}</div>
                 <Badge tone="star">

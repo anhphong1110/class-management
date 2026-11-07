@@ -122,7 +122,7 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
           <li
             key={a.studentId}
             aria-label={a.name}
-            className="grid items-center gap-2.5 rounded-[16px] border-2 border-edge bg-field px-3.5 py-2 sm:[grid-template-columns:1.6fr_1.3fr_1fr_1.2fr]"
+            className="grid items-center gap-2.5 rounded-ctl border-2 border-edge bg-field px-3.5 py-2 sm:[grid-template-columns:1.6fr_1.3fr_1fr_1.2fr]"
           >
             <div className="text-[15px] font-extrabold">{a.name}</div>
             <div className="text-sm font-bold text-muted">{a.username ?? ''}</div>

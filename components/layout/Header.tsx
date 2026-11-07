@@ -7,7 +7,7 @@ import { formatVietnameseDate } from '@/lib/domain/date'
 import { getShellData } from '@/lib/layout/shell-data'
 
 const iconLink =
-  'flex size-11 items-center justify-center rounded-[14px] bg-primary-soft text-primary-ink transition-colors hover:bg-primary-strong hover:text-white'
+  'flex size-11 items-center justify-center rounded-ctl bg-primary-soft text-primary-ink transition-colors hover:bg-primary-strong hover:text-white'
 
 export async function Header({ title, subtitle }: { title: string; subtitle: string }) {
   const data = await getShellData()

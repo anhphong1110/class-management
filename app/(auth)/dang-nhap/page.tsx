@@ -5,7 +5,9 @@ import { createAdminSupabase } from '@/lib/supabase/admin'
 import { toVietnameseMessage } from '@/lib/errors'
 import { brandLines } from '@/lib/classes/brand'
 import { themeVars } from '@/lib/domain/theme'
+import { demoRoles } from '@/lib/auth/demo'
 import LoginForm from './LoginForm'
+import DemoButtons from './DemoButtons'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +38,7 @@ export default async function LoginPage({
 }) {
   const sp = await searchParams
   const cls = await loadClass()
+  const demo = demoRoles()
   const school = cls?.school_name || 'Tiểu học Chính Nghĩa'
   const className = cls?.class_name ?? ''
   const teacher = cls?.teacher_name ?? ''
@@ -113,6 +116,7 @@ export default async function LoginPage({
           <h2 className="m-0 font-display text-[28px] font-extrabold">Đăng nhập</h2>
           <div className="text-[15px] font-semibold text-muted">Chọn tài khoản để vào trạm không gian</div>
         </div>
+        {demo.length > 0 && <DemoButtons roles={demo} next={sp.next} />}
         <LoginForm next={sp.next} initialError={initialError} />
       </section>
     </main>

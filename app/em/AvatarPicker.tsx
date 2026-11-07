@@ -29,7 +29,7 @@ export function AvatarPicker({
 
   if (!enabled) {
     return (
-      <div className="rounded-full border-4 border-white bg-white shadow-[0_4px_0_var(--primary-edge)]">
+      <div className="rounded-full border-4 border-white bg-white shadow-ledge">
         <AvatarImage avatar={current} size={130} />
       </div>
     )
@@ -60,9 +60,9 @@ export function AvatarPicker({
         type="button"
         aria-label="Đổi avatar"
         onClick={() => setOpen(true)}
-        className="group flex cursor-pointer flex-col items-center gap-2 rounded-[20px] border-0 bg-transparent p-1"
+        className="group flex cursor-pointer flex-col items-center gap-2 rounded-panel border-0 bg-transparent p-1"
       >
-        <span className="rounded-full border-4 border-white bg-white shadow-[0_4px_0_var(--primary-edge)] transition-transform group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
+        <span className="rounded-full border-4 border-white bg-white shadow-ledge transition-transform group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
           <AvatarImage avatar={current} size={130} />
         </span>
         <span className="inline-flex min-h-11 items-center rounded-full border-2 border-primary-strong bg-white px-4 text-base font-extrabold text-primary-strong group-hover:bg-primary-soft">
@@ -85,8 +85,8 @@ export function AvatarPicker({
                     aria-label={a.label || 'Avatar'}
                     disabled={pending}
                     onClick={() => setPicked(a.id)}
-                    className={`relative flex min-h-[84px] cursor-pointer items-center justify-center rounded-[20px] border-2 p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                      on ? 'border-primary-strong bg-primary-soft shadow-[0_3px_0_var(--primary-deep)]' : 'border-edge bg-white hover:bg-primary-soft'
+                    className={`relative flex min-h-[84px] cursor-pointer items-center justify-center rounded-panel border-2 p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                      on ? 'border-primary-strong bg-primary-soft shadow-ledge-active' : 'border-edge bg-white hover:bg-primary-soft'
                     }`}
                   >
                     <AvatarImage avatar={a.avatar} size={64} />

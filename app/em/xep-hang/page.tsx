@@ -32,7 +32,7 @@ export default async function RankPage() {
             key={r.studentId}
             data-testid="rank-row"
             aria-current={r.me ? 'true' : undefined}
-            className={`flex min-h-[68px] items-center gap-3.5 rounded-[20px] border-2 px-4 py-2.5 max-sm:gap-2.5 max-sm:px-3 ${
+            className={`flex min-h-[68px] items-center gap-3.5 rounded-panel border-2 px-4 py-2.5 max-sm:gap-2.5 max-sm:px-3 ${
               r.me ? 'border-primary-strong bg-primary-soft' : 'border-transparent bg-bg'
             }`}
           >

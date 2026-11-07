@@ -19,7 +19,7 @@ export default function ErrorPage({ reset }: { error: Error; reset: () => void }
           </Button>
           <Link
             href="/"
-            className="clay-press inline-flex min-h-[52px] items-center gap-2 rounded-[16px] bg-primary-strong px-6 text-lg font-extrabold text-white no-underline [--edge:var(--primary-deep)] hover:bg-primary-ink"
+            className="clay-press inline-flex min-h-[52px] items-center gap-2 rounded-ctl bg-primary-strong px-6 text-lg font-extrabold text-white no-underline [--edge:var(--primary-deep)] hover:bg-primary-ink"
           >
             <Icon d={ICONS.home} size={20} />
             Về trang chủ

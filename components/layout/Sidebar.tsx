@@ -64,12 +64,12 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
                   aria-current={on ? 'page' : undefined}
                   className={`flex min-h-11 items-center gap-3 whitespace-nowrap rounded-2xl px-2.5 py-1.5 text-[15px] transition-colors ${
                     on
-                      ? 'bg-primary-strong font-extrabold text-white shadow-[0_3px_0_var(--primary-deep)]'
+                      ? 'bg-primary-strong font-extrabold text-white shadow-ledge-active'
                       : 'font-bold text-ink hover:bg-primary-soft hover:text-primary-deep'
                   }`}
                 >
                   <span
-                    className={`flex size-[30px] flex-none items-center justify-center rounded-[10px] ${
+                    className={`flex size-[30px] flex-none items-center justify-center rounded-chip ${
                       on ? 'bg-white/25 text-[#FFE08A]' : NAV_TONES[meta?.tone ?? 'blue']
                     }`}
                   >
@@ -94,7 +94,7 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
           })}
         </ul>
       </nav>
-      <div data-testid="sidebar-foot" className="flex flex-col gap-3 rounded-[20px] bg-primary-soft p-3.5 max-lg:hidden">
+      <div data-testid="sidebar-foot" className="flex flex-col gap-3 rounded-panel bg-primary-soft p-3.5 max-lg:hidden">
         <div className="flex items-center gap-2.5">
           <AvatarImage avatar={teacher.avatar} size={44} />
           <div className="leading-tight">
@@ -104,7 +104,7 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
         </div>
         <Link
           href="/em"
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border-2 border-primary-strong bg-white px-3 text-[14px] font-extrabold text-primary-strong transition-colors hover:bg-primary-soft hover:text-primary-deep"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ctl border-2 border-primary-strong bg-white px-3 text-[14px] font-extrabold text-primary-strong transition-colors hover:bg-primary-soft hover:text-primary-deep"
         >
           <Icon d={ICONS.eye} size={18} />
           Xem như học sinh

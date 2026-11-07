@@ -43,7 +43,7 @@ export function LeaderboardClient({ rows, period, showAll }: { rows: RankRow[]; 
               href={href(k, showAll)}
               replace
               scroll={false}
-              className={`clay-press flex min-h-12 flex-[1_1_120px] items-center justify-center gap-1.5 rounded-[16px] border-2 text-[15.5px] font-extrabold no-underline ${
+              className={`clay-press flex min-h-12 flex-[1_1_120px] items-center justify-center gap-1.5 rounded-ctl border-2 text-[15.5px] font-extrabold no-underline ${
                 on
                   ? 'border-primary-strong bg-primary-strong text-white [--edge:var(--primary-deep)]'
                   : 'border-edge bg-white text-primary-deep [--edge:var(--primary-edge)] hover:bg-primary-soft'
@@ -116,7 +116,7 @@ export function LeaderboardClient({ rows, period, showAll }: { rows: RankRow[]; 
             href={href(period, !showAll)}
             replace
             scroll={false}
-            className="clay-press flex min-h-11 items-center rounded-[16px] border-2 border-primary-strong bg-white px-5 text-[14.5px] font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep"
+            className="clay-press flex min-h-11 items-center rounded-ctl border-2 border-primary-strong bg-white px-5 text-[14.5px] font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep"
           >
             {showAll ? 'Chỉ xem Top 5' : 'Xem toàn bộ bảng'}
           </Link>
@@ -135,7 +135,7 @@ export function LeaderboardClient({ rows, period, showAll }: { rows: RankRow[]; 
             <div
               key={r.id}
               data-testid="rank-row"
-              className={`flex items-center gap-3.5 rounded-[20px] border-2 px-4 py-2.5 ${
+              className={`flex items-center gap-3.5 rounded-panel border-2 px-4 py-2.5 ${
                 medal ? 'border-[#FFE08A] bg-[#FFF8E6]' : 'border-transparent bg-bg'
               }`}
             >

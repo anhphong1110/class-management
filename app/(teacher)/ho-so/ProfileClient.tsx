@@ -114,7 +114,7 @@ export function ProfileClient({
               type="button"
               aria-pressed={on}
               onClick={() => pickPerson(i)}
-              className={`flex min-h-[60px] cursor-pointer items-center gap-3 rounded-[18px] border-2 px-3 py-1.5 text-left text-ink transition-colors hover:bg-primary-soft motion-reduce:transition-none ${
+              className={`flex min-h-[60px] cursor-pointer items-center gap-3 rounded-panel border-2 px-3 py-1.5 text-left text-ink transition-colors hover:bg-primary-soft motion-reduce:transition-none ${
                 on ? 'border-primary-strong bg-primary-soft' : 'border-edge bg-white'
               }`}
             >
@@ -164,7 +164,7 @@ export function ProfileClient({
                     setPending(a.id)
                     setMsg(null)
                   }}
-                  className={`clay-press relative flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 px-1.5 py-3 text-ink [--edge:var(--primary-edge)] ${
+                  className={`clay-press relative flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-panel border-2 px-1.5 py-3 text-ink [--edge:var(--primary-edge)] ${
                     on ? 'border-primary-strong bg-primary-soft' : 'border-edge bg-white hover:bg-primary-soft'
                   }`}
                 >
@@ -182,7 +182,7 @@ export function ProfileClient({
               type="button"
               disabled={busy}
               onClick={() => fileRef.current?.click()}
-              className="flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-primary bg-bg px-1.5 py-2.5 text-center text-[13px] font-extrabold text-primary-ink transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+              className="flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-panel border-2 border-dashed border-primary bg-bg px-1.5 py-2.5 text-center text-[13px] font-extrabold text-primary-ink transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
             >
               <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />

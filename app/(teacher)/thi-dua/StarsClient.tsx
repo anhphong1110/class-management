@@ -337,7 +337,7 @@ export function StarsClient({
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggleStudent(s.id)}
-                className={`relative flex min-h-16 cursor-pointer items-center gap-2.5 rounded-[18px] border-2 px-3 py-2.5 text-left text-ink transition-colors ${
+                className={`relative flex min-h-16 cursor-pointer items-center gap-2.5 rounded-panel border-2 px-3 py-2.5 text-left text-ink transition-colors ${
                   on ? 'border-primary-strong bg-primary-soft' : 'border-edge bg-white hover:bg-bg'
                 }`}
               >
@@ -364,7 +364,7 @@ export function StarsClient({
             type="button"
             aria-pressed={isAdd}
             onClick={() => chooseMode('add')}
-            className={`inline-flex min-h-16 flex-[1_1_180px] cursor-pointer items-center justify-center gap-2 rounded-[20px] border-2 text-xl font-extrabold transition-colors ${
+            className={`inline-flex min-h-16 flex-[1_1_180px] cursor-pointer items-center justify-center gap-2 rounded-panel border-2 text-xl font-extrabold transition-colors ${
               isAdd ? 'border-star-edge bg-star text-star-ink shadow-[0_4px_0_var(--color-star-edge)]' : 'border-edge bg-white text-ink hover:bg-primary-soft'
             }`}
           >
@@ -374,7 +374,7 @@ export function StarsClient({
             type="button"
             aria-pressed={!isAdd}
             onClick={() => chooseMode('sub')}
-            className={`inline-flex min-h-16 flex-[1_1_180px] cursor-pointer items-center justify-center gap-2 rounded-[20px] border-2 text-xl font-extrabold transition-colors ${
+            className={`inline-flex min-h-16 flex-[1_1_180px] cursor-pointer items-center justify-center gap-2 rounded-panel border-2 text-xl font-extrabold transition-colors ${
               !isAdd ? 'border-danger bg-danger text-white shadow-[0_4px_0_var(--color-danger-deep)]' : 'border-edge bg-white text-ink hover:bg-primary-soft'
             }`}
           >
@@ -398,7 +398,7 @@ export function StarsClient({
                       setCustom('')
                       setErr('')
                     }}
-                    className={`min-h-14 min-w-[72px] cursor-pointer rounded-[16px] border-2 px-4 text-xl font-extrabold transition-colors ${
+                    className={`min-h-14 min-w-[72px] cursor-pointer rounded-ctl border-2 px-4 text-xl font-extrabold transition-colors ${
                       on ? onAmount : 'border-edge bg-white text-ink hover:bg-primary-soft'
                     }`}
                   >
@@ -529,9 +529,9 @@ export function StarsClient({
           </div>
           <div className="text-[13.5px] font-semibold text-muted">Cô có thể sửa tên, số sao mặc định hoặc lưu trữ từng tiêu chí.</div>
           {manageList.map((c) => (
-            <div key={c.id} className="flex items-center gap-2.5 rounded-[14px] bg-bg px-3 py-2">
+            <div key={c.id} className="flex items-center gap-2.5 rounded-ctl bg-bg px-3 py-2">
               <span
-                className={`min-w-9 shrink-0 rounded-[10px] px-2 py-1 text-center text-[13px] font-extrabold ${
+                className={`min-w-9 shrink-0 rounded-chip px-2 py-1 text-center text-[13px] font-extrabold ${
                   c.kind === 'award' ? 'bg-star-soft text-star-ink' : 'bg-danger-soft text-danger-deep'
                 }`}
               >

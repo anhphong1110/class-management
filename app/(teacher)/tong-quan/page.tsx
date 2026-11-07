@@ -48,7 +48,7 @@ const DELTA_STYLE = {
   request: 'bg-[#F0E8FF] text-[#5E35B1]',
 } as const
 
-const heroBtn = 'clay-press inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] px-6 text-base font-extrabold no-underline'
+const heroBtn = 'clay-press inline-flex min-h-12 items-center justify-center gap-2 rounded-ctl px-6 text-base font-extrabold no-underline'
 
 function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl: string | null; brand: string }) {
   return (
@@ -159,7 +159,7 @@ function TodayBlock({ tasks }: { tasks: TodayTasks }) {
                   <span className="text-base font-extrabold leading-snug">{it.title}</span>
                   <span className="text-sm font-semibold text-muted">{it.hint}</span>
                 </span>
-                <span className="inline-flex min-h-11 flex-none items-center gap-1.5 rounded-[14px] bg-primary-strong px-3.5 text-sm font-extrabold text-white">
+                <span className="inline-flex min-h-11 flex-none items-center gap-1.5 rounded-ctl bg-primary-strong px-3.5 text-sm font-extrabold text-white">
                   {it.cta}
                   <Icon d={ARROW} size={16} />
                 </span>
@@ -207,7 +207,7 @@ export default async function Page() {
               <h2 className="m-0 font-display text-[26px] font-extrabold">Top 3 phi hành gia xuất sắc</h2>
               <div className="text-sm font-semibold text-muted">Xếp theo sao thi đua tích lũy, không bị trừ khi đổi quà</div>
             </div>
-            <Link href="/xep-hang" className="clay-press inline-flex min-h-11 items-center rounded-[16px] bg-primary-strong px-5 font-extrabold text-white no-underline [--edge:var(--primary-deep)]">
+            <Link href="/xep-hang" className="clay-press inline-flex min-h-11 items-center rounded-ctl bg-primary-strong px-5 font-extrabold text-white no-underline [--edge:var(--primary-deep)]">
               Xem bảng xếp hạng
             </Link>
           </div>

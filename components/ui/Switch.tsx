@@ -42,7 +42,7 @@ export function Switch({
       </span>
       <span
         aria-hidden="true"
-        className={`relative h-[27px] w-[46px] shrink-0 rounded-[14px] transition-colors ${
+        className={`relative h-[27px] w-[46px] shrink-0 rounded-ctl transition-colors ${
           checked ? "bg-primary-strong" : "bg-[#B9B5E8]"
         }`}
       >

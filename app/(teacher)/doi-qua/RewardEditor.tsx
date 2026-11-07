@@ -159,9 +159,9 @@ export function RewardEditor({ reward, onClose }: { reward: RewardView | null; o
     >
       <div className="flex flex-none flex-col items-center gap-2.5">
         {shownImage ? (
-          <RewardVisual visual={{ kind: 'image', url: shownImage }} iconSize={84} className="h-40 w-[200px] rounded-[22px]" />
+          <RewardVisual visual={{ kind: 'image', url: shownImage }} iconSize={84} className="h-40 w-[200px] rounded-card" />
         ) : (
-          <RewardVisual visual={{ kind: 'preset', key: icon ?? 'star' }} iconSize={84} className="h-40 w-[200px] rounded-[22px]" />
+          <RewardVisual visual={{ kind: 'preset', key: icon ?? 'star' }} iconSize={84} className="h-40 w-[200px] rounded-card" />
         )}
         <Button variant="secondary" className="w-[200px] border-dashed" onClick={() => fileRef.current?.click()}>
           <Icon d={ICONS.plus} size={18} />

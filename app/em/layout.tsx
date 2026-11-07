@@ -35,11 +35,11 @@ export default async function StudentLayout({ children }: { children: ReactNode 
           showBell={pages.has('news')}
         />
         {ctx.preview && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] bg-star-soft px-4 py-2.5 text-[15px] font-extrabold text-star-ink">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel bg-star-soft px-4 py-2.5 text-[15px] font-extrabold text-star-ink">
             <span>Đang xem thử giao diện học sinh</span>
             <Link
               href="/tong-quan"
-              className="inline-flex min-h-11 items-center rounded-[14px] border-2 border-star-ink bg-white px-4 text-star-ink transition-colors hover:bg-star-soft"
+              className="inline-flex min-h-11 items-center rounded-ctl border-2 border-star-ink bg-white px-4 text-star-ink transition-colors hover:bg-star-soft"
             >
               Quay lại trang cô giáo
             </Link>

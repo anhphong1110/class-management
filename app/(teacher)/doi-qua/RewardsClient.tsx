@@ -124,7 +124,7 @@ export function RewardsClient({
                 data-testid="reward-card"
                 className={`clay-card flex flex-col gap-2.5 p-3.5 ${w.hidden ? 'opacity-60' : ''}`}
               >
-                <RewardVisual visual={w.visual} iconSize={64} className="h-[120px] w-full rounded-[18px]" />
+                <RewardVisual visual={w.visual} iconSize={64} className="h-[120px] w-full rounded-panel" />
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="m-0 font-display text-[19px] font-extrabold leading-[1.2]">{w.name}</h3>
                   <Badge tone="star">

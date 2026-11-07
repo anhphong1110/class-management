@@ -27,7 +27,7 @@ const h2 = 'm-0 font-display text-[22px] font-extrabold'
 const row = 'rounded-2xl border-2 border-edge bg-field px-3.5 py-1.5'
 const SPIN = 'M21 12a9 9 0 1 1-6.2-8.6'
 const LINK_BTN =
-  'clay-press inline-flex min-h-11 items-center justify-center gap-2 rounded-[16px] border-2 border-primary-strong bg-white px-5 text-base font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep'
+  'clay-press inline-flex min-h-11 items-center justify-center gap-2 rounded-ctl border-2 border-primary-strong bg-white px-5 text-base font-extrabold text-primary-strong no-underline [--edge:var(--primary-edge)] hover:bg-primary-soft hover:text-primary-deep'
 
 const INFO_FIELDS: [keyof InfoValues, string][] = [
   ['school_name', 'Tên trường'],
@@ -245,7 +245,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border-2 border-edge bg-primary-soft px-5 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel border-2 border-edge bg-primary-soft px-5 py-3">
         <p className="m-0 flex-1 basis-64 text-[15px] font-bold text-primary-deep">
           Muốn biết học sinh nhìn thấy gì sau khi cô đổi cài đặt? Cô xem thử rồi quay lại nhé.
         </p>
@@ -256,7 +256,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
       </div>
 
       {msg && (
-        <div className="sticky top-3 z-30 rounded-[16px] shadow-[0_8px_20px_-8px_rgba(35,31,77,0.35)]">
+        <div className="sticky top-3 z-30 rounded-ctl shadow-[0_8px_20px_-8px_rgba(35,31,77,0.35)]">
           <Notice tone={msg.tone}>{msg.text}</Notice>
         </div>
       )}
@@ -337,7 +337,7 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
                 type="button"
                 disabled={pending}
                 onClick={() => fileRefs.current[kind]?.click()}
-                className="flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-primary bg-bg p-2.5 text-center text-sm font-extrabold text-primary-ink transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-panel border-2 border-dashed border-primary bg-bg p-2.5 text-center text-sm font-extrabold text-primary-ink transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
@@ -359,8 +359,8 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
                 aria-pressed={on}
                 disabled={pending}
                 onClick={() => pickTheme(key)}
-                className={`flex min-h-[44px] cursor-pointer flex-col gap-2.5 rounded-[20px] border-2 p-3 text-left text-[15px] font-extrabold text-ink transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${
-                  on ? 'border-ink shadow-[0_4px_0_var(--color-ink)]' : 'border-edge shadow-[0_4px_0_var(--primary-edge)]'
+                className={`flex min-h-[44px] cursor-pointer flex-col gap-2.5 rounded-panel border-2 p-3 text-left text-[15px] font-extrabold text-ink transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${
+                  on ? 'border-ink shadow-[0_4px_0_var(--color-ink)]' : 'border-edge shadow-ledge'
                 }`}
                 style={{ background: t.bg }}
               >

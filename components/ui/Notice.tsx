@@ -22,7 +22,7 @@ export function Notice({
   return (
     <div
       role={tone === "error" ? "alert" : "status"}
-      className={`flex items-start gap-2.5 rounded-[16px] px-4 py-3 text-[15px] font-bold ${tones[tone]}`}
+      className={`flex items-start gap-2.5 rounded-ctl px-4 py-3 text-[15px] font-bold ${tones[tone]}`}
     >
       <svg
         viewBox="0 0 24 24"

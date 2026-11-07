@@ -33,13 +33,13 @@ export function UndoToast({
       role="status"
       aria-live="polite"
       data-testid="undo-toast"
-      className="fixed bottom-24 left-1/2 z-40 flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-3 rounded-[18px] bg-ink px-4 py-3 text-white shadow-[0_10px_30px_rgba(35,31,77,0.35)] lg:bottom-6"
+      className="fixed bottom-24 left-1/2 z-40 flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-3 rounded-panel bg-ink px-4 py-3 text-white shadow-pop lg:bottom-6"
     >
       <span className="min-w-0 flex-1 text-[15px] font-bold">{message}</span>
       <button
         type="button"
         onClick={onUndo}
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-[12px] bg-white/15 px-3.5 font-extrabold text-[#FFE08A] hover:bg-white/25"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-chip bg-white/15 px-3.5 font-extrabold text-[#FFE08A] hover:bg-white/25"
       >
         <Icon d={ICONS.undo} size={18} />
         Hoàn tác
@@ -48,7 +48,7 @@ export function UndoToast({
         type="button"
         onClick={onDismiss}
         aria-label="Đóng thông báo"
-        className="inline-flex size-11 items-center justify-center rounded-[12px] text-white hover:bg-white/15"
+        className="inline-flex size-11 items-center justify-center rounded-chip text-white hover:bg-white/15"
       >
         <Icon d={ICONS.x} size={18} />
       </button>

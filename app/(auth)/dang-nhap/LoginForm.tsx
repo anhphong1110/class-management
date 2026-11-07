@@ -62,7 +62,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
   return (
     <form action={action} className="flex flex-col gap-[18px]">
       <input type="hidden" name="next" value={next ?? ''} />
-      <div role="tablist" aria-label="Loại tài khoản" className="flex gap-2 rounded-[20px] bg-primary-soft p-1.5 pb-[9px]">
+      <div role="tablist" aria-label="Loại tài khoản" className="flex gap-2 rounded-panel bg-primary-soft p-1.5 pb-[9px]">
         {TABS.map((x) => {
           const on = x.key === tab
           return (
@@ -82,7 +82,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
                 document.getElementById(`tab-${next.key}`)?.focus()
               }}
               onClick={() => choose(x.key)}
-              className={`clay-press inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[14px] border-2 text-[15px] font-extrabold ${
+              className={`clay-press inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-ctl border-2 text-[15px] font-extrabold ${
                 on
                   ? 'border-primary-strong bg-primary-strong text-white [--edge:var(--primary-deep)]'
                   : 'border-edge bg-white text-ink [--edge:var(--primary-edge)] hover:border-primary-strong hover:bg-primary-soft hover:text-primary-deep'
@@ -125,7 +125,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
                 onClick={() => setShow((v) => !v)}
                 aria-pressed={show}
                 aria-label={show ? 'Ẩn ký tự đã nhập' : 'Hiện ký tự đã nhập'}
-                className="absolute right-1.5 top-1.5 flex size-10 items-center justify-center rounded-[12px] bg-transparent text-muted transition-colors hover:bg-primary-soft hover:text-primary-deep"
+                className="absolute right-1.5 top-1.5 flex size-10 items-center justify-center rounded-chip bg-transparent text-muted transition-colors hover:bg-primary-soft hover:text-primary-deep"
               >
                 <Icon d={show ? ICONS.eyeOff : ICONS.eye} size={20} />
               </button>
@@ -135,7 +135,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
       </div>
       <div role="alert" aria-live="polite">
         {state.error && (
-          <p className="m-0 flex items-start gap-2 rounded-[14px] bg-danger-soft px-3 py-2.5 text-[15px] font-bold text-danger-deep">
+          <p className="m-0 flex items-start gap-2 rounded-ctl bg-danger-soft px-3 py-2.5 text-[15px] font-bold text-danger-deep">
             <Icon d={ICONS.alert} size={18} className="mt-0.5" />
             {state.error}
           </p>
@@ -144,7 +144,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
       <button
         type="submit"
         disabled={pending}
-        className="clay-press flex min-h-[56px] items-center justify-center gap-2 rounded-[16px] border-0 bg-primary-strong text-lg font-extrabold text-white [--edge:var(--primary-deep)] hover:bg-primary-ink disabled:cursor-not-allowed disabled:opacity-60"
+        className="clay-press flex min-h-[56px] items-center justify-center gap-2 rounded-ctl border-0 bg-primary-strong text-lg font-extrabold text-white [--edge:var(--primary-deep)] hover:bg-primary-ink disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? (
           <span aria-hidden="true" className="size-5 animate-[spin_0.8s_linear_infinite] rounded-full border-[3px] border-white/40 border-t-white" />
@@ -153,7 +153,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
         )}
         {pending ? 'Đang bay…' : 'Cất cánh'}
       </button>
-      <div className="rounded-[14px] bg-primary-soft px-3 py-2.5 text-[14px] font-semibold leading-normal text-primary-deep">{t.note}</div>
+      <div className="rounded-ctl bg-primary-soft px-3 py-2.5 text-[14px] font-semibold leading-normal text-primary-deep">{t.note}</div>
     </form>
   )
 }

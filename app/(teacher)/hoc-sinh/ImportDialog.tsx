@@ -97,7 +97,7 @@ function Body({ existingCodes, onClose, onDone }: { existingCodes: Set<string>; 
           aria-label="Chọn file danh sách"
           onChange={onFile}
           disabled={pending}
-          className="min-h-12 w-full rounded-[16px] border-2 border-dashed border-edge bg-field p-2.5 text-[15px] font-semibold text-ink file:mr-3 file:min-h-10 file:cursor-pointer file:rounded-[12px] file:border-0 file:bg-primary-strong file:px-4 file:font-extrabold file:text-white hover:border-primary"
+          className="min-h-12 w-full rounded-ctl border-2 border-dashed border-edge bg-field p-2.5 text-[15px] font-semibold text-ink file:mr-3 file:min-h-10 file:cursor-pointer file:rounded-chip file:border-0 file:bg-primary-strong file:px-4 file:font-extrabold file:text-white hover:border-primary"
         />
       </div>
       {error && <Notice tone="error">{error}</Notice>}
@@ -130,7 +130,7 @@ function Body({ existingCodes, onClose, onDone }: { existingCodes: Set<string>; 
               </ul>
             </Notice>
           ) : null}
-          <div className="max-h-[300px] overflow-auto rounded-[16px] border-2 border-edge">
+          <div className="max-h-[300px] overflow-auto rounded-ctl border-2 border-edge">
             <table className="w-full border-collapse text-left text-[14px]">
               <thead>
                 <tr className="bg-primary-soft text-primary-deep">

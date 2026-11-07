@@ -49,6 +49,8 @@
   --radius-card: 24px;
 
   --shadow-pop: 0 10px 30px rgba(35, 31, 77, 0.35);
+  --shadow-ledge: 0 4px 0 var(--primary-edge);
+  --shadow-ledge-active: 0 3px 0 var(--primary-deep);
 
   --font-display: var(--font-baloo);
   --font-body: var(--font-nunito);

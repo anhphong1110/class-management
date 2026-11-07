@@ -30,7 +30,7 @@ export function SegmentedTabs<K extends string>({
     <div
       role="tablist"
       aria-label={label}
-      className={`flex gap-2 rounded-[20px] bg-primary-soft p-1.5 pb-[9px] ${className}`}
+      className={`flex gap-2 rounded-panel bg-primary-soft p-1.5 pb-[9px] ${className}`}
     >
       {items.map((it, i) => {
         const on = it.key === value;
@@ -51,7 +51,7 @@ export function SegmentedTabs<K extends string>({
               document.getElementById(`${idPrefix}-${next.key}`)?.focus();
             }}
             onClick={() => onChange(it.key)}
-            className={`clay-press inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[14px] border-2 text-[15px] font-extrabold ${
+            className={`clay-press inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-ctl border-2 text-[15px] font-extrabold ${
               on
                 ? "border-primary-strong bg-primary-strong text-white [--edge:var(--primary-deep)]"
                 : "border-edge bg-white text-ink [--edge:var(--primary-edge)] hover:border-primary-strong hover:bg-primary-soft hover:text-primary-deep"

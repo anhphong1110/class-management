@@ -191,7 +191,7 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
       <div ref={formRef}>
         <Card className="flex flex-col gap-4">
           <h2 className="m-0 font-display text-[22px] font-extrabold">{editId ? 'Sửa thông báo' : 'Đăng thông báo mới'}</h2>
-          <fieldset className="m-0 flex flex-col gap-3 rounded-[16px] border-2 border-edge px-4 pb-4 pt-2">
+          <fieldset className="m-0 flex flex-col gap-3 rounded-ctl border-2 border-edge px-4 pb-4 pt-2">
             <legend className="px-2 text-sm font-extrabold text-primary-deep">Nội dung thông báo</legend>
             <div className="flex flex-wrap gap-3">
               <Field label="Tiêu đề" className="flex-[2_1_260px]">
@@ -241,7 +241,7 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
               )}
             </Field>
           </fieldset>
-          <fieldset className="m-0 flex flex-col gap-3 rounded-[16px] border-2 border-edge px-4 pb-4 pt-2">
+          <fieldset className="m-0 flex flex-col gap-3 rounded-ctl border-2 border-edge px-4 pb-4 pt-2">
             <legend className="px-2 text-sm font-extrabold text-primary-deep">Hình ảnh và ghim</legend>
             {shownImage && (
               <div className="flex items-center gap-3">
@@ -267,7 +267,7 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
                 Đính kèm hình ảnh
               </Button>
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => onFile(e.target.files?.[0])} />
-              <div className="flex items-center rounded-[16px] border-2 border-edge bg-field px-4">
+              <div className="flex items-center rounded-ctl border-2 border-edge bg-field px-4">
                 <Switch checked={pinned} onChange={setPinned} label="Ghim lên đầu" disabled={busy} />
               </div>
             </div>

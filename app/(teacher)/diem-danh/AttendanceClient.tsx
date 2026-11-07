@@ -153,7 +153,7 @@ export function AttendanceClient({
     <div className="flex flex-col gap-5">
       <div className="clay-card flex flex-wrap items-center justify-between gap-3.5 px-6 py-5">
         <div className="flex items-center gap-3.5">
-          <div className="flex size-14 items-center justify-center rounded-[18px] bg-primary-soft text-primary-ink">
+          <div className="flex size-14 items-center justify-center rounded-panel bg-primary-soft text-primary-ink">
             <Icon d={ICONS.calendar} size={28} />
           </div>
           <div>
@@ -236,7 +236,7 @@ export function AttendanceClient({
             <li
               key={s.id}
               data-testid={`att-card-${s.code}`}
-              className={`flex flex-col gap-2.5 rounded-[22px] border-2 bg-white px-4 py-3.5 shadow-[0_4px_0_var(--primary-edge)] ${curOpt?.ring ?? 'border-edge'}`}
+              className={`flex flex-col gap-2.5 rounded-card border-2 bg-white px-4 py-3.5 shadow-ledge ${curOpt?.ring ?? 'border-edge'}`}
             >
               <div className="flex items-center gap-3">
                 <AvatarImage avatar={s.avatar} size={52} />
@@ -260,7 +260,7 @@ export function AttendanceClient({
                       aria-pressed={on}
                       disabled={pending}
                       onClick={() => set(s.id, on ? null : o.key)}
-                      className={`inline-flex min-h-11 flex-[1_1_120px] items-center justify-center gap-1.5 rounded-[14px] border-2 px-2.5 text-sm font-extrabold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`inline-flex min-h-11 flex-[1_1_120px] items-center justify-center gap-1.5 rounded-ctl border-2 px-2.5 text-sm font-extrabold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                         on ? o.on : 'border-edge bg-white text-ink hover:bg-primary-soft'
                       }`}
                     >
@@ -304,7 +304,7 @@ export function AttendanceClient({
               <div
                 key={h.date}
                 data-testid={`history-${h.date}`}
-                className="grid grid-cols-[1.6fr_repeat(4,1fr)_1fr] items-center gap-2 rounded-[14px] bg-bg px-3.5 py-1.5 text-[14.5px] font-bold"
+                className="grid grid-cols-[1.6fr_repeat(4,1fr)_1fr] items-center gap-2 rounded-ctl bg-bg px-3.5 py-1.5 text-[14.5px] font-bold"
               >
                 <div>{h.label}</div>
                 <div className="text-success-deep">{h.present} có mặt</div>

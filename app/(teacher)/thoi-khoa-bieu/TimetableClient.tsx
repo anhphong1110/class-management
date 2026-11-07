@@ -191,7 +191,7 @@ export function TimetableClient({
         <div data-testid="timetable-scroll" className="overflow-x-auto">
           <div data-testid="timetable-inner" className="flex flex-col gap-2" style={{ minWidth: view === 'week' ? (saturday ? 880 : 760) : 320 }}>
             <div className="grid gap-2" style={{ gridTemplateColumns: cols }}>
-              <div className="rounded-[14px] px-1.5 py-2.5 text-center font-display text-base font-extrabold text-muted">Tiết</div>
+              <div className="rounded-ctl px-1.5 py-2.5 text-center font-display text-base font-extrabold text-muted">Tiết</div>
               {days.map((d) => {
                 const isToday = d === todayWeekday
                 return (
@@ -200,7 +200,7 @@ export function TimetableClient({
                     data-testid="day-head"
                     data-today={isToday}
                     aria-current={isToday ? 'date' : undefined}
-                    className={`flex items-center justify-center gap-1.5 rounded-[14px] px-1.5 py-2.5 text-center font-display text-base font-extrabold ${isToday ? 'bg-primary-strong text-white' : 'bg-primary-soft text-primary-deep'}`}
+                    className={`flex items-center justify-center gap-1.5 rounded-ctl px-1.5 py-2.5 text-center font-display text-base font-extrabold ${isToday ? 'bg-primary-strong text-white' : 'bg-primary-soft text-primary-deep'}`}
                   >
                     {isToday && <Icon d={ICONS.star} size={16} />}
                     {WEEKDAY_LABELS[d]}
@@ -216,7 +216,7 @@ export function TimetableClient({
                   </div>
                 )}
                 <div data-testid="period-row" className="grid gap-2" style={{ gridTemplateColumns: cols }}>
-                  <div className="flex min-h-[60px] items-center justify-center rounded-[14px] bg-field px-1 py-2 text-[15px] font-extrabold">
+                  <div className="flex min-h-[60px] items-center justify-center rounded-ctl bg-field px-1 py-2 text-[15px] font-extrabold">
                     Tiết {period}
                   </div>
                   {days.map((d) => {
@@ -240,7 +240,7 @@ export function TimetableClient({
                           setEdit({ weekday: d, session, period })
                           setSlotMsg('')
                         }}
-                        className="min-h-[60px] cursor-pointer rounded-[14px] border-2 px-1.5 py-2 text-[15px] font-extrabold leading-tight transition-colors hover:brightness-95 motion-reduce:transition-none"
+                        className="min-h-[60px] cursor-pointer rounded-ctl border-2 px-1.5 py-2 text-[15px] font-extrabold leading-tight transition-colors hover:brightness-95 motion-reduce:transition-none"
                         style={style}
                       >
                         {subject?.name ?? '—'}

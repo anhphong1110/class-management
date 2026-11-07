@@ -39,7 +39,7 @@ export default async function TimetablePage() {
                   key={d}
                   role="columnheader"
                   data-today={on}
-                  className={`rounded-[14px] px-1.5 py-2.5 text-center font-display text-lg font-extrabold leading-tight ${
+                  className={`rounded-ctl px-1.5 py-2.5 text-center font-display text-lg font-extrabold leading-tight ${
                     on ? 'bg-primary-strong text-white' : 'bg-primary-soft text-primary-deep'
                   }`}
                 >
@@ -54,7 +54,7 @@ export default async function TimetablePage() {
               <div className="rounded-xl bg-primary-soft p-1.5 text-center text-base font-extrabold tracking-[.1em] text-primary-ink">{title}</div>
               {PERIODS.filter((p) => p.session === session).map((p) => (
                 <div key={p.period} className="grid gap-2" style={{ gridTemplateColumns: cols }} role="row">
-                  <div className="flex min-h-14 items-center justify-center rounded-[14px] bg-bg text-base font-extrabold">Tiết {p.period}</div>
+                  <div className="flex min-h-14 items-center justify-center rounded-ctl bg-bg text-base font-extrabold">Tiết {p.period}</div>
                   {days.map((d) => {
                     const subject = subjects.get(tt.slots[slotKey(d, p.session, p.period)] ?? '')
                     const c = subject ? paletteFor(subject.color) : null
@@ -62,7 +62,7 @@ export default async function TimetablePage() {
                       <div
                         key={d}
                         role="cell"
-                        className={`flex min-h-14 items-center justify-center rounded-[14px] p-1.5 text-center text-base font-extrabold leading-tight ${c ? '' : 'bg-bg'}`}
+                        className={`flex min-h-14 items-center justify-center rounded-ctl p-1.5 text-center text-base font-extrabold leading-tight ${c ? '' : 'bg-bg'}`}
                         style={c ? { background: c.bg, color: c.ink } : undefined}
                       >
                         {subject?.name ?? ''}
