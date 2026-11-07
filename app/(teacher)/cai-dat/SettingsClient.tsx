@@ -1,69 +1,25 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
-import { Button, ButtonLink } from '@/components/ui/Button'
+import { ButtonLink } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { Field, Input } from '@/components/ui/Field'
 import { Icon, ICONS } from '@/components/ui/Icon'
 import { Notice } from '@/components/ui/Notice'
-import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
-import { THEMES, type ThemeKey } from '@/lib/domain/theme'
+import type { ThemeKey } from '@/lib/domain/theme'
 import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { addStep, infoPayload, parseStepInput, removeStep, type InfoValues } from '@/lib/settings/form'
 import type { SettingsClass, SettingsData, SettingsFlags } from '@/lib/settings/queries'
 import { saveClassInfo, saveClassSettings, setSaturday, uploadBranding } from './actions'
-
-type Msg = { tone: 'success' | 'error'; text: string }
-type FlagKey = { [K in keyof SettingsFlags]: SettingsFlags[K] extends boolean ? K : never }[keyof SettingsFlags]
-type UploadKind = 'logo_path' | 'class_logo_path' | 'cover_path'
+import { BrandingSection } from './settings/BrandingSection'
+import { ClassInfoSection } from './settings/ClassInfoSection'
+import { FeaturesSection } from './settings/FeaturesSection'
+import { RulesSection } from './settings/RulesSection'
+import type { FlagKey, Msg, UploadKind } from './settings/shared'
 
 const SAVED = 'Đã lưu cài đặt.'
-const card = 'clay-card flex flex-col gap-3.5 px-6 py-[22px]'
-const h2 = 'm-0 font-display text-[22px] font-extrabold'
-const row = 'rounded-2xl border-2 border-edge bg-field px-3.5 py-1.5'
-
-const INFO_FIELDS: [keyof InfoValues, string][] = [
-  ['school_name', 'Tên trường'],
-  ['class_name', 'Tên lớp'],
-  ['school_year', 'Năm học'],
-  ['teacher_name', 'Giáo viên chủ nhiệm'],
-  ['slogan', 'Slogan'],
-]
-const TERM_FIELDS: [keyof InfoValues, string][] = [
-  ['term1_start', 'Học kỳ 1 bắt đầu'],
-  ['term1_end', 'Học kỳ 1 kết thúc'],
-  ['term2_start', 'Học kỳ 2 bắt đầu'],
-  ['term2_end', 'Học kỳ 2 kết thúc'],
-]
-const UPLOADS: [UploadKind, string, string, number][] = [
-  ['logo_path', 'Tải lên logo trường', 'upload-logo', 512],
-  ['class_logo_path', 'Tải lên logo lớp', 'upload-class-logo', 512],
-  ['cover_path', 'Tải lên ảnh bìa lớp', 'upload-cover', 1600],
-]
-const RULES: [FlagKey, string, string][] = [
-  ['require_approval', 'Giáo viên duyệt mọi yêu cầu đổi quà', 'Tắt thì học sinh đổi quà xong là trừ sao ngay'],
-  ['reserve_on_request', 'Giữ trước sao và quà khi gửi yêu cầu', 'Tránh bán vượt số lượng quà'],
-  ['only_enough', 'Chỉ cho đổi khi đủ sao khả dụng', 'Không bao giờ để số dư sao âm'],
-]
-const FEATURES: [FlagKey, string, string][] = [
-  ['feature_missions', 'Nhiệm vụ và huy hiệu', 'Giáo viên tạo nhiệm vụ, học sinh nhận huy hiệu'],
-  ['feature_random', 'Gọi tên ngẫu nhiên', 'Hiện trang quay số trong menu'],
-  ['feature_display', 'Chế độ trình chiếu lớp học', 'Toàn màn hình, không hiện dữ liệu riêng tư'],
-  ['feature_rewards', 'Trạm đổi quà', 'Tắt thì học sinh không thấy trang quà'],
-]
-const VIEWS: [FlagKey, string][] = [
-  ['student_can_view_profile', 'Hồ sơ của mình'],
-  ['student_can_view_history', 'Lịch sử sao của mình'],
-  ['student_can_view_rank', 'Bảng xếp hạng'],
-  ['student_can_view_rewards', 'Phần thưởng và đổi quà'],
-  ['student_can_view_timetable', 'Thời khóa biểu'],
-  ['student_can_view_news', 'Thông báo'],
-  ['student_can_view_attendance', 'Lịch sử điểm danh của mình'],
-]
 
 function toInfo(c: SettingsClass): InfoValues {
   return {
@@ -234,12 +190,6 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
     })
   }
 
-  const switchRow = (key: FlagKey, label: string, hint?: string) => (
-    <div key={key} className={row}>
-      <Switch checked={s[key]} onChange={(next) => flip(key, next)} label={label} hint={hint} disabled={pending} />
-    </div>
-  )
-
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel border-2 border-edge bg-primary-soft px-5 py-3">
@@ -258,216 +208,43 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
         </div>
       )}
 
-      <section className={card} aria-labelledby="info-h">
-        <h2 id="info-h" className={h2}>
-          Thông tin lớp
-        </h2>
-        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
-          {INFO_FIELDS.map(([k, label]) => (
-            <Field key={k} label={label}>
-              {(a) => (
-                <Input
-                  {...a}
-                  type="text"
-                  value={vals[k]}
-                  disabled={pending}
-                  onChange={(e) => setVals({ ...vals, [k]: e.target.value })}
-                />
-              )}
-            </Field>
-          ))}
-        </div>
-        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-          {TERM_FIELDS.map(([k, label]) => (
-            <Field key={k} label={label}>
-              {(a) => (
-                <Input
-                  {...a}
-                  type="date"
-                  value={vals[k]}
-                  disabled={pending}
-                  onChange={(e) => setVals({ ...vals, [k]: e.target.value })}
-                />
-              )}
-            </Field>
-          ))}
-        </div>
-        <p className="m-0 text-sm font-semibold text-muted">
-          Mỗi năm học cô cập nhật ngày học kỳ để bảng xếp hạng và nhiệm vụ theo học kỳ tính đúng.
-        </p>
-        <div className={row}>
-          <Switch
-            checked={s.timetable_saturday}
-            onChange={onSaturday}
-            label="Lớp học thứ Bảy"
-            disabled={pending}
-          />
-        </div>
-        <div>
-          <Button size="lg" onClick={saveInfo} loading={pending}>
-            Lưu thông tin
-          </Button>
-        </div>
-      </section>
+      <ClassInfoSection
+        vals={vals}
+        setVals={setVals}
+        saturdayOn={s.timetable_saturday}
+        pending={pending}
+        onSaturday={onSaturday}
+        onSave={saveInfo}
+      />
 
-      <section className={card} aria-labelledby="look-h">
-        <h2 id="look-h" className={h2}>
-          Logo, ảnh bìa và màu giao diện
-        </h2>
-        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-          {UPLOADS.map(([kind, label, testId, maxSide]) => (
-            <div key={kind}>
-              <input
-                ref={(el) => {
-                  fileRefs.current[kind] = el
-                }}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                data-testid={testId}
-                tabIndex={-1}
-                aria-hidden="true"
-                className="hidden"
-                onChange={(e) => onFile(kind, maxSide, e.target.files?.[0])}
-              />
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => fileRefs.current[kind]?.click()}
-                className="flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-panel border-2 border-dashed border-primary bg-bg p-2.5 text-center text-sm font-extrabold text-primary-ink transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
-                </svg>
-                {label}
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className="text-[15px] font-extrabold text-ink">Màu chủ đạo</div>
-        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-          {(Object.keys(THEMES) as ThemeKey[]).map((key) => {
-            const t = THEMES[key]
-            const on = key === theme
-            return (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={on}
-                disabled={pending}
-                onClick={() => pickTheme(key)}
-                className={`flex min-h-[44px] cursor-pointer flex-col gap-2.5 rounded-panel border-2 p-3 text-left text-[15px] font-extrabold text-ink transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${
-                  on ? 'border-ink shadow-[0_4px_0_var(--color-ink)]' : 'border-edge shadow-ledge'
-                }`}
-                style={{ background: t.bg }}
-              >
-                <span className="flex items-center justify-between gap-2">
-                  {t.label}
-                  {on && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-0.5 text-xs font-extrabold text-white">
-                      <Icon d={ICONS.check} size={12} />
-                      Đang dùng
-                    </span>
-                  )}
-                </span>
-                <span aria-hidden="true" className="flex items-center gap-1.5">
-                  <span className="size-7 rounded-full border-2 border-white" style={{ background: t.primary }} />
-                  <span className="size-7 rounded-full border-2 border-white" style={{ background: t.strong }} />
-                  <span className="size-7 rounded-full border-2" style={{ background: t.soft, borderColor: t.edge }} />
-                  <span
-                    className="ml-auto rounded-full px-3 py-1 text-xs font-extrabold text-white"
-                    style={{ background: t.strong, boxShadow: `0 3px 0 ${t.deep}` }}
-                  >
-                    Nút mẫu
-                  </span>
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </section>
+      <BrandingSection fileRefs={fileRefs} theme={theme} pending={pending} onFile={onFile} onPickTheme={pickTheme} />
 
       <div className="flex flex-wrap items-stretch gap-4">
-        <section className={`${card} min-w-0 flex-[1_1_380px]`} aria-labelledby="rules-h">
-          <h2 id="rules-h" className={h2}>
-            Quy định thi đua và đổi quà
-          </h2>
-          {RULES.map(([k, label, hint]) => switchRow(k, label, hint))}
-          <p className="m-0 text-sm font-semibold text-muted">
-            Khi &quot;Giữ trước sao&quot; bật, học sinh luôn cần đủ sao để gửi yêu cầu. &quot;Chỉ cho đổi khi đủ sao&quot; chỉ có tác dụng khi &quot;Giữ trước sao&quot; tắt.
-          </p>
-          <Field label="Tối đa lượt đổi quà mỗi tuần" className="max-w-[240px]">
-            {(a) => (
-              <Input
-                {...a}
-                type="number"
-                value={limit}
-                disabled={pending}
-                onChange={(e) => setLimit(e.target.value)}
-                onBlur={saveLimit}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.currentTarget.blur()
-                }}
-              />
-            )}
-          </Field>
-          <div className="text-[15px] font-extrabold text-ink">Mức sao gợi ý (cộng)</div>
-          <div className="flex flex-wrap items-center gap-2">
-            {s.star_steps.map((n) => (
-              <button
-                key={n}
-                type="button"
-                disabled={pending}
-                aria-label={`Xóa mức +${n}`}
-                onClick={() => saveSteps(removeStep(s.star_steps, n))}
-                className="inline-flex min-h-11 min-w-14 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 border-star-edge bg-star-soft px-3 text-[15px] font-extrabold text-star-ink hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <span>+{n}</span>
-                <Icon d={ICONS.x} size={14} />
-              </button>
-            ))}
-            {adding ? (
-              <span className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={1}
-                  aria-label="Mức sao mới"
-                  value={stepText}
-                  autoFocus
-                  disabled={pending}
-                  onChange={(e) => setStepText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') confirmStep()
-                    if (e.key === 'Escape') {
-                      setAdding(false)
-                      setStepText('')
-                    }
-                  }}
-                  className="!w-[96px]"
-                />
-                <Button onClick={confirmStep} disabled={pending}>
-                  Thêm
-                </Button>
-              </span>
-            ) : (
-              <Button variant="secondary" className="border-dashed" disabled={pending} onClick={() => setAdding(true)}>
-                + Thêm mức
-              </Button>
-            )}
-          </div>
-          <Link href="/thi-dua" className="inline-flex min-h-11 items-center text-[15px] font-extrabold text-primary-strong">
-            Sửa tiêu chí cộng/trừ sao ở Trạm thi đua
-          </Link>
-        </section>
-
-        <section className={`${card} min-w-0 flex-[1_1_380px]`} aria-labelledby="feat-h">
-          <h2 id="feat-h" className={h2}>
-            Bật/tắt tính năng
-          </h2>
-          {FEATURES.map(([k, label, hint]) => switchRow(k, label, hint))}
-          <h2 className={`${h2} mt-2.5`}>Học sinh được xem</h2>
-          {VIEWS.map(([k, label]) => switchRow(k, label))}
-        </section>
+        <RulesSection
+          settings={s}
+          pending={pending}
+          onFlip={flip}
+          limit={limit}
+          setLimit={setLimit}
+          onSaveLimit={saveLimit}
+          steps={{
+            steps: s.star_steps,
+            adding,
+            stepText,
+            pending,
+            onRemove: (n) => saveSteps(removeStep(s.star_steps, n)),
+            onStartAdd: () => setAdding(true),
+            onCancelAdd: () => {
+              setAdding(false)
+              setStepText('')
+            },
+            onTextChange: setStepText,
+            onConfirm: confirmStep,
+          }}
+        />
+        <FeaturesSection settings={s} pending={pending} onFlip={flip} />
       </div>
+
 
       <ConfirmDialog
         open={askSaturday}
