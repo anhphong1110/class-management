@@ -94,6 +94,14 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
           Xem như học sinh
         </Link>
       </div>
+      {/* Trang trí: phi hành gia ngồi trên mặt trăng ở đáy menu (ảnh dùng chung với trang đăng nhập). */}
+      <div data-testid="sidebar-mascot" aria-hidden="true" className="sidebar-mascot max-lg:hidden">
+        {/* eslint-disable @next/next/no-img-element */}
+        <img src="/brand/login/mat-trang.webp" alt="" loading="lazy" decoding="async" draggable={false} className="sidebar-mascot-moon" />
+        <img src="/brand/login/robot.webp" alt="" loading="lazy" decoding="async" draggable={false} className="sidebar-mascot-robot" />
+        <img src="/brand/login/sao-tho.webp" alt="" loading="lazy" decoding="async" draggable={false} className="sidebar-mascot-star" />
+        {/* eslint-enable @next/next/no-img-element */}
+      </div>
     </aside>
   )
 }

@@ -250,3 +250,53 @@ textarea::placeholder {
     transform: none;
   }
 }
+
+/* Phi hành gia ở đáy menu giáo viên (components/layout/Sidebar.tsx): bám sát mép đáy thẻ menu. */
+.sidebar-mascot {
+  position: relative;
+  flex: none;
+  height: 168px;
+  margin: -2px -14px -20px;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+.sidebar-mascot img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  height: auto;
+}
+.sidebar-mascot-moon {
+  left: -40px;
+  bottom: -96px;
+  width: 200px;
+  transform: scaleX(-1);
+}
+.sidebar-mascot-robot {
+  left: 52px;
+  bottom: 56px;
+  width: 58px;
+  filter: drop-shadow(0 6px 8px rgb(36 36 107 / 0.35));
+  animation: sidebar-bob 5s ease-in-out infinite;
+}
+.sidebar-mascot-star {
+  left: 138px;
+  bottom: 96px;
+  width: 30px;
+  animation: sidebar-bob 4s ease-in-out -1.2s infinite;
+}
+@keyframes sidebar-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -5px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-mascot img {
+    animation: none;
+  }
+}

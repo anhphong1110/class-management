@@ -6,7 +6,7 @@
  "app/(teacher)/hoc-sinh/StudentsClient.tsx": 3,
  "app/(teacher)/thoi-khoa-bieu/TimetableClient.tsx": 1,
  "app/(teacher)/thong-bao/AnnouncementsClient.tsx": 1,
- "app/(teacher)/tong-quan/page.tsx": 45,
+ "app/(teacher)/tong-quan/page.tsx": 14,
  "app/(teacher)/xep-hang/LeaderboardClient.tsx": 23,
  "app/em/doi-qua/page.tsx": 1,
  "app/em/thong-bao/page.tsx": 1,

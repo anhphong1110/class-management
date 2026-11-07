@@ -1,0 +1,547 @@
+/*
+ * Trang Tổng quan: banner vũ trụ và bục Top 3.
+ * Bảng màu và hiệu ứng nằm riêng ở đây (không gõ mã hex trong .tsx, xem tests/unit/hex-guard.test.ts).
+ * Chỉ animate transform/opacity; tắt hết khi người dùng chọn giảm chuyển động.
+ */
+.ov {
+  --ov-navy: #24246b;
+  --ov-indigo: #514bdb;
+  --ov-lav: #9470f5;
+  --ov-pink: #f653a6;
+  --ov-cyan: #32d9f5;
+  --ov-gold: #ffc94f;
+  --ov-ink: #2a2468;
+  --ov-outline: #2d1a82;
+}
+
+/* ---------- Banner ---------- */
+.ov-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  overflow: hidden;
+  padding: 22px 20px 0;
+  border: 2px solid rgb(255 255 255 / 0.55);
+  border-radius: var(--radius-card, 24px);
+  color: #fff;
+  background:
+    radial-gradient(60% 70% at 88% 10%, rgb(50 217 245 / 0.28), transparent 70%),
+    radial-gradient(50% 60% at 20% 100%, rgb(246 83 166 / 0.35), transparent 70%),
+    radial-gradient(55% 60% at 60% 40%, rgb(148 112 245 / 0.5), transparent 70%),
+    linear-gradient(135deg, var(--ov-navy) 0%, var(--ov-indigo) 55%, var(--ov-lav) 100%);
+  box-shadow:
+    0 4px 0 #a99cf0,
+    0 18px 30px -14px rgb(36 36 107 / 0.55);
+}
+.ov-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cg fill='white'%3E%3Ccircle cx='30' cy='50' r='1.6'/%3E%3Ccircle cx='140' cy='24' r='1.1'/%3E%3Ccircle cx='250' cy='100' r='1.8'/%3E%3Ccircle cx='330' cy='40' r='1.2'/%3E%3Ccircle cx='80' cy='190' r='1.2'/%3E%3Ccircle cx='200' cy='250' r='1.6'/%3E%3Ccircle cx='320' cy='210' r='1'/%3E%3Ccircle cx='40' cy='320' r='1.8'/%3E%3Ccircle cx='170' cy='340' r='1.1'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 360px 360px;
+  animation: ov-twinkle 5s ease-in-out infinite;
+}
+.ov-hero > * {
+  position: relative;
+  z-index: 1;
+}
+.ov-hero-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 20px;
+}
+.ov-ribbon {
+  display: inline-block;
+  margin: 0;
+  padding: 5px 16px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ffe48a, var(--ov-gold));
+  color: #5a2f8e;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  box-shadow:
+    0 3px 0 #e7a52a,
+    0 8px 14px rgb(18 14 90 / 0.35);
+}
+.ov-title {
+  margin: 0;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: clamp(34px, 4.4vw, 52px);
+  font-weight: 800;
+  line-height: 1.04;
+  color: #fff;
+  -webkit-text-stroke: 8px var(--ov-outline);
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+  text-shadow:
+    0 4px 0 #1b0f5c,
+    0 12px 20px rgb(18 14 90 / 0.4);
+}
+.ov-sub {
+  margin: 0;
+  max-width: 460px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgb(255 255 255 / 0.92);
+  text-shadow: 0 2px 8px rgb(18 14 90 / 0.5);
+}
+.ov-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+/* Nút trong banner: CSS ngoài @layer thắng utility của Tailwind. */
+.ov-hero a.ov-btn {
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 9999px;
+  font-weight: 900;
+}
+.ov-hero a.ov-btn-gold {
+  background: linear-gradient(180deg, #ffe48a, var(--ov-gold));
+  color: #4a2a00;
+  --edge: #d99a1f;
+}
+.ov-hero a.ov-btn-gold:hover {
+  background: linear-gradient(180deg, #fff0b0, #ffd56a);
+}
+.ov-hero a.ov-btn-pink {
+  background: linear-gradient(100deg, #ff7fc2, var(--ov-pink) 55%, #c24bd8);
+  color: #fff;
+  --edge: #b42a85;
+}
+.ov-hero a.ov-btn-pink:hover {
+  filter: brightness(1.08);
+}
+
+/* Khu hình bên phải */
+.ov-art {
+  position: relative;
+  min-height: 190px;
+  margin: 0 -20px;
+}
+.ov-art > * {
+  position: absolute;
+}
+.ov-deco {
+  display: block;
+  height: auto;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 12px rgb(18 14 90 / 0.35));
+}
+.ov-earth {
+  left: 46%;
+  bottom: -22%;
+  height: 112%;
+  width: auto;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0 28px rgb(50 217 245 / 0.45));
+}
+.ov-group {
+  left: 46%;
+  bottom: -3%;
+  height: 110%;
+  width: auto;
+  max-width: none;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 12px 16px rgb(18 14 90 / 0.4));
+  animation: ov-float 7s ease-in-out infinite;
+}
+.ov-saturn {
+  left: 3%;
+  top: 6%;
+  width: 78px;
+  animation: ov-drift 14s ease-in-out infinite;
+}
+.ov-rocket {
+  right: 6%;
+  top: -4%;
+  width: 46px;
+  transform: rotate(36deg);
+  animation: ov-hover 5s ease-in-out infinite;
+}
+.ov-star {
+  right: 24%;
+  top: 4%;
+  width: 40px;
+  animation: ov-float 4.4s ease-in-out infinite;
+}
+.ov-mascot-star {
+  left: 2%;
+  bottom: 18%;
+  width: 38px;
+  animation: ov-float 5s ease-in-out -1.5s infinite;
+}
+/* Mây trải suốt chân banner (không bị cắt theo cột), nằm sau chữ và nhân vật. */
+.ov-hero > .ov-clouds {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  width: 100%;
+  height: auto;
+  translate: 0 46%;
+  opacity: 0.95;
+}
+
+/* Ảnh bìa lớp do cô tải lên: nằm trong khung bo góc, thay cụm nhân vật. */
+.ov-cover-frame {
+  right: 20px;
+  left: 20px;
+  top: 0;
+  bottom: 20px;
+  overflow: hidden;
+  border: 3px solid rgb(255 255 255 / 0.85);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 0.12);
+  box-shadow:
+    0 0 0 6px rgb(255 255 255 / 0.16),
+    0 16px 28px -10px rgb(18 14 90 / 0.6);
+}
+.ov-cover-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- Top 3 ---------- */
+.ov-top3 {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  padding: 24px 22px 10px;
+  border: 2px solid #ddd3fb;
+  border-radius: var(--radius-card, 24px);
+  background:
+    radial-gradient(60% 40% at 15% 0%, rgb(148 112 245 / 0.12), transparent 70%),
+    radial-gradient(50% 40% at 90% 10%, rgb(246 83 166 / 0.1), transparent 70%),
+    linear-gradient(180deg, #f6f2ff, #fff 70%);
+  box-shadow:
+    0 4px 0 #ddd3fb,
+    0 14px 24px -14px rgb(35 31 77 / 0.22);
+}
+.ov-top3 > * {
+  position: relative;
+  z-index: 1;
+}
+.ov-top3-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ov-top3 a.ov-btn-violet {
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #7e5cf0, var(--ov-indigo));
+  color: #fff;
+  --edge: #3b2fb8;
+}
+.ov-clouds-soft {
+  position: absolute !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0 !important;
+  width: 100%;
+  height: auto;
+  translate: 0 38%;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.ov-top3-deco {
+  position: absolute !important;
+  z-index: 0 !important;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+.ov-top3-rocket {
+  left: 4%;
+  bottom: 12%;
+  width: 54px;
+  transform: rotate(-38deg);
+  animation: ov-hover 5.5s ease-in-out infinite;
+}
+.ov-top3-saturn {
+  right: 3%;
+  bottom: 10%;
+  width: 92px;
+  animation: ov-drift 16s ease-in-out infinite;
+}
+
+.ov-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+.ov-pcard {
+  --m: #ffc94f;
+  --m-deep: #d99a1f;
+  --m-soft: #fff4d1;
+  --m-ink: #4a3300;
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  max-width: 270px;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.ov-pcard[data-rank="2"] {
+  --m: #b9c2e8;
+  --m-deep: #7f89b8;
+  --m-soft: #eceffa;
+  --m-ink: #2f3550;
+}
+.ov-pcard[data-rank="3"] {
+  --m: #f0ae8a;
+  --m-deep: #c67a52;
+  --m-soft: #ffe8d8;
+  --m-ink: #512810;
+}
+.ov-ava {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(145deg, #fff, var(--m-soft));
+  box-shadow:
+    0 0 0 4px #fff,
+    0 10px 22px -6px var(--m-deep);
+}
+.ov-wreath {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  width: 162%;
+  height: auto;
+  max-width: none;
+  transform: translate(-50%, -47%);
+  filter: drop-shadow(0 6px 8px rgb(36 36 107 / 0.25));
+  pointer-events: none;
+}
+.ov-crown {
+  position: absolute;
+  left: 50%;
+  top: -42%;
+  z-index: 3;
+  width: 74%;
+  height: auto;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 4px 6px rgb(217 154 31 / 0.55));
+  pointer-events: none;
+  animation: ov-float 4s ease-in-out infinite;
+}
+
+.ov-stage {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+.ov-pcard[data-rank="2"] .ov-stage,
+.ov-pcard[data-rank="3"] .ov-stage {
+  width: 86%;
+}
+/* Avatar đứng trên mặt bục: kéo avatar xuống chồng lên mặt bục (phần trăm = theo bề ngang bục). */
+.ov-stage .ov-ava {
+  margin-top: 22%;
+  margin-bottom: -15%;
+}
+.ov-pcard[data-rank="1"] .ov-stage .ov-ava {
+  margin-top: 24%;
+  margin-bottom: -13%;
+}
+.ov-base {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+.ov-base img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 8px 10px rgb(36 36 107 / 0.25));
+}
+.ov-rankpill {
+  position: absolute;
+  left: 50%;
+  bottom: 24%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px 3px 4px;
+  border-radius: 9999px;
+  background: #fff;
+  color: var(--m-ink);
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  box-shadow:
+    0 0 0 2px var(--m),
+    0 4px 8px rgb(36 36 107 / 0.2);
+}
+.ov-rankpill b {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: linear-gradient(160deg, var(--m-soft), var(--m));
+  font-size: 13px;
+}
+.ov-pname {
+  max-width: 100%;
+  margin-top: 8px;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--ov-ink);
+  overflow-wrap: anywhere;
+}
+.ov-pstars {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background: var(--m-soft);
+  color: var(--m-ink);
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 0 0 2px var(--m);
+}
+
+/* ---------- Máy tính bảng và máy tính ---------- */
+@media (min-width: 768px) {
+  .ov-hero {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    align-items: stretch;
+    gap: 0;
+    padding: 26px 0 0 30px;
+    min-height: 310px;
+  }
+  .ov-hero-text {
+    justify-content: center;
+    padding-bottom: 28px;
+  }
+  .ov-art {
+    min-height: 0;
+    margin: 0;
+  }
+  .ov-saturn {
+    width: 96px;
+  }
+  .ov-rocket {
+    width: 66px;
+  }
+  .ov-star {
+    width: 52px;
+  }
+  .ov-mascot-star {
+    width: 50px;
+  }
+  .ov-cover-frame {
+    left: 0;
+    right: 24px;
+    top: 24px;
+    bottom: 24px;
+  }
+  .ov-ava {
+    padding: 8px;
+  }
+  .ov-podium {
+    gap: 18px;
+  }
+  .ov-pname {
+    font-size: 20px;
+  }
+}
+
+@keyframes ov-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes ov-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -6px;
+  }
+}
+@keyframes ov-hover {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 3px -8px;
+  }
+}
+@keyframes ov-drift {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 8px 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-hero::before,
+  .ov-hero *,
+  .ov-top3 * {
+    animation: none !important;
+  }
+}
+
+/* Điện thoại: thu nhỏ avatar bục Top 3 cho ba cột vừa một hàng. */
+@media (max-width: 639px) {
+  .ov-ava {
+    zoom: 0.72;
+  }
+  .ov-pname {
+    font-size: 15px;
+  }
+  .ov-pstars {
+    font-size: 13px;
+    padding: 2px 8px;
+  }
+  .ov-top3-head a {
+    width: 100%;
+  }
+}
