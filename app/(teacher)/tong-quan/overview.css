@@ -194,6 +194,19 @@
   opacity: 0.95;
 }
 
+/* Banner học sinh: avatar nằm giữa Trái Đất (thay cụm nhân vật của banner giáo viên). */
+.ov-art > .ov-art-avatar {
+  left: 46%;
+  top: 50%;
+  z-index: 3;
+  display: flex;
+  transform: translate(-50%, -50%);
+}
+.ov-hero-student .ov-earth {
+  bottom: -18%;
+  height: 118%;
+}
+
 /* Ảnh bìa lớp do cô tải lên: nằm trong khung bo góc, thay cụm nhân vật. */
 .ov-cover-frame {
   right: 20px;

@@ -10,10 +10,11 @@ type Hrefs = { stars?: string; gifts?: string; rank?: string }
  */
 export function StudentStats({ profile, hrefs = {} }: { profile: StudentProfile; hrefs?: Hrefs }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-4">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
       <div data-testid="stat" className="contents">
         <StatCard
           icon={ICONS.star}
+          art="/brand/overview/stat-sao.webp"
           tone="star"
           value={profile.competitionStars}
           label="Sao thi đua tích lũy"
@@ -24,6 +25,7 @@ export function StudentStats({ profile, hrefs = {} }: { profile: StudentProfile;
       <div data-testid="stat" className="contents">
         <StatCard
           icon={ICONS.gift}
+          art="/brand/overview/stat-doi-qua.webp"
           tone="mint"
           value={profile.availableStars}
           label="Sao khả dụng"
@@ -35,6 +37,7 @@ export function StudentStats({ profile, hrefs = {} }: { profile: StudentProfile;
         <div data-testid="stat" className="contents">
           <StatCard
             icon={ICONS.trophy}
+            art="/brand/overview/stat-noi-bat.webp"
             tone="pink"
             value={`#${profile.rankYear}`}
             label="Thứ hạng của em"
