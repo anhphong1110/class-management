@@ -82,8 +82,15 @@ async function open(page: Page, path = '/em') {
 
 const menu = (page: Page) => page.getByRole('navigation', { name: 'Menu học sinh' })
 
+// Dưới lg menu là thanh tab đáy: 4 mục đầu + "Thêm" mở bảng chứa các mục còn lại (khi có hơn 5 mục).
+async function showAllLinks(page: Page) {
+  const more = menu(page).getByRole('button', { name: 'Thêm' })
+  if (await more.isVisible()) await more.click()
+}
+
 test('menu 7 mục theo thứ tự khi bật hết', async ({ page }) => {
   await open(page)
+  await showAllLinks(page)
   await expect(menu(page).getByRole('link')).toHaveText([
     'Trang chủ',
     'Sao của em',
@@ -96,11 +103,25 @@ test('menu 7 mục theo thứ tự khi bật hết', async ({ page }) => {
   await expect(menu(page).getByRole('link', { name: 'Trang chủ' })).toHaveAttribute('aria-current', 'page')
 })
 
+test('dưới lg menu là thanh tab đáy, trên lg là thanh bên', async ({ page }) => {
+  await open(page)
+  const width = page.viewportSize()!.width
+  const pos = await menu(page).evaluate((el) => getComputedStyle(el).position)
+  if (width < 1024) {
+    expect(pos).toBe('fixed')
+    await expect(menu(page).getByRole('button', { name: 'Thêm' })).toBeVisible()
+  } else {
+    expect(pos).not.toBe('fixed')
+    await expect(menu(page).getByRole('button', { name: 'Thêm' })).toBeHidden()
+  }
+})
+
 test('cô tắt bảng xếp hạng: mục biến mất và /em/xep-hang trả 404', async ({ page }) => {
   await open(page)
   await expect(menu(page).getByRole('link', { name: 'Bảng xếp hạng' })).toBeVisible()
   await setFlags({ student_can_view_rank: false })
   await page.reload()
+  await showAllLinks(page)
   await expect(menu(page).getByRole('link', { name: 'Bảng xếp hạng' })).toHaveCount(0)
   await expect(menu(page).getByRole('link')).toHaveCount(6)
   const res = await page.goto('/em/xep-hang')
@@ -200,8 +221,8 @@ test('Bảng xếp hạng: Top 5, dòng của em tô màu và "(em)"', async ({ 
   await expect(me).toHaveCount(1)
   await expect(me).toContainText('Võ Hà My')
   await expect(me).toContainText('50 sao')
-  await expect(me).toHaveCSS('background-color', 'rgb(238, 240, 255)')
-  await expect(me).toHaveCSS('border-top-color', 'rgb(79, 91, 213)')
+  await expect(me).toHaveCSS('background-color', 'rgb(224, 238, 255)')
+  await expect(me).toHaveCSS('border-top-color', 'rgb(37, 99, 235)')
 })
 
 test('Bảng xếp hạng: em ngoài Top 5 thì thêm dòng của em ở cuối', async ({ page }) => {

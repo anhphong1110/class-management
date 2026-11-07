@@ -4,75 +4,79 @@ import { brandSentence } from '@/lib/classes/brand'
 import { getClassHeaderInfo } from '@/lib/classes/queries'
 import { Header } from '@/components/layout/Header'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
+import { ButtonLink } from '@/components/ui/Button'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Icon, ICONS } from '@/components/ui/Icon'
+import { StatCard } from '@/components/ui/StatCard'
 import { getOverview, type Top3Row } from '@/lib/overview/queries'
 import { teacherGreetingName } from '@/lib/overview/stats'
 import { announcementColors } from '@/lib/announcements/types'
 import { formatDayLabel } from '@/lib/domain/relative-time'
+import { getTodayTasks, type TodayTasks } from './today'
 
-const CARD = 'shadow-[0_6px_20px_rgba(102,117,232,.10)]'
 const STAR = '12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9'
+const ARROW = 'M5 12h14M13 6l6 6-6 6'
+const USER_X = 'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 8l5 5M22 8l-5 5'
 
-const STAT_STYLE = [
-  { tint: '#E8EBFF', ink: '#3F4BC4', d: 'M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M20 20v-1a4 4 0 0 0-3-3.8M16 4.2a3.5 3.5 0 0 1 0 6.6' },
-  { tint: '#DDF6F1', ink: '#0E7C6F', d: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9' },
-  { tint: '#FFE3EE', ink: '#B02A63', d: 'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 8l5 5M22 8l-5 5' },
-  { tint: '#FFF1CC', ink: '#8A5A00', d: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z' },
-  { tint: '#F0E8FF', ink: '#6A3FC0', d: 'M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z' },
-  { tint: '#E3F4FF', ink: '#12689C', d: 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3' },
-]
+// Thứ tự khớp với buildOverviewStats (lib/overview/stats.ts); mỗi thẻ dẫn tới trang liên quan.
+const STATS = [
+  { icon: ICONS.users, tone: 'blue', href: '/hoc-sinh' },
+  { icon: ICONS.checkCircle, tone: 'mint', href: '/diem-danh' },
+  { icon: USER_X, tone: 'pink', href: '/diem-danh' },
+  { icon: ICONS.star, tone: 'star', href: '/thi-dua' },
+  { icon: ICONS.gift, tone: 'pink', href: '/doi-qua' },
+  { icon: ICONS.trophy, tone: 'blue', href: '/xep-hang' },
+] as const
 
-const GIFT = 'M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z'
-const CUP = 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3'
 const ACTIONS = [
-  { label: 'Điểm danh', href: '/diem-danh', bg: '#DDF6F1', ink: '#0B6B5F', d: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9' },
-  { label: 'Cộng sao', href: '/thi-dua', bg: '#FFF1CC', ink: '#7A4E00', d: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z' },
-  { label: 'Trừ sao', href: '/thi-dua?che-do=tru', bg: '#FFE3EE', ink: '#9E2257', d: 'M5 12h14' },
-  { label: 'Đổi quà', href: '/doi-qua', bg: '#F0E8FF', ink: '#5E35B1', d: GIFT },
-  { label: 'Xem bảng xếp hạng', href: '/xep-hang', bg: '#E3F4FF', ink: '#0F5E8F', d: CUP },
-]
+  { label: 'Điểm danh', href: '/diem-danh', bg: 'bg-[#DDF6F1]', ink: 'text-[#0B6B5F]', d: ICONS.checkCircle },
+  { label: 'Cộng sao', href: '/thi-dua', bg: 'bg-[#FFF1CC]', ink: 'text-star-ink', d: ICONS.star },
+  { label: 'Trừ sao', href: '/thi-dua?che-do=tru', bg: 'bg-[#FFE3EE]', ink: 'text-[#9E2257]', d: ICONS.minus },
+  { label: 'Đổi quà', href: '/doi-qua', bg: 'bg-[#F0E8FF]', ink: 'text-[#5E35B1]', d: ICONS.gift },
+  { label: 'Xem bảng xếp hạng', href: '/xep-hang', bg: 'bg-[#E3F4FF]', ink: 'text-[#0F5E8F]', d: ICONS.trophy },
+] as const
 
 const MEDAL = {
-  1: { medal: 'Hạng 1', medalBg: '#FFC857', medalInk: '#4A3300', bg: 'linear-gradient(180deg,#FFF4D1,#FFFFFF)', size: 124 },
-  2: { medal: 'Hạng 2', medalBg: '#DDE2F0', medalInk: '#2F3550', bg: 'linear-gradient(180deg,#ECEFFA,#FFFFFF)', size: 96 },
-  3: { medal: 'Hạng 3', medalBg: '#F3BC97', medalInk: '#512810', bg: 'linear-gradient(180deg,#FFE8D8,#FFFFFF)', size: 96 },
+  1: { medalBg: '#FFC93C', medalInk: '#4A3300', bg: 'linear-gradient(180deg,#FFF4D1,#FFFFFF)', size: 124 },
+  2: { medalBg: '#DDE2F0', medalInk: '#2F3550', bg: 'linear-gradient(180deg,#ECEFFA,#FFFFFF)', size: 96 },
+  3: { medalBg: '#F3BC97', medalInk: '#512810', bg: 'linear-gradient(180deg,#FFE8D8,#FFFFFF)', size: 96 },
 } as const
 
 const DELTA_STYLE = {
-  award: { tint: '#FFF1CC', ink: '#7A4E00' },
-  penalty: { tint: '#FFE3EE', ink: '#9E2257' },
-  reversal: { tint: '#E8EBFF', ink: '#3441B5' },
-  request: { tint: '#F0E8FF', ink: '#5E35B1' },
+  award: 'bg-star-soft text-star-ink',
+  penalty: 'bg-danger-soft text-danger-deep',
+  reversal: 'bg-primary-soft text-primary-deep',
+  request: 'bg-[#F0E8FF] text-[#5E35B1]',
 } as const
+
+const heroBtn = '!min-h-12 !px-6'
 
 function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl: string | null; brand: string }) {
   return (
     <div
-      className="relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-[28px] px-9 py-8 text-white"
-      style={{ background: 'linear-gradient(120deg,#33378F 0%,#5C4FD8 55%,#9A66E6 100%)' }}
+      className="clay-card relative flex flex-wrap items-center justify-between gap-4 overflow-hidden px-8 py-7 text-ink"
+      style={{ background: 'linear-gradient(120deg,var(--primary-soft) 0%,#FFFFFF 45%,#FFF3C4 75%,#FFE1EE 100%)' }}
     >
       {coverUrl ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img data-testid="hero-cover" src={coverUrl} alt="" className="absolute inset-0 size-full object-cover" />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(120deg,rgba(51,55,143,.85),rgba(92,79,216,.55))' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(120deg,rgba(255,255,255,.94),rgba(255,255,255,.78) 60%,rgba(255,255,255,.35))' }} />
         </>
       ) : null}
       <div className="relative z-[1] flex flex-[1_1_320px] flex-col gap-2.5">
-        <div className="text-[13px] font-extrabold tracking-[.12em] text-[#FFE08A]">CÙNG HỌC – CÙNG CHƠI – CÙNG TỎA SÁNG</div>
-        <h2 className="m-0 font-display text-[44px] font-extrabold leading-[1.1]">Xin chào, {greeting}!</h2>
-        <p className="m-0 max-w-[460px] text-lg leading-normal text-[#EEF0FF]">
+        <div className="text-[13px] font-extrabold tracking-[.12em] text-primary-deep">CÙNG HỌC – CÙNG CHƠI – CÙNG TỎA SÁNG</div>
+        <h2 className="m-0 font-display text-[40px] font-extrabold leading-[1.1] text-ink">Xin chào, {greeting}!</h2>
+        <p className="m-0 max-w-[460px] text-lg leading-normal text-muted">
           Chào mừng cô trở lại {brand}. Hôm nay cả phi hành đoàn đã sẵn sàng cất cánh.
         </p>
         <div className="mt-2 flex flex-wrap gap-3">
-          <Link href="/diem-danh" className="inline-flex min-h-11 items-center rounded-full bg-[#FFC857] px-[22px] py-3 font-extrabold text-[#3B2A00]">
+          <ButtonLink href="/diem-danh" className={heroBtn}>
             Bắt đầu điểm danh
-          </Link>
-          <Link
-            href="/thi-dua"
-            className="inline-flex min-h-11 items-center rounded-full border-[1.5px] border-white/50 bg-white/[.16] px-[22px] py-3 font-bold text-white"
-          >
+          </ButtonLink>
+          <ButtonLink variant="secondary" href="/thi-dua" className={heroBtn}>
             Cộng sao cho lớp
-          </Link>
+          </ButtonLink>
         </div>
       </div>
       {coverUrl ? null : (
@@ -89,25 +93,25 @@ function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl: strin
             </linearGradient>
           </defs>
           <g>
-            <circle cx="40" cy="30" r="3" fill="#FFE08A" />
-            <circle cx="290" cy="40" r="2.5" fill="#fff" />
-            <circle cx="260" cy="170" r="3" fill="#FFE08A" />
-            <circle cx="70" cy="170" r="2" fill="#fff" />
+            <circle cx="40" cy="30" r="3" fill="#FFC93C" />
+            <circle cx="290" cy="40" r="2.5" fill="#B9A7F8" />
+            <circle cx="260" cy="170" r="3" fill="#FFC93C" />
+            <circle cx="70" cy="170" r="2" fill="#B9A7F8" />
           </g>
-          <ellipse cx="170" cy="110" rx="118" ry="26" fill="none" stroke="#FFD7F0" strokeWidth="7" opacity=".55" transform="rotate(-18 170 110)" />
+          <ellipse cx="170" cy="110" rx="118" ry="26" fill="none" stroke="#FF9ACB" strokeWidth="7" opacity=".5" transform="rotate(-18 170 110)" />
           <circle cx="170" cy="105" r="62" fill="url(#mp1)" />
           <path d="M120 80 Q170 62 222 84" stroke="#fff" strokeOpacity=".35" strokeWidth="8" fill="none" strokeLinecap="round" />
           <path d="M114 118 Q170 136 226 112" stroke="#C2557A" strokeOpacity=".3" strokeWidth="7" fill="none" strokeLinecap="round" />
           <ellipse
-            cx="170" cy="110" rx="118" ry="26" fill="none" stroke="#FFD7F0" strokeWidth="7" opacity=".9"
+            cx="170" cy="110" rx="118" ry="26" fill="none" stroke="#FF9ACB" strokeWidth="7" opacity=".9"
             transform="rotate(-18 170 110)" strokeDasharray="120 400" strokeDashoffset="-190"
           />
           <g transform="translate(236 30) rotate(35)">
-            <path d="M0 -34 C14 -22 14 6 8 22 L-8 22 C-14 6 -14 -22 0 -34Z" fill="url(#mr1)" />
+            <path d="M0 -34 C14 -22 14 6 8 22 L-8 22 C-14 6 -14 -22 0 -34Z" fill="url(#mr1)" stroke="#B9A7F8" strokeWidth="2" />
             <circle data-testid="hero-window" cx="0" cy="-8" r="7" fill="currentColor" className="text-primary" />
             <circle cx="-2" cy="-10" r="2.2" fill="#fff" opacity=".8" />
             <path d="M-8 14 L-18 28 L-6 22Z M8 14 L18 28 L6 22Z" fill="#F46FA5" />
-            <path d="M-5 22 L0 40 L5 22Z" fill="#FFC857" />
+            <path d="M-5 22 L0 40 L5 22Z" fill="#FFC93C" />
           </g>
         </svg>
       )}
@@ -115,10 +119,68 @@ function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl: strin
   )
 }
 
+/** Khối "Việc hôm nay": chỉ hiện những việc có dữ liệu thật, mỗi việc một nút bấm tới trang xử lý. */
+function TodayBlock({ tasks }: { tasks: TodayTasks }) {
+  const items: { key: string; icon: string; title: string; hint: string; href: string; cta: string }[] = []
+  if (tasks.attendanceTaken === false) {
+    items.push({ key: 'att', icon: ICONS.calendar, title: 'Hôm nay chưa điểm danh', hint: 'Mất khoảng một phút cho cả lớp.', href: '/diem-danh', cta: 'Điểm danh ngay' })
+  }
+  if (tasks.pendingGifts !== null && tasks.pendingGifts > 0) {
+    items.push({
+      key: 'gift',
+      icon: ICONS.gift,
+      title: `${tasks.pendingGifts} yêu cầu đổi quà đang chờ cô duyệt`,
+      hint: 'Các bạn đang chờ câu trả lời.',
+      href: '/doi-qua',
+      cta: 'Xem yêu cầu',
+    })
+  }
+  const known = tasks.attendanceTaken !== null || tasks.pendingGifts !== null
+  if (!known) return null
+  return (
+    <section data-testid="today-tasks" aria-labelledby="today-h" className="flex flex-col gap-3">
+      <h2 id="today-h" className="m-0 font-display text-2xl font-extrabold">Việc hôm nay</h2>
+      {items.length === 0 ? (
+        <div className="clay-card flex items-center gap-3 bg-success-soft px-5 py-4 [--primary-edge:#B2EEDD]">
+          <Icon d={ICONS.checkCircle} size={26} className="text-success-deep" />
+          <p className="m-0 text-base font-extrabold text-success-deep">Cô đã làm xong các việc cần làm hôm nay.</p>
+        </div>
+      ) : (
+        <ul className="m-0 grid list-none gap-3 p-0" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,300px),1fr))' }}>
+          {items.map((it) => (
+            <li key={it.key}>
+              <Link
+                href={it.href}
+                className="clay-card clay-press flex min-h-[84px] items-center gap-3.5 bg-star-soft px-4 py-3 text-ink no-underline [--edge:#FFE08A] [--primary-edge:#FFE08A]"
+              >
+                <span className="flex size-12 flex-none items-center justify-center rounded-2xl bg-white text-star-ink">
+                  <Icon d={it.icon} size={26} />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="text-base font-extrabold leading-snug">{it.title}</span>
+                  <span className="text-sm font-semibold text-muted">{it.hint}</span>
+                </span>
+                <span className="inline-flex min-h-11 flex-none items-center gap-1.5 rounded-ctl bg-primary-strong px-3.5 text-sm font-extrabold text-white">
+                  {it.cta}
+                  <Icon d={ARROW} size={16} />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 export default async function Page() {
   const user = await requireTeacher()
   const now = new Date()
-  const [info, data] = await Promise.all([getClassHeaderInfo(user.classId), getOverview(user.classId, now)])
+  const [info, data, tasks] = await Promise.all([
+    getClassHeaderInfo(user.classId),
+    getOverview(user.classId, now),
+    getTodayTasks(user.classId, now),
+  ])
   const order: Top3Row[] = [data.top3[1], data.top3[0], data.top3[2]].filter((r): r is Top3Row => !!r)
 
   return (
@@ -127,32 +189,26 @@ export default async function Page() {
       <div className="flex flex-col gap-5">
         <Hero greeting={teacherGreetingName(data.teacherName)} coverUrl={data.coverUrl} brand={brandSentence({ class_name: info.className, brand_title: info.brandTitle })} />
 
+        <TodayBlock tasks={tasks} />
+
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))' }}>
-          {data.stats.map((st, i) => (
-            <div key={st.label} data-testid="stat" className={`flex items-center gap-3.5 rounded-[22px] bg-white px-5 py-[18px] ${CARD}`}>
-              <div className="flex size-[52px] flex-none items-center justify-center rounded-2xl" style={{ background: STAT_STYLE[i].tint }}>
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke={STAT_STYLE[i].ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d={STAT_STYLE[i].d} />
-                </svg>
+          {data.stats.map((st, i) => {
+            const s = STATS[i] ?? STATS[0]
+            return (
+              <div key={st.label} data-testid="stat" className="flex flex-col [&>*]:flex-1">
+                <StatCard icon={s.icon} tone={s.tone} href={s.href} value={st.value} label={st.label} note={st.sub} />
               </div>
-              <div className="flex min-w-0 flex-col">
-                <div className="text-sm font-bold text-[#5B5890]">{st.label}</div>
-                <div className="font-display text-[32px] font-extrabold leading-[1.1] text-[#231F4D]">{st.value}</div>
-                <div className="text-[12.5px] text-[#5B5890]">{st.sub}</div>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
-        <section data-testid="top3" className={`flex flex-col gap-[18px] rounded-[28px] bg-white px-7 py-[26px] ${CARD}`}>
+        <section data-testid="top3" className="clay-card flex flex-col gap-[18px] px-7 py-[26px]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="m-0 font-display text-[26px] font-extrabold">Top 3 phi hành gia xuất sắc</h2>
-              <div className="text-sm text-[#5B5890]">Xếp theo sao thi đua tích lũy, không bị trừ khi đổi quà</div>
+              <div className="text-sm font-semibold text-muted">Xếp theo sao thi đua tích lũy, không bị trừ khi đổi quà</div>
             </div>
-            <Link href="/xep-hang" className="inline-flex min-h-11 items-center rounded-full bg-primary-strong px-[22px] py-[11px] font-extrabold text-white">
-              Xem bảng xếp hạng
-            </Link>
+            <ButtonLink href="/xep-hang">Xem bảng xếp hạng</ButtonLink>
           </div>
           <div className="flex flex-wrap items-end justify-center gap-4 pt-1.5">
             {order.map((t) => {
@@ -165,13 +221,14 @@ export default async function Page() {
                   style={{ background: m.bg }}
                 >
                   <AvatarImage avatar={t.avatar} size={m.size} crown={t.rank === 1 && t.stars > 0} />
-                  <div className="rounded-full px-3.5 py-1 text-[13px] font-extrabold" style={{ background: m.medalBg, color: m.medalInk }}>
+                  <div className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[13px] font-extrabold" style={{ background: m.medalBg, color: m.medalInk }}>
+                    <Icon d={ICONS.trophy} size={16} />
                     {`Hạng ${t.rank}`}
                   </div>
                   <div className="font-display text-xl font-bold leading-tight">{t.name}</div>
-                  <div className="flex items-center gap-1.5 text-lg font-extrabold text-[#7A4E00]">
+                  <div className="flex items-center gap-1.5 text-lg font-extrabold text-star-ink">
                     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-                      <polygon points={STAR} fill="#FFC857" stroke="#E0A020" strokeWidth="1.2" strokeLinejoin="round" />
+                      <polygon points={STAR} fill="#FFC93C" stroke="#E0A020" strokeWidth="1.2" strokeLinejoin="round" />
                     </svg>
                     {t.stars} sao
                   </div>
@@ -188,12 +245,9 @@ export default async function Page() {
               <Link
                 key={a.label}
                 href={a.href}
-                className="flex min-h-[120px] flex-col items-center justify-center gap-2.5 rounded-[22px] px-3 py-5 text-center text-base font-extrabold transition-[transform,box-shadow] hover:-translate-y-[3px] hover:shadow-[0_14px_28px_rgba(79,91,213,.22)]"
-                style={{ background: a.bg, color: a.ink }}
+                className={`clay-card clay-press flex min-h-[120px] flex-col items-center justify-center gap-2.5 px-3 py-5 text-center text-base font-extrabold no-underline [--edge:var(--primary-edge)] ${a.bg} ${a.ink}`}
               >
-                <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke={a.ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d={a.d} />
-                </svg>
+                <Icon d={a.d} size={34} />
                 {a.label}
               </Link>
             ))}
@@ -201,48 +255,55 @@ export default async function Page() {
         </section>
 
         <div className="flex flex-wrap items-stretch gap-4">
-          <section data-testid="activity" className={`flex min-w-0 flex-[1_1_340px] flex-col gap-3.5 rounded-[26px] bg-white p-6 ${CARD}`}>
+          <section data-testid="activity" className="clay-card flex min-w-0 flex-[1_1_340px] flex-col gap-3.5 p-6">
             <h2 className="m-0 font-display text-[22px] font-extrabold">Hoạt động gần đây</h2>
-            {data.activity.length === 0 ? <div className="text-[15px] text-[#5B5890]">Chưa có hoạt động nào.</div> : null}
+            {data.activity.length === 0 ? (
+              <EmptyState title="Chưa có hoạt động nào." icon={ICONS.star}>
+                Cộng sao hoặc điểm danh, hoạt động mới sẽ hiện ở đây.
+              </EmptyState>
+            ) : null}
             {data.activity.map((ac) => {
-              const st = DELTA_STYLE[ac.kind]
               const label = ac.delta === null ? 'Quà' : ac.delta > 0 ? `+${ac.delta}` : `${ac.delta}`
               return (
                 <div key={ac.key} data-testid="activity-row" className="flex items-center gap-3">
-                  <div className="min-w-12 flex-none rounded-xl px-2 py-1.5 text-center text-sm font-extrabold" style={{ background: st.tint, color: st.ink }}>
+                  <div className={`min-w-12 flex-none rounded-xl px-2 py-1.5 text-center text-sm font-extrabold ${DELTA_STYLE[ac.kind]}`}>
                     {label}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-[15px] font-bold">{ac.text}</div>
-                    <div className="text-[13px] text-[#5B5890]">{ac.meta}</div>
+                    <div className="text-[13px] font-semibold text-muted">{ac.meta}</div>
                   </div>
                 </div>
               )
             })}
           </section>
 
-          <section data-testid="news" className={`flex min-w-0 flex-[1_1_340px] flex-col gap-3.5 rounded-[26px] bg-white p-6 ${CARD}`}>
-            <div className="flex items-center justify-between">
+          <section data-testid="news" className="clay-card flex min-w-0 flex-[1_1_340px] flex-col gap-3.5 p-6">
+            <div className="flex items-center justify-between gap-2">
               <h2 className="m-0 font-display text-[22px] font-extrabold">Tín hiệu từ trạm chỉ huy</h2>
-              <Link href="/thong-bao" className="inline-flex min-h-11 items-center text-sm font-bold text-primary-strong">
+              <Link href="/thong-bao" className="inline-flex min-h-11 items-center text-sm font-extrabold text-primary-strong underline-offset-2 hover:underline">
                 Xem tất cả
               </Link>
             </div>
-            {data.news.length === 0 ? <div className="text-[15px] text-[#5B5890]">Chưa có thông báo nào.</div> : null}
+            {data.news.length === 0 ? (
+              <EmptyState title="Chưa có thông báo nào." icon={ICONS.bell}>
+                Khi cô đăng thông báo, tin mới sẽ hiện ở đây.
+              </EmptyState>
+            ) : null}
             {data.news.map((n) => {
               const [tint, ink] = announcementColors(n.type)
               return (
-                <div key={n.id} className="flex flex-col gap-1 rounded-2xl bg-[#F6F4FF] px-4 py-3.5">
+                <div key={n.id} className="flex flex-col gap-1 rounded-2xl bg-bg px-4 py-3.5">
                   <div className="flex flex-wrap items-center gap-2">
                     {n.type ? (
                       <span className="rounded-full px-2.5 py-[3px] text-xs font-extrabold" style={{ background: tint, color: ink }}>
                         {n.type}
                       </span>
                     ) : null}
-                    <span className="text-[12.5px] text-[#5B5890]">{formatDayLabel(new Date(n.publishedAt), now)}</span>
+                    <span className="text-[12.5px] font-semibold text-muted">{formatDayLabel(new Date(n.publishedAt), now)}</span>
                   </div>
                   <div className="text-[15.5px] font-extrabold">{n.title}</div>
-                  <div className="text-sm leading-[1.45] text-[#4A476E]">{n.body}</div>
+                  <div className="text-sm leading-[1.45] text-muted">{n.body}</div>
                 </div>
               )
             })}

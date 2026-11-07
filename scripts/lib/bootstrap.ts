@@ -15,18 +15,8 @@ export const REQUIRED_ENV = [
 
 // Giữ khớp với avatar_library trong supabase/seed.sql (test so sánh hai nơi).
 export const AVATAR_PRESETS: { preset: Record<string, string>; label: string }[] = [
-  { preset: { hair: 'b', hairColor: '#6B3F2A', skin: '#FFD9B8', bg: '#FFD6E8' }, label: 'Phi hành gia 1' },
-  { preset: { hair: 'a', hairColor: '#2B2B3B', skin: '#F5C49C', bg: '#CFF3EC' }, label: 'Phi hành gia 2' },
-  { preset: { hair: 'c', hairColor: '#3A2A4D', skin: '#FFD9B8', bg: '#D9D3FF' }, label: 'Phi hành gia 3' },
-  { preset: { hair: 'a', hairColor: '#6B3F2A', skin: '#E8B088', bg: '#FFE9B8' }, label: 'Phi hành gia 4' },
-  { preset: { hair: 'b', hairColor: '#2B2B3B', skin: '#FFD9B8', bg: '#D9D3FF' }, label: 'Phi hành gia 5' },
-  { preset: { hair: 'a', hairColor: '#3A2A4D', skin: '#F5C49C', bg: '#CFF3EC' }, label: 'Phi hành gia 6' },
-  { preset: { hair: 'c', hairColor: '#3A2A4D', skin: '#FFD9B8', bg: '#FFD6E8' }, label: 'Cô giáo' },
-  { preset: { hair: 'c', hairColor: '#8A4B2D', skin: '#FFD9B8', bg: '#FFD6E8' }, label: 'Phi hành gia 8' },
-  { preset: { hair: 'a', hairColor: '#2B2B3B', skin: '#E8B088', bg: '#D9D3FF' }, label: 'Phi hành gia 9' },
-  { preset: { hair: 'b', hairColor: '#6B3F2A', skin: '#F5C49C', bg: '#FFE9B8' }, label: 'Phi hành gia 10' },
-  { preset: { hair: 'c', hairColor: '#2B2B3B', skin: '#FFD9B8', bg: '#CFF3EC' }, label: 'Phi hành gia 11' },
-  { preset: { hair: 'b', hairColor: '#8A4B2D', skin: '#E8B088', bg: '#FFE9B8' }, label: 'Phi hành gia 12' },
+  { preset: { hair: 'b', hairColor: '#6B3F2A', skin: '#FFD9B8', bg: '#FFD6E8' }, label: 'Bạn nữ' },
+  { preset: { hair: 'a', hairColor: '#2B2B3B', skin: '#F5C49C', bg: '#CFF3EC' }, label: 'Bạn nam' },
 ]
 
 type Env = Record<string, string | undefined>

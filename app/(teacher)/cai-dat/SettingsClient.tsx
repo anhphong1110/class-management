@@ -1,77 +1,25 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
-import { Button } from '@/components/ui/Button'
-import { Modal } from '@/components/ui/Modal'
+import { ButtonLink } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Notice } from '@/components/ui/Notice'
-import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
-import { THEMES, type ThemeKey } from '@/lib/domain/theme'
+import type { ThemeKey } from '@/lib/domain/theme'
 import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
 import { addStep, infoPayload, parseStepInput, removeStep, type InfoValues } from '@/lib/settings/form'
 import type { SettingsClass, SettingsData, SettingsFlags } from '@/lib/settings/queries'
 import { clearBranding, saveClassInfo, saveClassSettings, setSaturday, uploadBranding } from './actions'
-
-type Msg = { tone: 'success' | 'error'; text: string }
-type FlagKey = { [K in keyof SettingsFlags]: SettingsFlags[K] extends boolean ? K : never }[keyof SettingsFlags]
-type UploadKind = 'logo_path' | 'class_logo_path' | 'cover_path'
+import { BrandingSection } from './settings/BrandingSection'
+import { ClassInfoSection } from './settings/ClassInfoSection'
+import { FeaturesSection } from './settings/FeaturesSection'
+import { RulesSection } from './settings/RulesSection'
+import type { FlagKey, Msg, UploadKind } from './settings/shared'
 
 const SAVED = 'Đã lưu cài đặt.'
-const card =
-  'flex flex-col gap-3.5 rounded-[26px] bg-white px-6 py-[22px] shadow-[0_6px_20px_rgba(102,117,232,0.10)]'
-const h2 = 'm-0 font-display text-[22px] font-extrabold'
-const row = 'rounded-2xl border-2 border-[#E4E0F7] bg-white px-3.5 py-1.5'
-const fieldLabel = 'flex flex-col gap-1 text-sm font-extrabold text-[#4A476E]'
-const input =
-  'min-h-12 box-border rounded-xl border-2 border-[#D9D5F2] bg-white px-3.5 text-base font-bold text-ink disabled:opacity-50'
-
-const INFO_FIELDS: [keyof InfoValues, string][] = [
-  ['school_name', 'Tên trường'],
-  ['class_name', 'Tên lớp'],
-  ['brand_title', 'Tên trạm (chủ đề của lớp)'],
-  ['school_year', 'Năm học'],
-  ['teacher_name', 'Giáo viên chủ nhiệm'],
-  ['slogan', 'Slogan'],
-]
-const TERM_FIELDS: [keyof InfoValues, string][] = [
-  ['term1_start', 'Học kỳ 1 bắt đầu'],
-  ['term1_end', 'Học kỳ 1 kết thúc'],
-  ['term2_start', 'Học kỳ 2 bắt đầu'],
-  ['term2_end', 'Học kỳ 2 kết thúc'],
-]
-const UPLOADS: [UploadKind, string, string, number][] = [
-  ['logo_path', 'Tải lên logo trường', 'upload-logo', 512],
-  ['class_logo_path', 'Tải lên logo lớp', 'upload-class-logo', 512],
-  ['cover_path', 'Tải lên ảnh bìa lớp', 'upload-cover', 1600],
-]
-const CLEAR_LABELS: Record<UploadKind, string> = {
-  logo_path: 'Gỡ logo trường',
-  class_logo_path: 'Gỡ logo lớp',
-  cover_path: 'Gỡ ảnh bìa lớp',
-}
-const RULES: [FlagKey, string, string][] = [
-  ['require_approval', 'Giáo viên duyệt mọi yêu cầu đổi quà', 'Tắt thì học sinh đổi quà xong là trừ sao ngay'],
-  ['reserve_on_request', 'Giữ trước sao và quà khi gửi yêu cầu', 'Tránh bán vượt số lượng quà'],
-  ['only_enough', 'Chỉ cho đổi khi đủ sao khả dụng', 'Không bao giờ để số dư sao âm'],
-]
-const FEATURES: [FlagKey, string, string][] = [
-  ['feature_missions', 'Nhiệm vụ và huy hiệu', 'Giáo viên tạo nhiệm vụ, học sinh nhận huy hiệu'],
-  ['feature_random', 'Gọi tên ngẫu nhiên', 'Hiện trang quay số trong menu'],
-  ['feature_display', 'Chế độ trình chiếu lớp học', 'Toàn màn hình, không hiện dữ liệu riêng tư'],
-  ['feature_rewards', 'Trạm đổi quà', 'Tắt thì học sinh không thấy trang quà'],
-]
-const VIEWS: [FlagKey, string][] = [
-  ['student_can_view_profile', 'Hồ sơ của mình'],
-  ['student_can_view_history', 'Lịch sử sao của mình'],
-  ['student_can_view_rank', 'Bảng xếp hạng'],
-  ['student_can_view_rewards', 'Phần thưởng và đổi quà'],
-  ['student_can_view_timetable', 'Thời khóa biểu'],
-  ['student_can_view_news', 'Thông báo'],
-  ['student_can_view_attendance', 'Lịch sử điểm danh của mình'],
-]
 
 function toInfo(c: SettingsClass): InfoValues {
   return {
@@ -251,237 +199,75 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
     })
   }
 
-  const switchRow = (key: FlagKey, label: string, hint?: string) => (
-    <div key={key} className={row}>
-      <Switch checked={s[key]} onChange={(next) => flip(key, next)} label={label} hint={hint} disabled={pending} />
-    </div>
-  )
-
   return (
     <>
-      {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
-
-      <section className={card} aria-labelledby="info-h">
-        <h2 id="info-h" className={h2}>
-          Thông tin lớp
-        </h2>
-        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
-          {INFO_FIELDS.map(([k, label]) => (
-            <label key={k} className={fieldLabel}>
-              {label}
-              <input
-                type="text"
-                value={vals[k]}
-                disabled={pending}
-                maxLength={k === 'brand_title' ? 60 : undefined}
-                placeholder={k === 'brand_title' ? 'Để trống: tự lấy từ tên lớp, vd Trạm không gian Năm 8' : undefined}
-                onChange={(e) => setVals({ ...vals, [k]: e.target.value })}
-                className={input}
-              />
-            </label>
-          ))}
-        </div>
-        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-          {TERM_FIELDS.map(([k, label]) => (
-            <label key={k} className={fieldLabel}>
-              {label}
-              <input
-                type="date"
-                value={vals[k]}
-                disabled={pending}
-                onChange={(e) => setVals({ ...vals, [k]: e.target.value })}
-                className={input}
-              />
-            </label>
-          ))}
-        </div>
-        <p className="m-0 text-[13.5px] text-muted">
-          Mỗi năm học cô cập nhật ngày học kỳ để bảng xếp hạng và nhiệm vụ theo học kỳ tính đúng.
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel border-2 border-edge bg-primary-soft px-5 py-3">
+        <p className="m-0 flex-1 basis-64 text-[15px] font-bold text-primary-deep">
+          Muốn biết học sinh nhìn thấy gì sau khi cô đổi cài đặt? Cô xem thử rồi quay lại nhé.
         </p>
-        <div className={row}>
-          <Switch
-            checked={s.timetable_saturday}
-            onChange={onSaturday}
-            label="Lớp học thứ Bảy"
-            disabled={pending}
-          />
-        </div>
-        <div>
-          <Button onClick={saveInfo} disabled={pending}>
-            Lưu thông tin
-          </Button>
-        </div>
-      </section>
-
-      <section className={card} aria-labelledby="look-h">
-        <h2 id="look-h" className={h2}>
-          Logo, ảnh bìa và màu giao diện
-        </h2>
-        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-          {UPLOADS.map(([kind, label, testId, maxSide]) => (
-            <div key={kind}>
-              <input
-                ref={(el) => {
-                  fileRefs.current[kind] = el
-                }}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                data-testid={testId}
-                tabIndex={-1}
-                aria-hidden="true"
-                className="hidden"
-                onChange={(e) => onFile(kind, maxSide, e.target.files?.[0])}
-              />
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => fileRefs.current[kind]?.click()}
-                className="flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-[#8E86D8] bg-bg p-2.5 text-center text-sm font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
-              >
-                <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
-                </svg>
-                {label}
-              </button>
-              {cls[kind] && (
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => onClear(kind)}
-                  className="mt-2 min-h-11 w-full cursor-pointer rounded-xl border-[1.5px] border-[#F3B8C6] bg-white text-sm font-extrabold text-[#8E1B3B] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {CLEAR_LABELS[kind]}
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="text-sm font-extrabold text-[#4A476E]">Màu chủ đạo</div>
-        <div className="flex flex-wrap gap-2.5">
-          {(Object.keys(THEMES) as ThemeKey[]).map((key) => {
-            const t = THEMES[key]
-            const on = key === theme
-            return (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={on}
-                disabled={pending}
-                onClick={() => pickTheme(key)}
-                className={`flex min-h-12 cursor-pointer items-center gap-2 rounded-full border-2 bg-white py-0 pl-2 pr-4 text-sm font-extrabold text-ink disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong ${
-                  on ? 'border-ink' : 'border-[#E4E0F7]'
-                }`}
-              >
-                <span className="size-8 rounded-full" style={{ background: t.primary }} />
-                {t.label}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      <div className="flex flex-wrap items-stretch gap-4">
-        <section className={`${card} min-w-0 flex-[1_1_380px]`} aria-labelledby="rules-h">
-          <h2 id="rules-h" className={h2}>
-            Quy định thi đua và đổi quà
-          </h2>
-          {RULES.map(([k, label, hint]) => switchRow(k, label, hint))}
-          <p className="m-0 text-[13.5px] text-muted">
-            Khi &quot;Giữ trước sao&quot; bật, học sinh luôn cần đủ sao để gửi yêu cầu. &quot;Chỉ cho đổi khi đủ sao&quot; chỉ có tác dụng khi &quot;Giữ trước sao&quot; tắt.
-          </p>
-          <label className="flex flex-wrap items-center gap-2 text-[14.5px] font-extrabold text-[#4A476E]">
-            Tối đa lượt đổi quà mỗi tuần
-            <input
-              type="number"
-              value={limit}
-              disabled={pending}
-              onChange={(e) => setLimit(e.target.value)}
-              onBlur={saveLimit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') e.currentTarget.blur()
-              }}
-              className={`${input} w-[84px] px-2.5`}
-            />
-          </label>
-          <div className="text-sm font-extrabold text-[#4A476E]">Mức sao gợi ý (cộng)</div>
-          <div className="flex flex-wrap items-center gap-2">
-            {s.star_steps.map((n) => (
-              <button
-                key={n}
-                type="button"
-                disabled={pending}
-                aria-label={`Xóa mức +${n}`}
-                onClick={() => saveSteps(removeStep(s.star_steps, n))}
-                className="min-h-11 min-w-14 cursor-pointer rounded-xl border-2 border-[#E0A020] bg-[#FFF1CC] px-3 text-[15px] font-extrabold text-[#4A3300] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                +{n} ×
-              </button>
-            ))}
-            {adding ? (
-              <span className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  aria-label="Mức sao mới"
-                  value={stepText}
-                  autoFocus
-                  disabled={pending}
-                  onChange={(e) => setStepText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') confirmStep()
-                    if (e.key === 'Escape') {
-                      setAdding(false)
-                      setStepText('')
-                    }
-                  }}
-                  className={`${input} w-[84px] px-2.5`}
-                />
-                <Button onClick={confirmStep} disabled={pending}>
-                  Thêm
-                </Button>
-              </span>
-            ) : (
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => setAdding(true)}
-                className="min-h-11 cursor-pointer rounded-xl border-2 border-dashed border-[#8E86D8] bg-white px-3.5 text-sm font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                + Thêm mức
-              </button>
-            )}
-          </div>
-          <Link href="/thi-dua" className="text-[14.5px] font-extrabold text-primary-strong">
-            Sửa tiêu chí cộng/trừ sao ở Trạm thi đua
-          </Link>
-        </section>
-
-        <section className={`${card} min-w-0 flex-[1_1_380px]`} aria-labelledby="feat-h">
-          <h2 id="feat-h" className={h2}>
-            Bật/tắt tính năng
-          </h2>
-          {FEATURES.map(([k, label, hint]) => switchRow(k, label, hint))}
-          <h2 className={`${h2} mt-2.5`}>Học sinh được xem</h2>
-          {VIEWS.map(([k, label]) => switchRow(k, label))}
-        </section>
+        <ButtonLink href="/em" variant="secondary">
+          <Icon d={ICONS.eye} size={20} />
+          Xem như học sinh
+        </ButtonLink>
       </div>
 
-      <Modal
+      {msg && (
+        <div className="sticky top-3 z-30 rounded-ctl shadow-[0_8px_20px_-8px_rgba(35,31,77,0.35)]">
+          <Notice tone={msg.tone}>{msg.text}</Notice>
+        </div>
+      )}
+
+      <ClassInfoSection
+        vals={vals}
+        setVals={setVals}
+        saturdayOn={s.timetable_saturday}
+        pending={pending}
+        onSaturday={onSaturday}
+        onSave={saveInfo}
+      />
+
+      <BrandingSection fileRefs={fileRefs} cls={cls} theme={theme} pending={pending} onFile={onFile} onClear={onClear} onPickTheme={pickTheme} />
+
+      <div className="flex flex-wrap items-stretch gap-4">
+        <RulesSection
+          settings={s}
+          pending={pending}
+          onFlip={flip}
+          limit={limit}
+          setLimit={setLimit}
+          onSaveLimit={saveLimit}
+          steps={{
+            steps: s.star_steps,
+            adding,
+            stepText,
+            pending,
+            onRemove: (n) => saveSteps(removeStep(s.star_steps, n)),
+            onStartAdd: () => setAdding(true),
+            onCancelAdd: () => {
+              setAdding(false)
+              setStepText('')
+            },
+            onTextChange: setStepText,
+            onConfirm: confirmStep,
+          }}
+        />
+        <FeaturesSection settings={s} pending={pending} onFlip={flip} />
+      </div>
+
+
+      <ConfirmDialog
         open={askSaturday}
-        onClose={() => {
+        title="Tắt học thứ Bảy?"
+        message={`Thời khóa biểu còn ${saturdaySlots} tiết thứ Bảy. Cô muốn xóa các tiết này và tắt học thứ Bảy?`}
+        confirmLabel="Xóa và tắt"
+        cancelLabel="Hủy"
+        danger
+        pending={pending}
+        onCancel={() => {
           if (!pending) setAskSaturday(false)
         }}
-        title={`Thời khóa biểu còn ${saturdaySlots} tiết thứ Bảy. Cô muốn xóa các tiết này và tắt học thứ Bảy?`}
-      >
-        <div className="flex flex-wrap justify-end gap-2.5">
-          <Button variant="secondary" onClick={() => setAskSaturday(false)} disabled={pending}>
-            Hủy
-          </Button>
-          <Button variant="danger" onClick={() => saturday(false, true)} disabled={pending}>
-            Xóa và tắt
-          </Button>
-        </div>
-      </Modal>
+        onConfirm={() => saturday(false, true)}
+      />
     </>
   )
 }

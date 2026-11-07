@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/Button'
+import { Field, Input } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
@@ -11,10 +12,7 @@ import { createStudentAccounts, setStudentLogin, setStudentPasswords } from './a
 
 type Failed = { name: string; reason: string }
 
-const input = 'min-h-12 w-full rounded-[14px] border-2 border-[#D9D5F2] bg-white px-3.5 text-base font-semibold text-ink'
-
-const card =
-  'flex flex-col gap-3.5 rounded-[26px] bg-white px-6 py-[22px] shadow-[0_6px_20px_rgba(102,117,232,0.10)]'
+const card = 'clay-card flex flex-col gap-3.5 px-6 py-[22px]'
 
 const checkbox = 'size-5 flex-none cursor-pointer accent-primary-strong'
 
@@ -137,7 +135,7 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
         </Notice>
       )}
       <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm font-extrabold text-[#4A476E]">
+        <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm font-extrabold text-muted">
           <input
             type="checkbox"
             className={checkbox}
@@ -157,7 +155,7 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
             <li
               key={a.studentId}
               aria-label={a.name}
-              className="grid items-center gap-2.5 rounded-[14px] bg-[#F6F4FF] px-3.5 py-1.5 [grid-template-columns:auto_1.6fr_1.3fr_1.2fr]"
+              className="grid items-center gap-2.5 rounded-ctl bg-primary-soft px-3.5 py-1.5 [grid-template-columns:auto_1.6fr_1.3fr_1.2fr]"
             >
               {a.username === null ? (
                 <span className="size-5" aria-hidden="true" />
@@ -171,7 +169,7 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
                 />
               )}
               <div className="text-[15px] font-extrabold">{a.name}</div>
-              <div className="text-sm font-bold text-[#4A476E]">{a.username ?? ''}</div>
+              <div className="text-sm font-bold text-muted">{a.username ?? ''}</div>
               {a.username === null ? (
                 <div className="text-sm font-bold text-muted">Chưa có tài khoản</div>
               ) : (
@@ -195,17 +193,18 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
             savePasswords()
           }}
         >
-          <label className="flex flex-col gap-1.5 text-sm font-bold text-[#4A476E]">
-            Mật khẩu mới cho {count} bạn đã chọn
-            <input
-              aria-label="Mật khẩu mới"
-              className={input}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="off"
-              maxLength={72}
-            />
-          </label>
+          <Field label={`Mật khẩu mới cho ${count} bạn đã chọn`}>
+            {(a) => (
+              <Input
+                {...a}
+                aria-label="Mật khẩu mới"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="off"
+                maxLength={72}
+              />
+            )}
+          </Field>
           <p className="m-0 text-[13px] text-muted">
             Ít nhất 6 ký tự. Cô nhớ báo mật khẩu cho các bạn; sau khi đăng nhập các bạn tự đổi lại được.
           </p>
@@ -214,7 +213,7 @@ export function AccountsSection({ accounts }: { accounts: AccountRow[] }) {
             <Button variant="secondary" onClick={closeDialog} disabled={pending}>
               Hủy
             </Button>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" loading={pending}>
               Lưu
             </Button>
           </div>

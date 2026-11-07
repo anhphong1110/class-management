@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Button } from '@/components/ui/Button'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { saveMyAvatar } from './actions'
@@ -26,7 +27,13 @@ export function AvatarPicker({
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
-  if (!enabled) return <AvatarImage avatar={current} size={130} />
+  if (!enabled) {
+    return (
+      <div className="rounded-full border-4 border-white bg-white shadow-ledge">
+        <AvatarImage avatar={current} size={130} />
+      </div>
+    )
+  }
 
   function close() {
     if (pending) return
@@ -53,36 +60,52 @@ export function AvatarPicker({
         type="button"
         aria-label="Đổi avatar"
         onClick={() => setOpen(true)}
-        className="cursor-pointer rounded-full border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="group flex cursor-pointer flex-col items-center gap-2 rounded-panel border-0 bg-transparent p-1"
       >
-        <AvatarImage avatar={current} size={130} />
+        <span className="rounded-full border-4 border-white bg-white shadow-ledge transition-transform group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
+          <AvatarImage avatar={current} size={130} />
+        </span>
+        <span className="inline-flex min-h-11 items-center rounded-full border-2 border-primary-strong bg-white px-4 text-base font-extrabold text-primary-strong group-hover:bg-primary-soft">
+          Đổi avatar
+        </span>
       </button>
       <Modal open={open} onClose={close} title="Chọn avatar của em">
         <div className="flex flex-col gap-4">
           {error && <Notice tone="error">{error}</Notice>}
-          <div role="radiogroup" aria-label="Thư viện avatar" className="grid grid-cols-4 gap-3">
-            {library.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                role="radio"
-                aria-checked={picked === a.id}
-                aria-label={a.label || 'Avatar'}
-                disabled={pending}
-                onClick={() => setPicked(a.id)}
-                className={`flex cursor-pointer items-center justify-center rounded-2xl border-2 bg-white p-1.5 disabled:cursor-not-allowed disabled:opacity-60 ${
-                  picked === a.id ? 'border-primary-strong bg-primary-soft' : 'border-transparent'
-                }`}
-              >
-                <AvatarImage avatar={a.avatar} size={56} />
-              </button>
-            ))}
+          <div className="max-h-[52vh] overflow-y-auto p-1">
+            <div role="radiogroup" aria-label="Thư viện avatar" className="grid grid-cols-3 gap-3 min-[420px]:grid-cols-4">
+              {library.map((a) => {
+                const on = picked === a.id
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    aria-label={a.label || 'Avatar'}
+                    disabled={pending}
+                    onClick={() => setPicked(a.id)}
+                    className={`relative flex min-h-[84px] cursor-pointer items-center justify-center rounded-panel border-2 p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                      on ? 'border-primary-strong bg-primary-soft shadow-ledge-active' : 'border-edge bg-white hover:bg-primary-soft'
+                    }`}
+                  >
+                    <AvatarImage avatar={a.avatar} size={64} />
+                    {on && (
+                      <span className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-primary-strong text-white">
+                        <Icon d={ICONS.check} size={16} />
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
           </div>
-          <div className="flex justify-end gap-2.5">
+          {!pending && picked === currentId && <p className="m-0 text-base font-semibold text-muted">Chọn một avatar mới rồi bấm Lưu avatar nhé.</p>}
+          <div className="flex flex-wrap justify-end gap-3">
             <Button variant="secondary" onClick={close} disabled={pending}>
               Hủy
             </Button>
-            <Button onClick={save} disabled={pending || !picked || picked === currentId}>
+            <Button size="lg" onClick={save} disabled={pending || !picked || picked === currentId}>
               {pending ? 'Đang lưu…' : 'Lưu avatar'}
             </Button>
           </div>

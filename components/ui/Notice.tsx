@@ -1,9 +1,15 @@
 import type { ReactNode } from "react";
 
 const tones = {
-  success: "bg-[#DDF6F1] text-[#0B5A4D]",
-  error: "bg-[#FFE3EA] text-[#8E1B3B]",
-  info: "bg-[#F6F4FF] text-[#3A3769]",
+  success: "bg-success-soft text-success-deep",
+  error: "bg-danger-soft text-danger-deep",
+  info: "bg-primary-soft text-primary-deep",
+};
+
+const icons = {
+  success: "M9 12l2 2 4-4M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18",
+  error: "M12 8v5M12 16h.01M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18",
+  info: "M12 11v5M12 8h.01M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18",
 };
 
 export function Notice({
@@ -16,9 +22,23 @@ export function Notice({
   return (
     <div
       role={tone === "error" ? "alert" : "status"}
-      className={`rounded-[14px] px-4 py-3 text-sm font-bold ${tones[tone]}`}
+      className={`flex items-start gap-2.5 rounded-ctl px-4 py-3 text-[15px] font-bold ${tones[tone]}`}
     >
-      {children}
+      <svg
+        viewBox="0 0 24 24"
+        width="20"
+        height="20"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className="mt-0.5 flex-none"
+      >
+        <path d={icons[tone]} />
+      </svg>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }

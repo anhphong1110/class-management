@@ -231,6 +231,7 @@ test.describe('Chia tổ', () => {
     await expect(gcard(page, 'Tổ 5')).toHaveCount(1)
     await expect(gcard(page, 'Tổ 5').getByTestId('group-summary')).toHaveText('0 bạn · 0 sao tích lũy')
     await gcard(page, 'Tổ 5').getByRole('button', { name: 'Xóa tổ' }).click()
+    await page.getByRole('dialog', { name: 'Xóa tổ này?' }).getByRole('button', { name: 'Xóa tổ' }).click()
     await expect(gcard(page, 'Tổ 5')).toHaveCount(0)
     await expect(page.getByTestId('group-card')).toHaveCount(4)
   })

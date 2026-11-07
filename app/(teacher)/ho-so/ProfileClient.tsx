@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from 'react'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Button } from '@/components/ui/Button'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
@@ -27,8 +28,8 @@ export function ProfileClient({
   const [pending, setPending] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
   const [allow, setAllow] = useState(allowStudents)
-  const [removing, setRemoving] = useState<LibraryItem | null>(null)
   const [busy, startTransition] = useTransition()
+  const [removing, setRemoving] = useState<LibraryItem | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const person = people[who]
@@ -128,7 +129,7 @@ export function ProfileClient({
     <div className="flex flex-wrap items-start gap-4">
       <section
         data-testid="people"
-        className="flex max-w-[380px] flex-[1_1_280px] flex-col gap-2 rounded-[26px] bg-white p-[18px] shadow-[0_6px_20px_rgba(102,117,232,0.10)]"
+        className="clay-card flex max-w-[380px] flex-[1_1_280px] flex-col gap-2 p-[18px]"
       >
         <h2 className="m-0 mb-1 ml-1 font-display text-xl font-extrabold">Chọn người cần đổi avatar</h2>
         {people.map((p, i) => {
@@ -140,15 +141,16 @@ export function ProfileClient({
               type="button"
               aria-pressed={on}
               onClick={() => pickPerson(i)}
-              className={`flex min-h-[60px] cursor-pointer items-center gap-3 rounded-[18px] border-2 px-3 py-1.5 text-left text-ink ${
-                on ? 'border-primary-strong bg-primary-soft' : 'border-[#E4E0F7] bg-white'
+              className={`flex min-h-[60px] cursor-pointer items-center gap-3 rounded-panel border-2 px-3 py-1.5 text-left text-ink transition-colors hover:bg-primary-soft motion-reduce:transition-none ${
+                on ? 'border-primary-strong bg-primary-soft' : 'border-edge bg-white'
               }`}
             >
               <AvatarImage avatar={av} size={46} />
-              <span className="flex flex-col">
+              <span className="flex min-w-0 flex-1 flex-col">
                 <span className="text-[15px] font-extrabold">{p.name}</span>
-                <span className="text-[12.5px] font-bold text-muted">{p.role}</span>
+                <span className="text-[13px] font-bold text-muted">{p.role}</span>
               </span>
+              {on && <Icon d={ICONS.checkCircle} size={22} className="text-primary-strong" />}
             </button>
           )
         })}
@@ -157,68 +159,73 @@ export function ProfileClient({
       <div className="flex min-w-0 flex-[999_1_420px] flex-col gap-4">
         <div
           data-testid="current"
-          className="flex flex-wrap items-center gap-5 rounded-[30px] border-2 border-lavender bg-gradient-to-br from-[#ECE9FF] to-white p-6"
+          className="clay-card flex flex-wrap items-center gap-5 bg-primary-soft p-6"
         >
           <AvatarImage avatar={current?.avatar ?? null} size={150} />
           <div className="flex flex-[1_1_220px] flex-col gap-1.5">
-            <div className="text-[13px] font-extrabold tracking-[0.1em] text-primary-ink">{person.role.toUpperCase()}</div>
+            <div className="text-[13px] font-extrabold tracking-[0.1em] text-primary-deep">{person.role.toUpperCase()}</div>
             <div className="font-display text-[30px] font-extrabold leading-[1.1]">{person.name}</div>
-            <div className="text-[14.5px] font-bold text-muted">
+            <div className="text-[15px] font-bold text-muted">
               Avatar hiện tại: {current?.label || 'Chưa chọn'}
             </div>
             {current && (
               <div>
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   disabled={busy}
                   onClick={clearAvatar}
-                  className="mt-1 min-h-10 cursor-pointer rounded-xl border-[1.5px] border-[#F3B8C6] bg-white px-3.5 text-sm font-extrabold text-[#8E1B3B] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-1 !min-h-10 !px-3.5 !text-sm !border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft"
                 >
                   Gỡ avatar
-                </button>
+                </Button>
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col gap-3.5 rounded-[28px] bg-white p-6 shadow-[0_6px_20px_rgba(102,117,232,0.10)]">
+        <div className="clay-card flex flex-col gap-3.5 p-6">
           <div>
             <h2 className="m-0 font-display text-[22px] font-extrabold">Thư viện avatar của lớp</h2>
-            <div className="text-sm text-muted">
+            <div className="text-sm font-semibold text-muted">
               Gồm các avatar có sẵn và avatar cô đã tải lên. Học sinh chỉ chọn được trong thư viện này.
             </div>
           </div>
-          <div data-testid="library" className="grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-3">
+          <div data-testid="library" className="grid grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-3.5">
             {library.map((a) => {
               const on = a.id === pendingId
               return (
                 <div key={a.id} className="relative">
+                <button
+                  type="button"
+                  aria-pressed={on}
+                  aria-label={a.label}
+                  onClick={() => {
+                    setPending(a.id)
+                    setMsg(null)
+                  }}
+                  className={`clay-press relative flex w-full min-h-[148px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-panel border-2 px-1.5 py-3 text-ink [--edge:var(--primary-edge)] ${
+                    on ? 'border-primary-strong bg-primary-soft' : 'border-edge bg-white hover:bg-primary-soft'
+                  }`}
+                >
+                  <AvatarImage avatar={a.avatar} size={96} />
+                  <span className="text-[13px] font-extrabold">{a.label}</span>
+                  {on && (
+                    <span className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-primary-strong text-white">
+                      <Icon d={ICONS.check} size={14} />
+                    </span>
+                  )}
+                </button>
+                {a.removable && (
                   <button
                     type="button"
-                    aria-pressed={on}
-                    aria-label={a.label}
-                    onClick={() => {
-                      setPending(a.id)
-                      setMsg(null)
-                    }}
-                    className={`flex w-full cursor-pointer flex-col items-center gap-1 rounded-[20px] border-2 px-1.5 py-2.5 text-ink ${
-                      on ? 'border-primary-strong bg-primary-soft' : 'border-[#E4E0F7] bg-white'
-                    }`}
+                    disabled={busy}
+                    aria-label={`Xóa ảnh ${a.label}`}
+                    onClick={() => setRemoving(a)}
+                    className="absolute -right-1.5 -top-1.5 flex size-8 items-center justify-center rounded-full border-0 bg-danger-deep text-base font-extrabold leading-none text-white transition-colors hover:bg-danger disabled:opacity-50"
                   >
-                    <AvatarImage avatar={a.avatar} size={76} />
-                    <span className="text-[12.5px] font-extrabold">{a.label}</span>
+                    ×
                   </button>
-                  {a.removable && (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      aria-label={`Xóa ảnh ${a.label}`}
-                      onClick={() => setRemoving(a)}
-                      className="absolute right-1.5 top-1.5 flex size-7 cursor-pointer items-center justify-center rounded-full border-0 bg-[#8E1B3B] text-sm font-extrabold leading-none text-white disabled:opacity-50"
-                    >
-                      ×
-                    </button>
-                  )}
+                )}
                 </div>
               )
             })}
@@ -226,7 +233,7 @@ export function ProfileClient({
               type="button"
               disabled={busy}
               onClick={() => fileRef.current?.click()}
-              className="flex min-h-[118px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 border-dashed border-[#8E86D8] bg-bg px-1.5 py-2.5 text-center text-[13px] font-extrabold text-primary-ink disabled:opacity-50"
+              className="flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-panel border-2 border-dashed border-primary bg-bg px-1.5 py-2.5 text-center text-[13px] font-extrabold text-primary-ink transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
             >
               <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
@@ -249,13 +256,13 @@ export function ProfileClient({
           {msg ? <Notice tone={msg.tone}>{msg.text}</Notice> : null}
           <div className="flex flex-wrap items-center justify-between gap-2.5">
             <div className="text-sm font-bold text-muted">Đang chọn: {pendingItem?.label || 'Chưa chọn'}</div>
-            <Button onClick={save} disabled={busy || !pendingId} className="min-h-[52px] rounded-2xl px-7 text-base">
+            <Button size="lg" onClick={save} loading={busy} disabled={!pendingId}>
               Lưu avatar
             </Button>
           </div>
         </div>
 
-        <div className="rounded-[24px] bg-white px-6 py-5 shadow-[0_6px_20px_rgba(102,117,232,0.10)]">
+        <div className="clay-card px-6 py-4">
           <Switch
             checked={allow}
             onChange={flipAllow}
@@ -267,14 +274,14 @@ export function ProfileClient({
       </div>
 
       <Modal open={!!removing} onClose={() => setRemoving(null)} title={`Xóa ảnh ${removing?.label ?? ''}?`}>
-        <p className="mb-4 text-[15px] font-semibold text-[#4A476E]">
+        <p className="m-0 mb-4 text-base font-semibold text-muted">
           Ảnh này sẽ bị xóa khỏi thư viện của lớp. Ai đang dùng ảnh sẽ quay về avatar mặc định.
         </p>
-        <div className="mt-3 flex flex-wrap justify-end gap-2.5">
+        <div className="mt-3 flex flex-wrap justify-end gap-3">
           <Button variant="secondary" onClick={() => setRemoving(null)} disabled={busy}>
             Hủy
           </Button>
-          <Button variant="danger" onClick={confirmRemove} disabled={busy}>
+          <Button variant="danger" onClick={confirmRemove} loading={busy}>
             Xóa ảnh
           </Button>
         </div>

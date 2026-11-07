@@ -48,7 +48,7 @@ test('cột thứ hôm nay được tô #4F5BD5', async ({ page }) => {
   const today = page.locator('[data-testid=day-head][data-today=true]')
   if (dow >= 1 && dow <= 5) {
     await expect(today).toHaveCount(1)
-    await expect(today).toHaveCSS('background-color', 'rgb(79, 91, 213)')
+    await expect(today).toHaveCSS('background-color', 'rgb(37, 99, 235)')
   } else {
     await expect(today).toHaveCount(0)
   }
@@ -114,11 +114,13 @@ test('xóa môn: đang dùng thì bị chặn, chưa dùng thì biến mất', a
   seedSlot(1, 'morning', 1, 'Toán')
   await open(page)
   await page.getByRole('button', { name: 'Xóa môn Toán' }).click()
+  await page.getByRole('dialog', { name: 'Xóa môn học này?' }).getByRole('button', { name: 'Xóa môn' }).click()
   await expect(page.getByRole('status')).toHaveText(
     'Môn "Toán" đang có trong thời khóa biểu. Cô hãy đổi các tiết đó sang môn khác trước khi xóa.',
   )
   await expect(nameInput(page, 'Toán')).toBeVisible()
   await page.getByRole('button', { name: 'Xóa môn Âm nhạc' }).click()
+  await page.getByRole('dialog', { name: 'Xóa môn học này?' }).getByRole('button', { name: 'Xóa môn' }).click()
   await expect(nameInput(page, 'Âm nhạc')).toHaveCount(0)
   await expect(rows(page)).toHaveCount(11)
 })
@@ -216,10 +218,10 @@ test('in ở chế độ Theo ngày: chỉ in ngày đang xem', async ({ page },
   seedSlot(3, 'morning', 1, 'Toán')
   await open(page)
   await page.getByRole('button', { name: 'Theo ngày' }).click()
-  await page.getByRole('button', { name: 'Thứ Tư' }).click()
+  await page.getByRole('button', { name: 'Thứ Tư', exact: true }).click()
   await page.emulateMedia({ media: 'print' })
   await expect(page.getByTestId('day-head')).toHaveText(['Thứ Tư'])
-  await expect(page.getByRole('button', { name: 'Thứ Tư' })).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Thứ Tư', exact: true })).toBeHidden()
 })
 
 test('điện thoại: trang không cuộn ngang, lưới tự cuộn', async ({ page }, info) => {

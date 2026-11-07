@@ -1,38 +1,56 @@
 import { AvatarImage } from '@/components/avatar/AvatarImage'
+import { Badge } from '@/components/ui/Badge'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { getRankData, requireStudentPage } from '@/lib/student/queries'
 
-const BADGE = ['#FFC857', '#DDE2F0', '#F3BC97', '#E4E0F7', '#E4E0F7']
+/** Huy chương top 3 (vàng, bạc, đồng); số hạng luôn hiện bằng chữ nên không dựa vào màu. */
+function medalClass(rank: number): string {
+  if (rank === 1) return 'bg-star text-ink'
+  if (rank === 2) return 'bg-[#DDE2F0] text-ink'
+  if (rank === 3) return 'bg-[#F3BC97] text-ink'
+  return 'bg-primary-soft text-primary-deep'
+}
 
 export default async function RankPage() {
   const ctx = await requireStudentPage('rank')
   const rows = await getRankData(ctx)
   return (
-    <section className="flex flex-col gap-3 rounded-[28px] bg-white p-6 shadow-[0_6px_20px_rgba(102,117,232,0.10)]" aria-labelledby="rank-h">
+    <section className="clay-card flex flex-col gap-3 p-6 max-sm:px-4" aria-labelledby="rank-h">
       <h2 id="rank-h" className="m-0 font-display text-2xl font-extrabold">
         Top 5 ngôi sao sáng nhất · cả năm
       </h2>
-      <div className="text-[13.5px] text-muted">Xếp theo sao thi đua tích lũy, không tính sao đã đổi quà.</div>
-      {rows.map((r, i) => (
-        <div
-          key={r.studentId}
-          data-testid="rank-row"
-          className="flex items-center gap-3.5 rounded-[20px] border-2 px-4 py-2.5"
-          style={{ background: r.me ? 'var(--primary-soft)' : '#F6F4FF', borderColor: r.me ? 'var(--primary-strong)' : 'transparent' }}
-        >
-          <div
-            className="flex size-[42px] flex-none items-center justify-center rounded-full font-display text-xl font-extrabold text-[#3A2A00]"
-            style={{ background: BADGE[Math.min(i, 4)] }}
+      <div className="text-base font-semibold text-muted">Xếp theo sao thi đua tích lũy, không tính sao đã đổi quà.</div>
+      {rows.length === 0 && (
+        <EmptyState title="Chưa có bảng xếp hạng." icon={ICONS.trophy}>
+          Khi cả lớp có sao, em sẽ thấy các bạn ở đây.
+        </EmptyState>
+      )}
+      <ol className="m-0 flex list-none flex-col gap-3 p-0">
+        {rows.map((r) => (
+          <li
+            key={r.studentId}
+            data-testid="rank-row"
+            aria-current={r.me ? 'true' : undefined}
+            className={`flex min-h-[68px] items-center gap-3.5 rounded-panel border-2 px-4 py-2.5 max-sm:gap-2.5 max-sm:px-3 ${
+              r.me ? 'border-primary-strong bg-primary-soft' : 'border-transparent bg-bg'
+            }`}
           >
-            {r.rank}
-          </div>
-          <AvatarImage avatar={r.avatar} size={52} />
-          <div className="min-w-0 flex-1 text-[16.5px] font-extrabold">
-            {r.name}
-            {r.me && <span className="whitespace-pre text-[12.5px] font-extrabold text-primary-ink">{'  (em)'}</span>}
-          </div>
-          <div className="text-[19px] font-extrabold text-[#7A4E00]">{r.stars} sao</div>
-        </div>
-      ))}
+            <div className={`flex size-11 flex-none items-center justify-center rounded-full font-display text-xl font-extrabold ${medalClass(r.rank)}`}>
+              {r.rank}
+            </div>
+            <AvatarImage avatar={r.avatar} size={52} />
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[17px] font-extrabold">
+              <span className="min-w-0">{r.name}</span>
+              {r.me && <Badge tone="star">(em)</Badge>}
+            </div>
+            <div className="inline-flex flex-none items-center gap-1.5 text-xl font-extrabold text-star-ink">
+              <Icon d={ICONS.star} size={20} className="text-star-edge" />
+              <span>{r.stars} sao</span>
+            </div>
+          </li>
+        ))}
+      </ol>
     </section>
   )
 }

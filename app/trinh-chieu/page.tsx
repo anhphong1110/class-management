@@ -18,7 +18,7 @@ export default async function Page() {
           <p className="m-0 text-xl font-bold">Tính năng này đang tắt. Cô bật lại trong Cài đặt.</p>
           <Link
             href="/tong-quan"
-            className="mt-5 inline-flex min-h-12 items-center rounded-[14px] border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline"
+            className="mt-5 inline-flex min-h-12 items-center rounded-ctl border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline"
           >
             Thoát trình chiếu
           </Link>

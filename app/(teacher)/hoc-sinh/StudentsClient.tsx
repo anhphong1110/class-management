@@ -3,12 +3,16 @@
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Input, Select } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { givenNameKey, matchesSearch } from '@/lib/domain/vn-text'
 import type { StarGroup } from '@/lib/stars/queries'
 import type { StudentCard, TodayStatus } from '@/lib/students/queries'
 import { archiveStudent, deleteStudent, exportStudents, loadProfile, type ProfileDetail } from './actions'
+import { CLOCK, X_CIRCLE } from '../diem-danh/status-icons'
 import { GroupsView } from './GroupsView'
 import { ImportDialog } from './ImportDialog'
 import { ProfilePanel } from './ProfilePanel'
@@ -18,12 +22,13 @@ type Sort = 'name' | 'stars' | 'no'
 type Filter = 'all' | 'present' | 'absent' | 'late'
 type View = 'all' | 'groups'
 
+// [nhãn, lớp màu, icon]: luôn có chữ và icon, không chỉ dựa vào màu.
 const TODAY: Record<NonNullable<TodayStatus> | 'none', [string, string, string]> = {
-  present: ['Có mặt', '#DDF6F1', '#0B5A4D'],
-  late: ['Đi trễ', '#FFF1CC', '#6E4700'],
-  absent_excused: ['Vắng có phép', '#E3EEFF', '#1F4C9E'],
-  absent_unexcused: ['Vắng', '#FFE3EA', '#8E1B3B'],
-  none: ['Chưa điểm danh', '#F0EEFA', '#4A476E'],
+  present: ['Có mặt', 'bg-success-soft text-success-deep', ICONS.checkCircle],
+  late: ['Đi trễ', 'bg-star-soft text-star-ink', CLOCK],
+  absent_excused: ['Vắng có phép', 'bg-primary-soft text-primary-deep', ICONS.calendar],
+  absent_unexcused: ['Vắng', 'bg-danger-soft text-danger-deep', X_CIRCLE],
+  none: ['Chưa điểm danh', 'bg-[#F0EEFA] text-muted', ICONS.minus],
 }
 
 const FILTERS: [Filter, string][] = [
@@ -38,14 +43,12 @@ const VIEWS: [View, string][] = [
 ]
 
 const ROLE_LABEL = { leader: 'Tổ trưởng', deputy: 'Tổ phó', member: '' } as const
-const pill = (on: boolean, h: number) => ({
-  minHeight: h,
-  background: on ? 'var(--primary-strong)' : '#fff',
-  color: on ? '#fff' : '#3A3769',
-  border: `2px solid ${on ? 'var(--primary-strong)' : '#D9D5F2'}`,
-})
-const ghostBtn =
-  'min-h-12 rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-4 text-[14.5px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-60'
+const pill = (on: boolean) =>
+  `inline-flex cursor-pointer items-center justify-center gap-1.5 border-2 font-extrabold transition-colors ${
+    on
+      ? 'border-primary-strong bg-primary-strong text-white'
+      : 'border-edge bg-white text-primary-deep hover:bg-primary-soft'
+  }`
 
 function groupLabel(s: StudentCard): string {
   if (!s.groupName) return 'Chưa có tổ'
@@ -99,6 +102,7 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
 
   function confirmArchive() {
     if (!sel) return
+    setNotice('')
     startTransition(async () => {
       const res = await archiveStudent(sel.id)
       if (res.error) setError(res.error)
@@ -106,6 +110,7 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
         setConfirming(false)
         setSelId(null)
         setError('')
+        setNotice('Đã lưu trữ học sinh. Sổ sao và lịch sử vẫn được giữ lại.')
       }
     })
   }
@@ -146,58 +151,42 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-3.5 rounded-[26px] bg-white px-6 py-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex flex-[1_1_360px] flex-wrap gap-2.5">
-            <label className="box-border flex min-h-12 flex-[1_1_220px] items-center gap-2 rounded-[14px] border-2 border-[#D9D5F2] bg-white px-3.5">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#5B5890" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-4-4" />
-              </svg>
-              <input
-                type="search"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Tìm theo tên hoặc mã học sinh"
-                aria-label="Tìm học sinh"
-                className="min-w-0 flex-1 border-0 bg-transparent text-base font-semibold text-ink outline-0"
-              />
-            </label>
-            <label className="flex items-center gap-2 text-sm font-bold text-[#4A476E]">
-              Sắp xếp
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as Sort)}
-                aria-label="Sắp xếp"
-                className="min-h-12 rounded-[14px] border-2 border-[#D9D5F2] bg-white px-3 text-[15px] font-bold text-ink"
-              >
-                <option value="name">Theo tên (A–Z)</option>
-                <option value="stars">Theo số sao</option>
-                <option value="no">Theo số thứ tự</option>
-              </select>
-            </label>
-          </div>
+      <div className="clay-card flex flex-col gap-4 px-6 py-5">
+        <div className="relative">
+          <Icon d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14M20 20l-4-4" size={24} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+          <Input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Tìm theo tên hoặc mã học sinh"
+            aria-label="Tìm học sinh"
+            className="!min-h-14 !pl-13 text-lg"
+          />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label className="flex items-center gap-2 text-sm font-extrabold text-muted">
+            Sắp xếp
+            <Select value={sort} onChange={(e) => setSort(e.target.value as Sort)} aria-label="Sắp xếp" className="!w-auto">
+              <option value="name">Theo tên (A–Z)</option>
+              <option value="stars">Theo số sao</option>
+              <option value="no">Theo số thứ tự</option>
+            </Select>
+          </label>
           <div className="flex flex-wrap gap-2.5">
-            <button
-              type="button"
-              onClick={() => setForm({ open: true, student: null })}
-              className="min-h-12 rounded-[14px] bg-primary-strong px-5 text-[15px] font-extrabold text-white"
-            >
-              + Thêm học sinh
-            </button>
-            <button
-              type="button"
+            <Button onClick={() => setForm({ open: true, student: null })}>+ Thêm học sinh</Button>
+            <Button
+              variant="secondary"
               onClick={() => {
                 setNotice('')
                 setImporting(true)
               }}
-              className={ghostBtn}
             >
+              <Icon d={ICONS.inbox} size={18} />
               Nhập Excel / CSV
-            </button>
-            <button type="button" onClick={exportFile} disabled={exporting} className={ghostBtn}>
-              Xuất Excel
-            </button>
+            </Button>
+            <Button variant="secondary" onClick={exportFile} disabled={exporting}>
+              {exporting ? 'Đang xuất…' : 'Xuất Excel'}
+            </Button>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -207,9 +196,9 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
               type="button"
               aria-pressed={filter === k}
               onClick={() => setFilter(k)}
-              className="cursor-pointer rounded-full px-4 text-sm font-extrabold"
-              style={pill(filter === k, 44)}
+              className={`min-h-11 rounded-full px-4 text-sm ${pill(filter === k)}`}
             >
+              {filter === k ? <Icon d={ICONS.check} size={16} /> : null}
               {label}
             </button>
           ))}
@@ -223,8 +212,7 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
             type="button"
             aria-pressed={view === k}
             onClick={() => setView(k)}
-            className="cursor-pointer rounded-[14px] px-6 text-[15px] font-extrabold"
-            style={pill(view === k, 48)}
+            className={`min-h-12 rounded-ctl px-6 text-[15px] ${pill(view === k)}`}
           >
             {label}
           </button>
@@ -254,38 +242,75 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
         />
       )}
 
-      {view === 'all' && list.length === 0 && (
-        <div className="rounded-[26px] bg-white px-6 py-10 text-center shadow-[0_6px_20px_rgba(102,117,232,.10)]">
-          <div className="font-display text-[22px] font-extrabold">Chưa tìm thấy phi hành gia nào</div>
-          <div className="text-[15px] text-[#5B5890]">Cô thử đổi từ khóa hoặc bộ lọc nhé.</div>
-        </div>
+      {view === 'all' && students.length === 0 && (
+        <EmptyState
+          title="Lớp mình chưa có học sinh nào"
+          icon={ICONS.users}
+          action={
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setNotice('')
+                setImporting(true)
+              }}
+            >
+              Nhập danh sách từ file
+            </Button>
+          }
+        >
+          Cô thêm từng bạn hoặc nhập cả danh sách từ file Excel để bắt đầu nhé.
+        </EmptyState>
+      )}
+
+      {view === 'all' && students.length > 0 && list.length === 0 && (
+        <EmptyState
+          title="Chưa tìm thấy phi hành gia nào"
+          icon={ICONS.users}
+          action={
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setQ('')
+                setFilter('all')
+              }}
+            >
+              Xóa bộ lọc
+            </Button>
+          }
+        >
+          Cô thử đổi từ khóa hoặc bộ lọc nhé.
+        </EmptyState>
       )}
 
       {view === 'all' && (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))' }}>
           {list.map((s) => {
-            const [label, bg, ink] = TODAY[s.today ?? 'none']
+            const [label, tone, icon] = TODAY[s.today ?? 'none']
+            const chosen = selId === s.id
             return (
               <button
                 key={s.id}
                 type="button"
                 data-testid="student-card"
+                aria-pressed={chosen}
                 onClick={() => setSelId(s.id)}
-                className="flex cursor-pointer flex-col items-center gap-1.5 rounded-[26px] bg-white px-3.5 pb-4 pt-5 text-center text-ink shadow-[0_6px_20px_rgba(102,117,232,.10)] transition hover:-translate-y-[3px] hover:shadow-[0_14px_28px_rgba(79,91,213,.20)]"
-                style={{ border: `2px solid ${selId === s.id ? 'var(--primary-strong)' : 'transparent'}` }}
+                className={`clay-card clay-press flex cursor-pointer flex-col items-center gap-1.5 px-3.5 pb-4 pt-5 text-center text-ink [--edge:var(--primary-edge)] ${
+                  chosen ? '!border-primary-strong' : ''
+                }`}
               >
                 <AvatarImage avatar={s.avatar} size={92} />
                 <div className="font-display text-lg font-extrabold leading-[1.2]">{s.fullName}</div>
-                <div className="text-[13px] font-bold text-[#5B5890]">
+                <div className="text-[13px] font-bold text-muted">
                   Mã {s.code} · {groupLabel(s)}
                 </div>
-                <div className="flex items-center gap-1.5 text-[17px] font-extrabold text-[#7A4E00]">
+                <div className="flex items-center gap-1.5 text-[17px] font-extrabold text-star-ink">
                   <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-                    <polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857" stroke="#E0A020" strokeWidth="1.2" strokeLinejoin="round" />
+                    <polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC93C" stroke="#E0A020" strokeWidth="1.2" strokeLinejoin="round" />
                   </svg>
                   {s.competition} sao
                 </div>
-                <span className="rounded-full px-3 py-1 text-[12.5px] font-extrabold" style={{ background: bg, color: ink }}>
+                <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[12.5px] font-extrabold ${tone}`}>
+                  <Icon d={icon} size={14} />
                   {label}
                 </span>
               </button>
@@ -306,33 +331,39 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
       <StudentForm open={form.open} student={form.student} onClose={() => setForm({ open: false, student: null })} />
 
       <Modal open={confirming && !!sel} onClose={() => setConfirming(false)} title="Lưu trữ học sinh?">
-        <p className="mb-4 text-[15px] font-semibold text-[#4A476E]">
-          {sel?.fullName} sẽ không còn trong danh sách lớp, Trạm thi đua và bảng xếp hạng. Sổ sao và lịch sử vẫn được giữ lại.
+        <p className="m-0 mb-4 flex items-start gap-3 text-base font-semibold text-muted">
+          <Icon d={ICONS.alert} size={22} className="mt-0.5 text-danger" />
+          <span>
+            {sel?.fullName} sẽ không còn trong danh sách lớp, Trạm thi đua và bảng xếp hạng. Sổ sao và lịch sử vẫn được giữ lại.
+          </span>
         </p>
         {error && <Notice tone="error">{error}</Notice>}
-        <div className="mt-3 flex flex-wrap justify-end gap-2.5">
+        <div className="mt-3 flex flex-wrap justify-end gap-3">
           <Button variant="secondary" onClick={() => setConfirming(false)} disabled={pending}>
             Hủy
           </Button>
           <Button variant="danger" onClick={confirmArchive} disabled={pending}>
-            Lưu trữ
+            {pending ? 'Đang lưu trữ…' : 'Lưu trữ'}
           </Button>
         </div>
       </Modal>
 
       <Modal open={confirmingDelete && !!sel} onClose={() => setConfirmingDelete(false)} title="Xóa học sinh?">
-        <p className="mb-2 text-[15px] font-semibold text-[#4A476E]">
-          {sel?.fullName} sẽ bị xóa hẳn cùng toàn bộ sao, lịch sử đổi quà, điểm danh, huy hiệu và tài khoản đăng nhập của em. Việc này không hoàn tác được.
+        <p className="m-0 mb-2 flex items-start gap-3 text-base font-semibold text-muted">
+          <Icon d={ICONS.alert} size={22} className="mt-0.5 text-danger" />
+          <span>
+            {sel?.fullName} sẽ bị xóa hẳn cùng toàn bộ sao, lịch sử đổi quà, điểm danh, huy hiệu và tài khoản đăng nhập của em. Việc này không hoàn tác được.
+          </span>
         </p>
-        <p className="mb-4 text-[15px] font-semibold text-[#4A476E]">
+        <p className="m-0 mb-4 text-base font-semibold text-muted">
           Nếu em chỉ chuyển lớp hoặc nghỉ học và cô muốn giữ lịch sử, hãy chọn Lưu trữ thay vì Xóa.
         </p>
         {error && <Notice tone="error">{error}</Notice>}
-        <div className="mt-3 flex flex-wrap justify-end gap-2.5">
+        <div className="mt-3 flex flex-wrap justify-end gap-3">
           <Button variant="secondary" onClick={() => setConfirmingDelete(false)} disabled={pending}>
             Hủy
           </Button>
-          <Button variant="danger" onClick={confirmDelete} disabled={pending}>
+          <Button variant="danger" onClick={confirmDelete} loading={pending}>
             Xóa vĩnh viễn
           </Button>
         </div>

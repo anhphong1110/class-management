@@ -2,18 +2,33 @@
 
 import { useCallback, useRef, useState, useTransition } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
+import { RewardVisual } from '@/components/rewards/RewardVisual'
+import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
-import { RewardVisual } from '@/components/rewards/RewardVisual'
 import { formatRelative } from '@/lib/domain/relative-time'
-import type { RewardRequestView, RewardView } from '@/lib/rewards/queries'
+import type { RewardRequestStatus, RewardRequestView, RewardView } from '@/lib/rewards/queries'
 import { STAT } from '@/lib/rewards/status'
 import { approveRequest, deleteReward, deliverRequest, rejectRequest, setRewardHidden } from './actions'
 import { RewardEditor } from './RewardEditor'
 
 type Editing = { kind: 'new' } | { kind: 'edit'; id: string } | null
 type Msg = { tone: 'success' | 'error'; text: string } | null
+
+const CLOCK = 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18'
+
+/** Trạng thái luôn có icon và chữ, không chỉ màu. Nhãn lấy từ STAT dùng chung. */
+const BADGE: Record<RewardRequestStatus, { tone: 'star' | 'neutral' | 'success' | 'danger'; icon: string }> = {
+  pending: { tone: 'star', icon: CLOCK },
+  approved: { tone: 'neutral', icon: ICONS.checkCircle },
+  delivered: { tone: 'success', icon: ICONS.gift },
+  rejected: { tone: 'danger', icon: ICONS.x },
+}
 
 export function RewardsClient({
   rewards,
@@ -27,6 +42,7 @@ export function RewardsClient({
   const [editing, setEditing] = useState<Editing>(null)
   const [msg, setMsg] = useState<Msg>(null)
   const [busy, setBusy] = useState<Set<string>>(new Set())
+  const [rejecting, setRejecting] = useState<RewardRequestView | null>(null)
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null)
   const [deleteError, setDeleteError] = useState('')
   const [deletePending, startDelete] = useTransition()
@@ -41,11 +57,6 @@ export function RewardsClient({
     setEditing(null)
     setTimeout(() => trigger.current?.focus(), 0)
   }, [])
-  const nowDate = new Date(now)
-
-  const editingReward = editing?.kind === 'edit' ? (rewards.find((r) => r.id === editing.id) ?? null) : null
-  const pendingCount = requests.filter((q) => q.status === 'pending').length
-
   function confirmDelete() {
     if (!deleting) return
     startDelete(async () => {
@@ -58,6 +69,10 @@ export function RewardsClient({
       }
     })
   }
+  const nowDate = new Date(now)
+
+  const editingReward = editing?.kind === 'edit' ? (rewards.find((r) => r.id === editing.id) ?? null) : null
+  const pendingCount = requests.filter((q) => q.status === 'pending').length
 
   function run(key: string, task: () => Promise<{ error?: string; message?: string }>) {
     if (inflight.current.has(key)) return
@@ -75,22 +90,25 @@ export function RewardsClient({
     })
   }
 
+  function confirmReject() {
+    const q = rejecting
+    if (!q) return
+    setRejecting(null)
+    run(`req:${q.id}`, () => rejectRequest(q.id))
+  }
+
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3.5 rounded-[26px] bg-[linear-gradient(120deg,#33378F,#7A58E0)] px-[26px] py-[22px] text-white">
+      <div className="clay-card flex flex-wrap items-center justify-between gap-3.5 bg-primary-soft px-6 py-5">
         <div className="max-w-[560px]">
-          <div className="font-display text-[26px] font-extrabold">Đổi sao lấy quà</div>
-          <div className="text-[15.5px] leading-normal text-[#E9EBFF]">
+          <div className="font-display text-[26px] font-extrabold text-primary-deep">Đổi sao lấy quà</div>
+          <div className="text-[15.5px] font-semibold leading-normal text-muted">
             Học sinh gửi yêu cầu, hệ thống giữ trước sao và quà. Cô duyệt hoặc từ chối, sao chỉ bị trừ chính thức khi cô duyệt. Sao đổi quà không ảnh hưởng thứ hạng thi đua.
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => open({ kind: 'new' })}
-          className="min-h-12 cursor-pointer rounded-2xl border-0 bg-star px-6 text-base font-extrabold text-[#3B2A00]"
-        >
+        <Button variant="accent" size="lg" onClick={() => open({ kind: 'new' })}>
           + Thêm phần thưởng
-        </button>
+        </Button>
       </div>
 
       {editing && (editing.kind === 'new' || editingReward) && (
@@ -101,167 +119,182 @@ export function RewardsClient({
         />
       )}
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-4">
-        {rewards.map((w) => {
-          const out = w.left <= 0
-          const editingThis = editing?.kind === 'edit' && editing.id === w.id
-          const hiddenKey = `hide:${w.id}`
-          return (
-            <div
-              key={w.id}
-              data-testid="reward-card"
-              className={`flex flex-col gap-2.5 rounded-[24px] bg-white p-3.5 shadow-[0_6px_20px_rgba(102,117,232,0.10)] ${w.hidden ? 'opacity-60' : ''}`}
-            >
-              <RewardVisual visual={w.visual} iconSize={64} className="h-[120px] w-full rounded-[18px]" />
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="m-0 font-display text-[19px] font-extrabold leading-[1.2]">{w.name}</h3>
-                <div className="flex flex-none items-center gap-1 rounded-full bg-[#FFF1CC] px-2.5 py-1 text-[15px] font-extrabold text-[#7A4E00]">
-                  <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
-                    <polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857" stroke="#E0A020" strokeWidth="1.4" strokeLinejoin="round" />
-                  </svg>
-                  {w.cost}
+      {rewards.length === 0 ? (
+        <EmptyState
+          title="Chưa có phần thưởng nào"
+          icon={ICONS.gift}
+          action={<Button onClick={() => open({ kind: 'new' })}>+ Thêm phần thưởng</Button>}
+        >
+          Thêm món quà đầu tiên để học sinh có thể đổi bằng sao.
+        </EmptyState>
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-4">
+          {rewards.map((w) => {
+            const out = w.left <= 0
+            const editingThis = editing?.kind === 'edit' && editing.id === w.id
+            const hiddenKey = `hide:${w.id}`
+            return (
+              <div
+                key={w.id}
+                data-testid="reward-card"
+                className={`clay-card flex flex-col gap-2.5 p-3.5 ${w.hidden ? 'opacity-60' : ''}`}
+              >
+                <RewardVisual visual={w.visual} iconSize={64} className="h-[120px] w-full rounded-panel" />
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="m-0 font-display text-[19px] font-extrabold leading-[1.2]">{w.name}</h3>
+                  <Badge tone="star">
+                    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                      <polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,22 12,17.5 5.5,22 7.5,14.5 2,9.5 9,9" fill="#FFC857" stroke="#E0A020" strokeWidth="1.4" strokeLinejoin="round" />
+                    </svg>
+                    {w.cost}
+                  </Badge>
+                </div>
+                <div className="text-sm font-semibold leading-[1.4] text-muted">{w.description}</div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="flex flex-wrap gap-1.5">
+                    <Badge tone={out ? 'danger' : 'success'}>
+                      <Icon d={out ? ICONS.x : ICONS.check} size={14} />
+                      {out ? 'Hết quà' : 'Còn quà'}
+                    </Badge>
+                    {w.hidden && (
+                      <Badge>
+                        <Icon d={ICONS.eyeOff} size={14} />
+                        Đã ẩn
+                      </Badge>
+                    )}
+                  </span>
+                  <span className="text-[13px] font-bold text-muted">
+                    {`Còn ${w.left}${w.held ? ` (đang giữ ${w.held})` : ''}`}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    className={`flex-1 ${editingThis ? '!bg-primary-soft' : ''}`}
+                    onClick={() => open({ kind: 'edit', id: w.id })}
+                  >
+                    Sửa
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="flex-1"
+                    loading={busy.has(hiddenKey)}
+                    onClick={() => run(hiddenKey, () => setRewardHidden(w.id, !w.hidden))}
+                  >
+                    {w.hidden ? 'Hiện' : 'Ẩn'}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="flex-1 !border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft"
+                    onClick={() => {
+                      setDeleteError('')
+                      setDeleting({ id: w.id, name: w.name })
+                    }}
+                  >
+                    Xóa
+                  </Button>
                 </div>
               </div>
-              <div className="text-[13.5px] leading-[1.4] text-muted">{w.description}</div>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="flex gap-1.5">
-                  <span
-                    className="rounded-full px-2.5 py-1 text-[12.5px] font-extrabold"
-                    style={{ background: out ? '#FFE3EA' : '#DDF6F1', color: out ? '#8E1B3B' : '#0B5A4D' }}
-                  >
-                    {out ? 'Hết quà' : 'Còn quà'}
-                  </span>
-                  {w.hidden && (
-                    <span className="rounded-full bg-[#E9E7F7] px-2.5 py-1 text-[12.5px] font-extrabold text-[#4A476E]">Đã ẩn</span>
-                  )}
-                </span>
-                <span className="text-[13px] font-bold text-[#4A476E]">
-                  {`Còn ${w.left}${w.held ? ` (đang giữ ${w.held})` : ''}`}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => open({ kind: 'edit', id: w.id })}
-                  className={`min-h-11 flex-1 cursor-pointer rounded-xl border-2 bg-white text-sm font-extrabold text-primary-ink ${editingThis ? 'border-primary-strong' : 'border-[#D9D5F2]'}`}
-                >
-                  Sửa
-                </button>
-                <button
-                  type="button"
-                  disabled={busy.has(hiddenKey)}
-                  onClick={() => run(hiddenKey, () => setRewardHidden(w.id, !w.hidden))}
-                  className="min-h-11 flex-1 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white text-sm font-extrabold text-[#4A476E] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {w.hidden ? 'Hiện' : 'Ẩn'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDeleteError('')
-                    setDeleting({ id: w.id, name: w.name })
-                  }}
-                  className="min-h-11 flex-1 cursor-pointer rounded-xl border-[1.5px] border-[#F3B8C6] bg-white text-sm font-extrabold text-[#8E1B3B]"
-                >
-                  Xóa
-                </button>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
 
-      <section className="flex flex-col gap-3 rounded-[28px] bg-white p-6 shadow-[0_6px_20px_rgba(102,117,232,0.10)]">
+      <Card className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="m-0 font-display text-2xl font-extrabold">Yêu cầu và lịch sử đổi quà</h2>
-          <span className="rounded-full bg-primary-soft px-3.5 py-1.5 text-sm font-extrabold text-primary-ink">
+          <Badge tone={pendingCount > 0 ? 'star' : 'neutral'}>
+            <Icon d={CLOCK} size={14} />
             {pendingCount} yêu cầu chờ duyệt
-          </span>
+          </Badge>
         </div>
-        {msg && (
-          <div
-            role={msg.tone === 'error' ? 'alert' : 'status'}
-            className={`rounded-[14px] px-4 py-3 text-[15px] font-bold ${msg.tone === 'error' ? 'bg-[#FFE3EA] text-[#8E1B3B]' : 'bg-[#DDF6F1] text-[#0B5A4D]'}`}
-          >
-            {msg.text}
-          </div>
+        {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
+        {requests.length === 0 && (
+          <EmptyState title="Chưa có yêu cầu đổi quà nào" icon={ICONS.inbox}>
+            Khi học sinh đổi quà, yêu cầu sẽ hiện ở đây để cô duyệt.
+          </EmptyState>
         )}
-        {requests.length === 0 && <p className="m-0 text-sm text-muted">Chưa có yêu cầu đổi quà nào.</p>}
-        <div className="overflow-x-auto">
-          <div className="flex min-w-[640px] flex-col gap-2">
-            {requests.map((q) => {
-              const [label, tint, ink] = STAT[q.status]
-              const key = `req:${q.id}`
-              const locked = busy.has(key)
-              return (
-                <div
-                  key={q.id}
-                  data-testid="request-row"
-                  className="grid grid-cols-[1.5fr_1.4fr_.7fr_1fr_1.6fr] items-center gap-2.5 rounded-2xl bg-bg px-3.5 py-2.5"
-                >
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <AvatarImage avatar={q.avatar} size={40} />
-                    <div className="flex min-w-0 flex-col">
-                      <span className="text-[15px] font-extrabold">{q.studentName}</span>
-                      <span className="text-xs text-muted">{formatRelative(new Date(q.createdAt), nowDate)}</span>
-                    </div>
-                  </div>
-                  <div className="text-[14.5px] font-bold">{q.rewardName}</div>
-                  <div className="text-[14.5px] font-extrabold text-[#7A4E00]">{q.cost} sao</div>
-                  <div>
-                    <span className="rounded-full px-2.5 py-1 text-[12.5px] font-extrabold" style={{ background: tint, color: ink }}>
-                      {label}
-                    </span>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    {q.status === 'pending' && (
-                      <>
-                        <button
-                          type="button"
-                          disabled={locked}
-                          onClick={() => run(key, () => approveRequest(q.id))}
-                          className="min-h-11 cursor-pointer rounded-xl border-0 bg-[#12794F] px-3.5 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Duyệt
-                        </button>
-                        <button
-                          type="button"
-                          disabled={locked}
-                          onClick={() => run(key, () => rejectRequest(q.id))}
-                          className="min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#C0314E] bg-white px-3.5 text-sm font-extrabold text-[#A22441] disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Từ chối
-                        </button>
-                      </>
-                    )}
-                    {q.status === 'approved' && (
-                      <button
-                        type="button"
-                        disabled={locked}
-                        onClick={() => run(key, () => deliverRequest(q.id))}
-                        className="min-h-11 cursor-pointer rounded-xl border-0 bg-primary-strong px-3.5 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Đã trao quà
-                      </button>
-                    )}
+        <div className="flex flex-col gap-2.5">
+          {requests.map((q) => {
+            const label = STAT[q.status][0]
+            const badge = BADGE[q.status]
+            const key = `req:${q.id}`
+            const locked = busy.has(key)
+            return (
+              <div
+                key={q.id}
+                data-testid="request-row"
+                className="grid grid-cols-1 items-center gap-2.5 rounded-2xl border-2 border-edge bg-bg px-3.5 py-3 md:grid-cols-[1.5fr_1.4fr_.7fr_1fr_1.8fr]"
+              >
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <AvatarImage avatar={q.avatar} size={44} />
+                  <div className="flex min-w-0 flex-col">
+                    <span className="text-[15px] font-extrabold">{q.studentName}</span>
+                    <span className="text-xs font-semibold text-muted">{formatRelative(new Date(q.createdAt), nowDate)}</span>
                   </div>
                 </div>
-              )
-            })}
-          </div>
+                <div className="text-[15px] font-bold">{q.rewardName}</div>
+                <div className="text-[15px] font-extrabold text-star-ink">{q.cost} sao</div>
+                <div>
+                  <Badge tone={badge.tone}>
+                    <Icon d={badge.icon} size={14} />
+                    {label}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap justify-start gap-2 md:justify-end">
+                  {q.status === 'pending' && (
+                    <>
+                      <Button loading={locked} onClick={() => run(key, () => approveRequest(q.id))}>
+                        {!locked && <Icon d={ICONS.check} size={18} />}
+                        Duyệt
+                      </Button>
+                      <Button variant="secondary" disabled={locked} onClick={() => setRejecting(q)}>
+                        <Icon d={ICONS.x} size={18} />
+                        Từ chối
+                      </Button>
+                    </>
+                  )}
+                  {q.status === 'approved' && (
+                    <Button loading={locked} onClick={() => run(key, () => deliverRequest(q.id))}>
+                      {!locked && <Icon d={ICONS.gift} size={18} />}
+                      Đã trao quà
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
-      </section>
+      </Card>
+
+      <ConfirmDialog
+        open={rejecting !== null}
+        title="Từ chối yêu cầu này?"
+        message={
+          rejecting
+            ? `Số sao và quà đã giữ sẽ được trả lại cho ${rejecting.studentName}. Việc này không hoàn tác được.`
+            : ''
+        }
+        confirmLabel="Từ chối"
+        cancelLabel="Giữ lại"
+        danger
+        onConfirm={confirmReject}
+        onCancel={() => setRejecting(null)}
+      />
 
       <Modal open={!!deleting} onClose={() => setDeleting(null)} title="Xóa phần thưởng?">
-        <p className="mb-4 text-[15px] font-semibold text-[#4A476E]">
-          {deleting?.name} sẽ bị xóa hẳn khỏi trạm đổi quà. Quà đã có học sinh đổi thì không xóa được; khi đó cô dùng nút Ẩn nhé.
+        <p className="m-0 mb-4 flex items-start gap-3 text-base font-semibold text-muted">
+          <Icon d={ICONS.alert} size={22} className="mt-0.5 text-danger" />
+          <span>
+            {deleting?.name} sẽ bị xóa hẳn khỏi trạm đổi quà. Quà đã có học sinh đổi thì không xóa được; khi đó cô dùng nút Ẩn nhé.
+          </span>
         </p>
         {deleteError && <Notice tone="error">{deleteError}</Notice>}
-        <div className="mt-3 flex flex-wrap justify-end gap-2.5">
+        <div className="mt-3 flex flex-wrap justify-end gap-3">
           <Button variant="secondary" onClick={() => setDeleting(null)} disabled={deletePending}>
             Hủy
           </Button>
-          <Button variant="danger" onClick={confirmDelete} disabled={deletePending}>
+          <Button variant="danger" onClick={confirmDelete} loading={deletePending}>
             Xóa vĩnh viễn
           </Button>
         </div>

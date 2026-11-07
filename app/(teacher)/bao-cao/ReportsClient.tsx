@@ -5,34 +5,34 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { Field, Input } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { PERIOD_LABELS, type Period } from '@/lib/domain/period'
-import { kpiCards, unitLabel } from '@/lib/reports/format'
+import { kpiCards, unitLabel, viDate } from '@/lib/reports/format'
 import { BAD_RANGE, isValidCustomRange, type ReportPeriod } from '@/lib/reports/range'
 import type { ReportData } from '@/lib/reports/types'
 import { exportReport } from './actions'
 
-const CARD = 'rounded-[26px] bg-white px-6 py-[22px] shadow-[0_6px_20px_rgba(102,117,232,.10)]'
 const H2 = 'm-0 font-display text-[22px] font-extrabold'
-const PLUS = 'var(--primary-strong)'
-const MINUS = '#C0314E'
+/** Sao trừ có sọc chéo, để phân biệt với sao cộng không chỉ bằng màu. */
+const STRIPES = 'repeating-linear-gradient(135deg, rgba(255,255,255,.5) 0 3px, transparent 3px 7px)'
 const ATTEND = [
-  { key: 'present', label: 'Có mặt', bg: '#12794F' },
-  { key: 'late', label: 'Đi trễ', bg: '#FFC857' },
-  { key: 'excused', label: 'Vắng có phép', bg: '#2563C9' },
-  { key: 'unexcused', label: 'Vắng không phép', bg: '#C0314E' },
+  { key: 'present', label: 'Có mặt', cls: 'bg-success' },
+  { key: 'late', label: 'Đi trễ', cls: 'bg-[#B45309]' },
+  { key: 'excused', label: 'Vắng có phép', cls: 'bg-primary-strong' },
+  { key: 'unexcused', label: 'Vắng không phép', cls: 'bg-danger' },
 ] as const
-const DATE_INPUT = 'min-h-12 w-full rounded-[14px] border-2 border-[#D9D5F2] bg-white px-3.5 text-[15px] font-semibold text-ink'
 
-const tabBtn = (on: boolean) => ({
-  background: on ? 'var(--primary-strong)' : '#fff',
-  color: on ? '#fff' : '#3A3769',
-  borderColor: on ? 'var(--primary-strong)' : '#D9D5F2',
-})
+const TAB =
+  'clay-press flex min-h-12 items-center gap-2 rounded-ctl border-2 px-5 text-[15px] font-extrabold no-underline [--edge:var(--primary-edge)]'
+const TAB_ON = 'border-primary-strong bg-primary-strong text-white'
+const TAB_OFF = 'border-primary-strong bg-white text-primary-strong hover:bg-primary-soft'
 
 function Empty({ children }: { children: string }) {
-  return <p className="m-0 rounded-[12px] bg-[#F6F4FF] px-3 py-2.5 text-[14.5px] font-semibold text-muted">{children}</p>
+  return <p className="m-0 rounded-chip bg-field px-3 py-2.5 text-[15px] font-semibold text-muted">{children}</p>
 }
 
 export function ReportsClient({
@@ -90,9 +90,13 @@ export function ReportsClient({
   const critMax = data ? Math.max(1, ...data.criteria.map((c) => c.n)) : 1
   const giftMax = data ? Math.max(1, ...data.gifts.map((g) => g.n)) : 1
 
+  const summary = data
+    ? `Từ ${viDate(data.from)} đến ${viDate(data.to)}: lớp được cộng ${data.kpis.added} sao, bị trừ ${data.kpis.deducted} sao, chuyên cần ${data.kpis.attendancePct}%, có ${data.kpis.redeemed} lượt đổi quà.`
+    : ''
+
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[26px] bg-white px-[18px] py-3.5 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
+      <Card className="flex flex-wrap items-center justify-between gap-3 !px-[18px] !py-3.5">
         <div role="tablist" className="flex flex-wrap gap-2">
           {(Object.keys(PERIOD_LABELS) as Period[]).map((k) => (
             <Link
@@ -102,50 +106,36 @@ export function ReportsClient({
               href={`/bao-cao?ky=${k}`}
               replace
               scroll={false}
-              className="flex min-h-12 cursor-pointer items-center rounded-[14px] border-2 px-5 text-[15px] font-extrabold"
-              style={tabBtn(period === k)}
+              className={`${TAB} ${period === k ? TAB_ON : TAB_OFF}`}
             >
               {PERIOD_LABELS[k]}
             </Link>
           ))}
-          <button
-            type="button"
-            aria-pressed={period === 'custom'}
-            onClick={() => setOpen(true)}
-            className="min-h-12 cursor-pointer rounded-[14px] border-2 px-[18px] text-[15px] font-extrabold"
-            style={period === 'custom' ? tabBtn(true) : { background: '#fff', color: '#3441B5', borderColor: '#D9D5F2' }}
-          >
+          <Button variant={period === 'custom' ? 'primary' : 'secondary'} aria-pressed={period === 'custom'} onClick={() => setOpen(true)}>
+            <Icon d={ICONS.calendar} size={18} />
             Chọn ngày
-          </button>
+          </Button>
         </div>
         <div className="flex flex-wrap gap-2.5">
-          <button
-            type="button"
-            disabled={pending || !data}
-            onClick={() => download('csv')}
-            className="min-h-12 cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-[#3441B5] disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button variant="secondary" disabled={!data} loading={pending} onClick={() => download('csv')}>
             Xuất CSV
-          </button>
-          <button
-            type="button"
-            disabled={pending || !data}
-            onClick={() => download('xlsx')}
-            className="min-h-12 cursor-pointer rounded-[14px] border-0 bg-primary-strong px-[18px] text-[14.5px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          </Button>
+          <Button disabled={!data} loading={pending} onClick={() => download('xlsx')}>
             Xuất Excel
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {(error || msg) && <Notice tone="error">{error || msg}</Notice>}
 
       {data && (
         <>
+          <p className="m-0 text-base font-bold text-ink">{summary}</p>
           <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
-            {kpiCards(data.kpis).map((k) => (
-              <div key={k.label} data-testid="kpi" className="rounded-[22px] bg-white px-[18px] py-4 shadow-[0_6px_20px_rgba(102,117,232,.10)]">
-                <div className="text-[13.5px] font-bold text-muted">{k.label}</div>
+            {kpiCards(data.kpis).map((k, i) => (
+              <div key={k.label} data-testid="kpi" className="clay-card px-[18px] py-4">
+                <Icon d={[ICONS.star, ICONS.minus, ICONS.checkCircle, ICONS.gift, ICONS.trophy][i] ?? ICONS.star} size={22} className="mb-1" />
+                <div className="text-sm font-bold text-muted">{k.label}</div>
                 <div className="font-display text-[32px] font-extrabold leading-[1.15]" style={{ color: k.color }}>
                   {k.value}
                 </div>
@@ -153,131 +143,150 @@ export function ReportsClient({
             ))}
           </div>
 
-          <div className={`${CARD} flex flex-col gap-3`}>
+          <Card className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2.5">
               <h2 className={H2}>Sao cộng và sao trừ theo {unitLabel(data.bucket)}</h2>
-              <div className="flex gap-3.5 text-[13.5px] font-bold">
+              <div className="flex gap-3.5 text-sm font-bold">
                 <span className="flex items-center gap-1.5">
-                  <span className="size-3.5 rounded bg-primary-strong" />
+                  <span className="size-4 rounded bg-primary-strong" />
                   Sao cộng
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="size-3.5 rounded" style={{ background: MINUS }} />
-                  Sao trừ
+                  <span className="size-4 rounded bg-danger" style={{ backgroundImage: STRIPES }} />
+                  Sao trừ (sọc chéo)
                 </span>
               </div>
             </div>
             <div className="overflow-x-auto">
               <div
                 data-testid="report-chart"
-                className="flex h-[230px] items-end gap-3 border-b-2 border-[#E4E0F7] pt-2.5"
+                aria-hidden="true"
+                className="flex h-[230px] items-end gap-3 border-b-2 border-edge pt-2.5"
                 style={{ minWidth: data.buckets.length * 78 }}
               >
                 {data.buckets.map((b, i) => (
                   <div key={`${b.label}-${i}`} data-testid="report-bar" className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
                     <div className="flex h-[190px] items-end gap-1">
                       <div className="flex h-full flex-col items-center justify-end">
-                        <span className="text-xs font-extrabold text-[#2C37A8]">{b.added}</span>
-                        <div className="w-[22px] rounded-t-md" style={{ height: Math.max(4, Math.round((b.added / barMax) * 150)), background: PLUS }} />
+                        <span className="text-xs font-extrabold text-primary-deep">{b.added}</span>
+                        <div className="w-[22px] rounded-t-md bg-primary-strong" style={{ height: Math.max(4, Math.round((b.added / barMax) * 150)) }} />
                       </div>
                       <div className="flex h-full flex-col items-center justify-end">
-                        <span className="text-xs font-extrabold text-[#8E1B3B]">{b.deducted}</span>
-                        <div className="w-[22px] rounded-t-md" style={{ height: Math.max(4, Math.round((b.deducted / barMax) * 150)), background: MINUS }} />
+                        <span className="text-xs font-extrabold text-danger-deep">{b.deducted}</span>
+                        <div className="w-[22px] rounded-t-md bg-danger" style={{ height: Math.max(4, Math.round((b.deducted / barMax) * 150)), backgroundImage: STRIPES }} />
                       </div>
                     </div>
-                    <div className="pt-1 text-[13px] font-bold text-[#4A476E]">{b.label}</div>
+                    <div className="pt-1 text-[13px] font-bold text-muted">{b.label}</div>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+            <table className="sr-only">
+              <caption>{`Số sao cộng và sao trừ theo ${unitLabel(data.bucket)}`}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{`Mốc ${unitLabel(data.bucket)}`}</th>
+                  <th scope="col">Sao cộng</th>
+                  <th scope="col">Sao trừ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.buckets.map((b, i) => (
+                  <tr key={`${b.label}-${i}`}>
+                    <th scope="row">{b.label}</th>
+                    <td>{b.added}</td>
+                    <td>{b.deducted}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
 
           <div className="flex flex-wrap items-stretch gap-4">
-            <div className={`${CARD} flex min-w-0 flex-[1_1_360px] flex-col gap-3`}>
+            <Card className="flex min-w-0 flex-[1_1_360px] flex-col gap-3">
               <h2 className={H2}>Tình hình chuyên cần</h2>
-              <div role="img" aria-label="Tỉ lệ chuyên cần" className="flex h-[34px] overflow-hidden rounded-xl bg-[#EEEBFA]">
+              <div role="img" aria-label="Tỉ lệ chuyên cần" className="flex h-[34px] overflow-hidden rounded-xl bg-primary-soft">
                 {ATTEND.map((a) => (
-                  <div key={a.key} style={{ width: `${data.attendance[a.key]}%`, background: a.bg }} />
+                  <div key={a.key} className={a.cls} style={{ width: `${data.attendance[a.key]}%` }} />
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {ATTEND.map((a) => (
-                  <div key={a.key} className="flex items-center gap-2 text-[14.5px] font-bold">
-                    <span className="size-3.5 rounded" style={{ background: a.bg }} />
+                  <div key={a.key} className="flex items-center gap-2 text-[15px] font-bold">
+                    <span className={`size-4 rounded ${a.cls}`} />
                     {a.label}: {data.attendance[a.key]}%
                   </div>
                 ))}
               </div>
-              <div className="mt-1 text-[14.5px] font-extrabold text-[#4A476E]">Cần quan tâm (vắng nhiều nhất)</div>
+              <div className="mt-1 text-[15px] font-extrabold text-ink">Cần quan tâm (vắng nhiều nhất)</div>
               {data.lowAttendance.length === 0 && <Empty>Chưa có bạn nào vắng trong kỳ này.</Empty>}
               {data.lowAttendance.map((l, i) => (
-                <div key={`${i}-${l.name}`} className="flex justify-between rounded-xl bg-[#F6F4FF] px-3 py-2 text-[14.5px] font-bold">
+                <div key={`${i}-${l.name}`} className="flex justify-between rounded-xl bg-field px-3 py-2 text-[15px] font-bold">
                   <span>{l.name}</span>
-                  <span className="text-[#8E1B3B]">{l.days} buổi vắng</span>
+                  <span className="text-danger-deep">{l.days} buổi vắng</span>
                 </div>
               ))}
-            </div>
+            </Card>
 
-            <div className={`${CARD} flex min-w-0 flex-[1_1_360px] flex-col gap-3`}>
+            <Card className="flex min-w-0 flex-[1_1_360px] flex-col gap-3">
               <h2 className={H2}>Tiêu chí thường gặp</h2>
               {data.criteria.length === 0 && <Empty>Chưa có lượt cộng hoặc trừ sao nào trong kỳ này.</Empty>}
               {data.criteria.map((c) => (
                 <div key={`${c.kind}-${c.label}`} className="flex flex-col gap-[3px]">
-                  <div className="flex justify-between text-[14.5px] font-bold">
+                  <div className="flex justify-between gap-2 text-[15px] font-bold">
                     <span>{c.label}</span>
-                    <span style={{ color: c.kind === 'award' ? '#2C37A8' : '#8E1B3B' }}>{c.n} lần</span>
+                    <span className={c.kind === 'award' ? 'text-primary-deep' : 'text-danger-deep'}>
+                      {c.kind === 'award' ? 'Cộng' : 'Trừ'} · {c.n} lần
+                    </span>
                   </div>
-                  <div className="h-2.5 rounded-md bg-[#EEEBFA]">
-                    <div className="h-full rounded-md" style={{ width: `${Math.round((c.n / critMax) * 100)}%`, background: c.kind === 'award' ? PLUS : MINUS }} />
+                  <div className="h-3 rounded-md bg-primary-soft">
+                    <div
+                      className={`h-full rounded-md ${c.kind === 'award' ? 'bg-primary-strong' : 'bg-danger'}`}
+                      style={{ width: `${Math.round((c.n / critMax) * 100)}%`, backgroundImage: c.kind === 'award' ? undefined : STRIPES }}
+                    />
                   </div>
                 </div>
               ))}
-            </div>
+            </Card>
           </div>
 
           <div className="flex flex-wrap items-stretch gap-4">
-            <div className={`${CARD} flex min-w-0 flex-[1_1_360px] flex-col gap-2.5`}>
+            <Card className="flex min-w-0 flex-[1_1_360px] flex-col gap-2.5">
               <h2 className={H2}>Học sinh tiến bộ</h2>
-              <div className="text-[13.5px] text-muted">So với kỳ trước, tính theo sao thi đua nhận được.</div>
+              <div className="text-sm font-semibold text-muted">So với kỳ trước, tính theo sao thi đua nhận được.</div>
               {data.progress.length === 0 && <Empty>Chưa có bạn nào tiến bộ so với kỳ trước.</Empty>}
               {data.progress.map((p) => (
-                <div key={p.studentId} className="flex items-center gap-3 rounded-2xl bg-[#F6F4FF] px-3 py-2">
+                <div key={p.studentId} className="flex items-center gap-3 rounded-2xl bg-field px-3 py-2">
                   <AvatarImage avatar={(p.avatarId && avatars[p.avatarId]) || null} size={40} />
                   <div className="flex-1 text-[15px] font-extrabold">{p.name}</div>
-                  <span className="rounded-full bg-[#DDF6F1] px-3 py-1 text-sm font-extrabold text-[#0B5A4D]">+{p.up} sao</span>
+                  <span className="rounded-full bg-success-soft px-3 py-1 text-sm font-extrabold text-success-deep">+{p.up} sao</span>
                 </div>
               ))}
-            </div>
+            </Card>
 
-            <div className={`${CARD} flex min-w-0 flex-[1_1_360px] flex-col gap-3`}>
+            <Card className="flex min-w-0 flex-[1_1_360px] flex-col gap-3">
               <h2 className={H2}>Phần thưởng đã đổi</h2>
               {data.gifts.length === 0 && <Empty>Chưa có lượt đổi quà nào trong kỳ này.</Empty>}
               {data.gifts.map((g, i) => (
                 <div key={`${i}-${g.label}`} className="flex flex-col gap-[3px]">
-                  <div className="flex justify-between text-[14.5px] font-bold">
+                  <div className="flex justify-between text-[15px] font-bold">
                     <span>{g.label}</span>
                     <span className="text-[#5E35B1]">{g.n} lượt</span>
                   </div>
-                  <div className="h-2.5 rounded-md bg-[#EEEBFA]">
+                  <div className="h-3 rounded-md bg-primary-soft">
                     <div className="h-full rounded-md bg-[#7A58E0]" style={{ width: `${Math.round((g.n / giftMax) * 100)}%` }} />
                   </div>
                 </div>
               ))}
-            </div>
+            </Card>
           </div>
         </>
       )}
 
       <Modal open={open} onClose={() => setOpen(false)} title="Chọn khoảng ngày">
         <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5 text-sm font-bold text-ink">
-            Từ ngày
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={DATE_INPUT} />
-          </label>
-          <label className="flex flex-col gap-1.5 text-sm font-bold text-ink">
-            Đến ngày
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={DATE_INPUT} />
-          </label>
+          <Field label="Từ ngày">{(a) => <Input {...a} type="date" value={from} onChange={(e) => setFrom(e.target.value)} />}</Field>
+          <Field label="Đến ngày">{(a) => <Input {...a} type="date" value={to} onChange={(e) => setTo(e.target.value)} />}</Field>
           {dialogError && <Notice tone="error">{dialogError}</Notice>}
           <div className="flex justify-end gap-2.5">
             <Button variant="secondary" onClick={() => setOpen(false)}>

@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { Icon, ICONS } from '@/components/ui/Icon'
+import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
 import { buildPool, pickNext } from '@/lib/random/pick'
 import { rewardRandom } from './actions'
@@ -50,8 +54,6 @@ function reducedMotion(): boolean {
     return false
   }
 }
-
-const chip = 'min-h-[44px] cursor-pointer rounded-full border-2 px-[18px] text-[14.5px] font-extrabold'
 
 export function RandomClient({ today, students, groups }: { today: string; students: StudentView[]; groups: GroupView[] }) {
   const [scope, setScope] = useState<'all' | string>('all')
@@ -167,55 +169,55 @@ export function RandomClient({ today, students, groups }: { today: string; stude
 
   return (
     <>
-      <div className="flex flex-col gap-3.5 rounded-[26px] bg-white px-6 py-5 shadow-[0_6px_20px_rgba(102,117,232,0.10)]">
+      <Card className="flex flex-col gap-3.5">
         <div className="flex flex-col gap-2">
-          <div className="text-[14.5px] font-extrabold text-[#4A476E]">Gọi trong phạm vi</div>
+          <div className="text-[15px] font-extrabold text-ink">Gọi trong phạm vi</div>
           <div className="flex flex-wrap gap-2">
             {scopes.map(([id, label]) => {
               const on = scope === id
               return (
-                <button
+                <Button
                   key={id}
-                  type="button"
+                  variant={on ? 'primary' : 'secondary'}
+                  className="!rounded-full"
                   aria-pressed={on}
                   disabled={spinning}
                   onClick={() => {
                     setScope(id)
                     clearStage()
                   }}
-                  className={`${chip} ${on ? 'border-primary-strong bg-primary-strong text-white' : 'border-[#D9D5F2] bg-white text-[#3A3769]'}`}
                 >
                   {label}
-                </button>
+                </Button>
               )
             })}
           </div>
         </div>
         <div className="flex flex-wrap gap-2.5">
           {toggles.map((t) => (
-            <div key={t.label} className="rounded-[14px] border-2 border-[#D9D5F2] bg-white px-4">
+            <div key={t.label} className="rounded-ctl border-2 border-edge bg-field px-4">
               <Switch checked={t.on} onChange={t.flip} label={t.label} disabled={spinning} />
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
-      <div className="relative flex flex-col items-center gap-3.5 overflow-hidden rounded-[32px] bg-[linear-gradient(160deg,#2B2E7E_0%,#4C47C4_65%,#7B63E0_100%)] px-6 pb-[30px] pt-[34px] text-center text-white">
+      <div className="clay-card relative flex flex-col items-center gap-3.5 overflow-hidden bg-[linear-gradient(160deg,#DDEBFF_0%,#EBE3FF_60%,#FFE9F3_100%)] px-6 pb-8 pt-9 text-center">
         <svg viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true" className="absolute left-0 top-0 h-full w-full">
-          <g style={{ animation: 'tw 3s ease-in-out infinite' }}>
-            <circle cx="90" cy="50" r="3" fill="#FFE08A" />
-            <circle cx="300" cy="320" r="2" fill="#fff" />
-            <circle cx="700" cy="60" r="3" fill="#FFE08A" />
-            <circle cx="900" cy="300" r="2.5" fill="#fff" />
-            <circle cx="560" cy="360" r="2" fill="#FFE08A" />
+          <g className="motion-safe:[animation:tw_3s_ease-in-out_infinite]">
+            <circle cx="90" cy="50" r="4" fill="#FFC93C" />
+            <circle cx="300" cy="320" r="3" fill="#B9A7F8" />
+            <circle cx="700" cy="60" r="4" fill="#FF6FAE" />
+            <circle cx="900" cy="300" r="3.5" fill="#FFC93C" />
+            <circle cx="560" cy="360" r="3" fill="#5EDCC5" />
           </g>
         </svg>
-        <div className="relative text-sm font-extrabold tracking-[0.16em] text-[#FFE08A]">
+        <div aria-live="polite" className="relative text-sm font-extrabold tracking-[0.16em] text-primary-deep">
           {spinning ? 'ĐANG QUAY...' : result ? 'PHI HÀNH GIA MAY MẮN' : 'SẴN SÀNG QUAY'}
         </div>
         <div
           key={pop}
-          className={`relative flex h-[230px] w-[230px] items-center justify-center rounded-full border-4 border-white/55 bg-white/[0.14] ${result ? 'pop' : ''}`}
+          className={`relative flex h-[230px] w-[230px] items-center justify-center rounded-full border-4 border-white bg-white/70 shadow-[0_6px_0_#CFE3FF] ${result ? 'pop' : ''}`}
         >
           {cur ? (
             <AvatarImage avatar={cur.avatar} size={196} crown={result} />
@@ -225,62 +227,65 @@ export function RandomClient({ today, students, groups }: { today: string; stude
             </svg>
           )}
         </div>
-        <div data-testid="current-name" className="relative min-h-[44px] font-display text-[40px] font-extrabold leading-[1.1]">
+        <div
+          data-testid="current-name"
+          className="relative min-h-[56px] break-words font-display text-[44px] font-extrabold leading-[1.1] text-ink sm:text-[64px] sm:min-h-[72px]"
+        >
           {cur ? cur.fullName : 'Bấm quay để chọn'}
         </div>
-        <div data-testid="current-meta" className="relative min-h-[22px] text-base font-bold text-[#E4E7FF]">
+        <div data-testid="current-meta" className="relative min-h-[24px] text-lg font-bold text-muted">
           {cur ? `${cur.groupName ?? 'Chưa có tổ'} · Mã ${cur.code}` : ''}
         </div>
-        <div className="relative mt-1.5 flex flex-wrap justify-center gap-3">
-          <button
-            type="button"
+        <div className="relative mt-2 flex flex-wrap justify-center gap-4">
+          <Button
+            variant="accent"
             onClick={spin}
             disabled={spinning}
-            className="min-h-[60px] cursor-pointer rounded-[20px] border-0 bg-[#FFC857] px-10 text-xl font-extrabold text-[#3B2A00] disabled:cursor-not-allowed"
+            className="!min-h-[76px] !rounded-card !px-12 !text-2xl"
           >
+            <Icon d={ICONS.rocket} size={30} />
             {spinning ? 'Đang quay...' : result ? 'Gọi bạn tiếp theo' : 'Quay số'}
-          </button>
+          </Button>
           {result && !spinning && cur ? (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="lg"
               onClick={reward}
               disabled={pending || rewarded}
-              className="min-h-[60px] cursor-pointer rounded-[20px] border-2 border-white/70 bg-transparent px-[26px] text-[17px] font-extrabold text-white disabled:opacity-60"
+              className="!min-h-[76px] !rounded-card !px-8"
             >
+              <Icon d={ICONS.star} size={24} />
               +1 sao cho bạn này
-            </button>
+            </Button>
           ) : null}
         </div>
         {msg ? (
-          <div role={msg.error ? 'alert' : 'status'} className="relative rounded-[14px] bg-white/[0.18] px-4 py-2.5 text-[15px] font-bold">
-            {msg.text}
+          <div className="relative text-left">
+            <Notice tone={msg.error ? 'error' : 'info'}>{msg.text}</Notice>
           </div>
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-3 rounded-[26px] bg-white px-6 py-[22px] shadow-[0_6px_20px_rgba(102,117,232,0.10)]">
+      <Card className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <h2 className="m-0 font-display text-[22px] font-extrabold">
             Đã được gọi ({calledInPool}/{pool.length})
           </h2>
-          <button
-            type="button"
-            onClick={resetRound}
-            className="min-h-[44px] cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-[18px] text-[14.5px] font-extrabold text-primary-ink"
-          >
+          <Button variant="secondary" onClick={resetRound}>
+            <Icon d={ICONS.undo} size={18} />
             Bắt đầu vòng mới
-          </button>
+          </Button>
         </div>
         <div data-testid="called-list" className="flex flex-wrap gap-2">
           {calledList.map((s) => (
-            <span key={s.id} className="inline-flex items-center gap-2 rounded-full bg-bg py-1 pl-1 pr-3.5 text-sm font-bold">
+            <span key={s.id} className="inline-flex items-center gap-2 rounded-full bg-primary-soft py-1 pl-1 pr-3.5 text-sm font-bold text-primary-deep">
               <AvatarImage avatar={s.avatar} size={32} />
               {s.fullName}
             </span>
           ))}
-          {calledList.length === 0 ? <span className="text-[14.5px] text-muted">Chưa gọi bạn nào trong vòng này.</span> : null}
+          {calledList.length === 0 ? <span className="text-[15px] font-semibold text-muted">Chưa gọi bạn nào trong vòng này.</span> : null}
         </div>
-      </div>
+      </Card>
     </>
   )
 }

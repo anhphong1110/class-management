@@ -16,3 +16,39 @@ export const TEACHER_NAV: NavItem[] = [
   { id: 'settings', label: 'Cài đặt', href: '/cai-dat', icon: 'M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M14 4v4M8 10v4M18 16v4' },
   { id: 'profile', label: 'Hồ sơ và avatar', href: '/ho-so', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8' },
 ]
+
+import { TONES, type Tone } from '@/components/ui/tones'
+
+export type NavTone = Tone
+
+/** Nhóm và màu icon cho từng mục menu cô giáo. Các nhóm liền nhau theo đúng thứ tự TEACHER_NAV. */
+export const TEACHER_NAV_META: Record<string, { group: string; tone: NavTone }> = {
+  home: { group: 'Lớp học', tone: 'blue' },
+  students: { group: 'Lớp học', tone: 'purple' },
+  attendance: { group: 'Lớp học', tone: 'mint' },
+  stars: { group: 'Thi đua và quà', tone: 'star' },
+  rank: { group: 'Thi đua và quà', tone: 'pink' },
+  rewards: { group: 'Thi đua và quà', tone: 'mint' },
+  random: { group: 'Thi đua và quà', tone: 'purple' },
+  timetable: { group: 'Lịch và nhiệm vụ', tone: 'blue' },
+  news: { group: 'Lịch và nhiệm vụ', tone: 'pink' },
+  missions: { group: 'Lịch và nhiệm vụ', tone: 'star' },
+  display: { group: 'Công cụ', tone: 'purple' },
+  report: { group: 'Công cụ', tone: 'mint' },
+  settings: { group: 'Cài đặt', tone: 'blue' },
+  profile: { group: 'Cài đặt', tone: 'pink' },
+}
+
+/** Màu ô icon pastel (nền + nét) cho mục chưa chọn. */
+export const NAV_TONES = TONES
+
+/** Màu icon cho mục menu học sinh theo id. */
+export const STUDENT_NAV_TONES: Record<string, NavTone> = {
+  home: 'blue',
+  stars: 'star',
+  rank: 'pink',
+  gifts: 'mint',
+  tt: 'blue',
+  att: 'mint',
+  news: 'purple',
+}

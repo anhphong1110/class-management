@@ -1,6 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Field, Input, Select, Textarea } from '@/components/ui/Field'
+import { Icon, ICONS } from '@/components/ui/Icon'
 import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
@@ -18,9 +25,7 @@ import {
 
 type Result = { error?: string; message?: string }
 
-const field = 'min-h-12 box-border rounded-xl border-2 border-[#D9D5F2] bg-white px-3.5 text-base font-bold text-ink'
-const ghost =
-  'min-h-11 cursor-pointer rounded-xl border-[1.5px] border-[#D9D5F2] bg-white px-3.5 text-[13.5px] font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50'
+const PIN = 'M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z'
 
 export function AnnouncementsClient({ items, now }: { items: AnnouncementView[]; now: string }) {
   const nowDate = new Date(now)
@@ -34,7 +39,7 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
   const [clearImage, setClearImage] = useState(false)
   const [err, setErr] = useState('')
   const [msg, setMsg] = useState('')
-  const [confirmDel, setConfirmDel] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<AnnouncementView | null>(null)
   const [busy, startTransition] = useTransition()
   const fileRef = useRef<HTMLInputElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
@@ -79,7 +84,6 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
   }
 
   function startEdit(n: AnnouncementView) {
-    setConfirmDel(null)
     setEditId(n.id)
     setTitle(n.title)
     setBody(n.body)
@@ -102,7 +106,6 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
   }
 
   function submit() {
-    setConfirmDel(null)
     if (!title.trim() || !body.trim()) {
       setErr(toVietnameseMessage('announcement_required'))
       setMsg('')
@@ -174,171 +177,165 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
     })
   }
 
-  function remove(id: string) {
-    if (confirmDel !== id) {
-      setConfirmDel(id)
-      return
-    }
-    setConfirmDel(null)
-    if (editId === id) resetForm()
-    run(() => archiveAnnouncement(id))
+  function confirmRemove() {
+    const n = deleting
+    if (!n) return
+    setDeleting(null)
+    if (editId === n.id) resetForm()
+    run(() => archiveAnnouncement(n.id))
   }
 
   return (
     <>
-      <div ref={formRef} className="flex flex-col gap-3 rounded-[26px] bg-white px-6 py-[22px] shadow-[0_6px_20px_rgba(102,117,232,.10)]">
-        <h2 className="m-0 font-display text-[22px] font-extrabold">{editId ? 'Sửa thông báo' : 'Đăng thông báo mới'}</h2>
-        <div className="flex flex-wrap gap-3">
-          <label className="flex flex-[2_1_260px] flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
-            Tiêu đề
-            <input
-              ref={titleRef}
-              type="text"
-              value={title}
-              maxLength={120}
-              disabled={busy}
-              placeholder="Ví dụ: Nhắc bài Toán"
-              onChange={(e) => {
-                setTitle(e.target.value)
-                setErr('')
-              }}
-              className={field}
-            />
-          </label>
-          <label className="flex flex-[1_1_180px] flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
-            Loại
-            <select value={type} disabled={busy} onChange={(e) => setType(e.target.value)} className={`${field} px-3`}>
-              {ANNOUNCEMENT_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <label className="flex flex-col gap-1 text-sm font-extrabold text-[#4A476E]">
-          Nội dung
-          <textarea
-            rows={3}
-            value={body}
-            maxLength={2000}
-            disabled={busy}
-            placeholder="Cô viết nội dung thông báo ở đây"
-            onChange={(e) => {
-              setBody(e.target.value)
-              setErr('')
-            }}
-            className="box-border resize-y rounded-xl border-2 border-[#D9D5F2] bg-white px-3.5 py-3 text-base font-semibold text-ink"
-          />
-        </label>
-        {shownImage && (
-          <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={shownImage} alt="Hình đính kèm" className="h-20 w-32 rounded-xl object-cover" />
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setFile(null)
-                setPreview(null)
-                setClearImage(true)
-                if (fileRef.current) fileRef.current.value = ''
-              }}
-              className={ghost}
-            >
-              Bỏ hình
-            </button>
-          </div>
-        )}
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex flex-wrap gap-2.5">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => fileRef.current?.click()}
-              className="min-h-12 cursor-pointer rounded-[14px] border-2 border-dashed border-[#8E86D8] bg-[#F6F4FF] px-4 text-sm font-extrabold text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Đính kèm hình ảnh
-            </button>
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => onFile(e.target.files?.[0])} />
-            <div className="flex items-center rounded-[14px] border-2 border-[#D9D5F2] bg-white px-4">
-              <Switch checked={pinned} onChange={setPinned} label="Ghim lên đầu" disabled={busy} />
+      <div ref={formRef}>
+        <Card className="flex flex-col gap-4">
+          <h2 className="m-0 font-display text-[22px] font-extrabold">{editId ? 'Sửa thông báo' : 'Đăng thông báo mới'}</h2>
+          <fieldset className="m-0 flex flex-col gap-3 rounded-ctl border-2 border-edge px-4 pb-4 pt-2">
+            <legend className="px-2 text-sm font-extrabold text-primary-deep">Nội dung thông báo</legend>
+            <div className="flex flex-wrap gap-3">
+              <Field label="Tiêu đề" className="flex-[2_1_260px]">
+                {(a) => (
+                  <Input
+                    {...a}
+                    ref={titleRef}
+                    type="text"
+                    value={title}
+                    maxLength={120}
+                    disabled={busy}
+                    placeholder="Ví dụ: Nhắc bài Toán"
+                    onChange={(e) => {
+                      setTitle(e.target.value)
+                      setErr('')
+                    }}
+                  />
+                )}
+              </Field>
+              <Field label="Loại" className="flex-[1_1_180px]">
+                {(a) => (
+                  <Select {...a} value={type} disabled={busy} onChange={(e) => setType(e.target.value)}>
+                    {ANNOUNCEMENT_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
             </div>
-          </div>
-          <div className="flex gap-2.5">
-            {editId && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={cancelEdit}
-                className="min-h-[52px] cursor-pointer rounded-[14px] border-[1.5px] border-[#D9D5F2] bg-white px-5 font-extrabold text-[#4A476E] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Hủy sửa
-              </button>
+            <Field label="Nội dung">
+              {(a) => (
+                <Textarea
+                  {...a}
+                  rows={3}
+                  value={body}
+                  maxLength={2000}
+                  disabled={busy}
+                  placeholder="Cô viết nội dung thông báo ở đây"
+                  className="resize-y"
+                  onChange={(e) => {
+                    setBody(e.target.value)
+                    setErr('')
+                  }}
+                />
+              )}
+            </Field>
+          </fieldset>
+          <fieldset className="m-0 flex flex-col gap-3 rounded-ctl border-2 border-edge px-4 pb-4 pt-2">
+            <legend className="px-2 text-sm font-extrabold text-primary-deep">Hình ảnh và ghim</legend>
+            {shownImage && (
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={shownImage} alt="Hình đính kèm" className="h-20 w-32 rounded-xl object-cover" />
+                <Button
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() => {
+                    setFile(null)
+                    setPreview(null)
+                    setClearImage(true)
+                    if (fileRef.current) fileRef.current.value = ''
+                  }}
+                >
+                  Bỏ hình
+                </Button>
+              </div>
             )}
-            <button
-              type="button"
-              disabled={busy}
-              onClick={submit}
-              className="min-h-[52px] cursor-pointer rounded-[14px] border-0 bg-primary-strong px-7 text-base font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button variant="secondary" className="border-dashed" disabled={busy} onClick={() => fileRef.current?.click()}>
+                <Icon d={ICONS.plus} size={18} />
+                Đính kèm hình ảnh
+              </Button>
+              <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => onFile(e.target.files?.[0])} />
+              <div className="flex items-center rounded-ctl border-2 border-edge bg-field px-4">
+                <Switch checked={pinned} onChange={setPinned} label="Ghim lên đầu" disabled={busy} />
+              </div>
+            </div>
+          </fieldset>
+          <div className="flex flex-wrap justify-end gap-2.5">
+            {editId && (
+              <Button variant="secondary" size="lg" disabled={busy} onClick={cancelEdit}>
+                Hủy sửa
+              </Button>
+            )}
+            <Button size="lg" loading={busy} onClick={submit}>
               {editId ? 'Lưu thay đổi' : 'Đăng thông báo'}
-            </button>
+            </Button>
           </div>
-        </div>
-        {err && <Notice tone="error">{err}</Notice>}
-        {msg && <Notice tone="success">{msg}</Notice>}
+          {err && <Notice tone="error">{err}</Notice>}
+          {msg && <Notice tone="success">{msg}</Notice>}
+        </Card>
       </div>
 
       <div className="flex flex-col gap-3.5">
+        {items.length === 0 && (
+          <EmptyState title="Chưa có thông báo nào" icon={ICONS.bell}>
+            Cô đăng thông báo đầu tiên ở phía trên để cả lớp cùng xem nhé.
+          </EmptyState>
+        )}
         {items.map((n) => {
           const [tint, ink] = announcementColors(n.type)
-          const asking = confirmDel === n.id
           return (
             <article
               key={n.id}
               data-testid="announcement-card"
-              className="flex flex-col gap-2 rounded-3xl border-2 bg-white px-6 py-5 shadow-[0_6px_20px_rgba(102,117,232,.10)]"
-              style={{ borderColor: n.pinned ? '#FFC857' : 'transparent' }}
+              className={`clay-card flex flex-col gap-2 px-6 py-5 ${n.pinned ? '[--primary-edge:#FFD65E]' : ''}`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   {n.type && (
-                    <span className="rounded-full px-3 py-[3px] text-[12.5px] font-extrabold" style={{ background: tint, color: ink }}>
+                    <span className="rounded-full px-3 py-[3px] text-[13px] font-extrabold" style={{ background: tint, color: ink }}>
                       {n.type}
                     </span>
                   )}
-                  <span className="text-[13px] text-[#5B5890]">{formatDayLabel(new Date(n.publishedAt), nowDate)}</span>
-                  {n.pinned && <span className="text-[12.5px] font-extrabold text-[#7A4E00]">Đang ghim</span>}
+                  <span className="text-[13px] font-semibold text-muted">{formatDayLabel(new Date(n.publishedAt), nowDate)}</span>
+                  {n.pinned && (
+                    <Badge tone="star">
+                      <Icon d={PIN} size={14} />
+                      Đang ghim
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => {
-                      setConfirmDel(null)
-                      run(() => togglePin(n.id, !n.pinned))
-                    }}
-                    className={ghost}
-                  >
+                  <Button variant="secondary" disabled={busy} onClick={() => run(() => togglePin(n.id, !n.pinned))}>
+                    <Icon d={PIN} size={16} />
                     {n.pinned ? 'Bỏ ghim' : 'Ghim'}
-                  </button>
-                  <button type="button" disabled={busy} onClick={() => startEdit(n)} className={ghost}>
+                  </Button>
+                  <Button variant="secondary" disabled={busy} onClick={() => startEdit(n)}>
                     Sửa
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="ghost"
                     disabled={busy}
-                    onClick={() => remove(n.id)}
-                    className="min-h-11 cursor-pointer rounded-xl border-[1.5px] px-3.5 text-[13.5px] font-extrabold text-[#A22441] disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ borderColor: asking ? '#C0314E' : '#D9D5F2', background: asking ? '#FFE3EA' : '#fff' }}
+                    onClick={() => setDeleting(n)}
+                    className="text-danger-deep hover:!bg-danger-soft hover:!text-danger-deep"
                   >
-                    {asking ? 'Bấm lần nữa để xóa' : 'Xóa'}
-                  </button>
+                    <Icon d={ICONS.trash} size={16} />
+                    Xóa
+                  </Button>
                 </div>
               </div>
               <h3 className="m-0 font-display text-[21px] font-extrabold">{n.title}</h3>
-              <div className="whitespace-pre-line text-[15px] leading-normal text-[#4A476E]">{n.body}</div>
+              <div className="whitespace-pre-line text-base leading-normal text-muted">{n.body}</div>
               {n.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={n.imageUrl} alt={n.title} className="max-h-72 w-full rounded-2xl object-cover" />
@@ -347,6 +344,17 @@ export function AnnouncementsClient({ items, now }: { items: AnnouncementView[];
           )
         })}
       </div>
+
+      <ConfirmDialog
+        open={deleting !== null}
+        title="Xóa thông báo này?"
+        message={deleting ? `Thông báo "${deleting.title}" sẽ biến mất khỏi trang của học sinh.` : ''}
+        confirmLabel="Xóa thông báo"
+        danger
+        pending={busy}
+        onCancel={() => setDeleting(null)}
+        onConfirm={confirmRemove}
+      />
     </>
   )
 }
