@@ -19,6 +19,7 @@ export function ProfilePanel({
   onClose,
   onEdit,
   onArchive,
+  onDelete,
 }: {
   student: StudentCard
   detail: ProfileDetail | null
@@ -26,6 +27,7 @@ export function ProfilePanel({
   onClose: () => void
   onEdit: () => void
   onArchive: () => void
+  onDelete: () => void
 }) {
   const stats = [
     { label: 'Sao thi đua tích lũy', value: String(student.competition) },
@@ -69,6 +71,10 @@ export function ProfilePanel({
           <Button variant="secondary" onClick={onArchive} className="!border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft">
             <Icon d={ICONS.trash} size={18} />
             Lưu trữ
+          </Button>
+          <Button variant="secondary" onClick={onDelete} className="!border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft">
+            <Icon d={ICONS.trash} size={18} />
+            Xóa học sinh
           </Button>
           <Button variant="secondary" onClick={onClose}>
             Đóng hồ sơ

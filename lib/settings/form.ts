@@ -1,6 +1,7 @@
 export type InfoValues = {
   school_name: string
   class_name: string
+  brand_title: string
   school_year: string
   teacher_name: string
   slogan: string

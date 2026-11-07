@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { admin, login } from './helpers'
+import { admin, login, pw } from './helpers'
 import {
   CLASS_ID,
   resetAnnouncements,
@@ -53,7 +53,18 @@ test.beforeAll(async () => {
   originalAvatar = s?.avatar_id ?? null
 })
 test.beforeEach(reset)
+
+/** Trả mật khẩu của tài khoản seed về như cũ để các spec khác còn đăng nhập được. */
+async function restorePassword() {
+  const db = admin()
+  const { data, error } = await db.from('profiles').select('id').eq('username', 'hs.hamy').single()
+  expect(error).toBeNull()
+  const res = await db.auth.admin.updateUserById(data!.id, { password: pw('hs.hamy') })
+  expect(res.error).toBeNull()
+}
+
 test.afterAll(async () => {
+  await restorePassword()
   resetStars()
   resetMissions()
   resetTimetable()
@@ -247,6 +258,58 @@ test('đổi avatar khi cờ bật; không có nút khi cờ tắt', async ({ pa
   await expect(page.getByRole('button', { name: 'Đổi avatar' })).toHaveCount(0)
 })
 
+async function studentLogin(page: Page, password: string) {
+  await page.context().clearCookies()
+  await page.goto('/dang-nhap')
+  await page.getByRole('tab', { name: 'Học sinh' }).click()
+  await page.getByLabel(/Tên đăng nhập/).fill('hs.hamy')
+  await page.getByLabel('Mật khẩu').fill(password)
+  await page.getByRole('button', { name: 'Cất cánh' }).click()
+}
+
+test('em đổi mật khẩu: mật khẩu cũ hết dùng, mật khẩu mới đăng nhập được', async ({ page }) => {
+  const next = 'em-doi-mk-7'
+  try {
+    await open(page)
+    await page.getByRole('button', { name: 'Đổi mật khẩu' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Đổi mật khẩu' })
+    await dialog.getByLabel('Mật khẩu mới', { exact: true }).fill(next)
+    await dialog.getByLabel('Nhập lại mật khẩu mới').fill(next)
+    await dialog.getByRole('button', { name: 'Lưu' }).click()
+    await expect(dialog.getByText('Đã đổi mật khẩu. Lần sau em đăng nhập bằng mật khẩu mới nhé.')).toBeVisible()
+    await dialog.getByRole('button', { name: 'Đóng' }).click()
+    await expect(dialog).toBeHidden()
+
+    await studentLogin(page, pw('hs.hamy'))
+    await expect(page.getByText('Tên đăng nhập hoặc mật khẩu chưa đúng.')).toBeVisible()
+    await studentLogin(page, next)
+    await expect(page).toHaveURL(/\/em$/)
+  } finally {
+    await restorePassword()
+  }
+})
+
+test('em đổi mật khẩu: hai ô không khớp hoặc dưới 6 ký tự thì báo lỗi, mật khẩu cũ giữ nguyên', async ({ page }) => {
+  await open(page)
+  await page.getByRole('button', { name: 'Đổi mật khẩu' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Đổi mật khẩu' })
+
+  await dialog.getByLabel('Mật khẩu mới', { exact: true }).fill('abcdef')
+  await dialog.getByLabel('Nhập lại mật khẩu mới').fill('abcdeg')
+  await dialog.getByRole('button', { name: 'Lưu' }).click()
+  await expect(dialog.getByText('Hai ô mật khẩu chưa giống nhau.')).toBeVisible()
+
+  await dialog.getByLabel('Mật khẩu mới', { exact: true }).fill('abc12')
+  await dialog.getByLabel('Nhập lại mật khẩu mới').fill('abc12')
+  await dialog.getByRole('button', { name: 'Lưu' }).click()
+  await expect(dialog.getByText('Mật khẩu cần ít nhất 6 ký tự.')).toBeVisible()
+
+  await dialog.getByRole('button', { name: 'Hủy' }).click()
+  await expect(dialog).toBeHidden()
+  await studentLogin(page, pw('hs.hamy'))
+  await expect(page).toHaveURL(/\/em$/)
+})
+
 test('Đăng xuất về /dang-nhap', async ({ page }) => {
   await open(page)
   await page.getByRole('button', { name: 'Đăng xuất' }).click()
@@ -267,4 +330,5 @@ test('giáo viên xem thử /em thấy dữ liệu học sinh đầu tiên', asy
   await expect(page.getByText('Đây là bản xem thử giao diện học sinh.')).toBeVisible()
   await expect(page.getByText('Hôm nay em còn 7 sao khả dụng.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Đổi avatar' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Đổi mật khẩu' })).toHaveCount(0)
 })

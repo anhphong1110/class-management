@@ -110,6 +110,43 @@ test('tải ảnh lên thư viện và từ chối ảnh quá lớn', async ({ p
   await expect(tiles).toHaveCount(3)
 })
 
+test('gỡ avatar của Hà My về mặc định', async ({ page }) => {
+  await open(page)
+  await page.getByTestId('people').getByRole('button', { name: /Võ Hà My/ }).click()
+  await expect(page.getByTestId('current')).not.toContainText('Chưa chọn')
+  await page.getByRole('button', { name: 'Gỡ avatar' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Đã gỡ avatar của Võ Hà My.' })).toBeVisible()
+  await expect(page.getByTestId('current')).toContainText('Avatar hiện tại: Chưa chọn')
+  await expect(page.getByRole('button', { name: 'Gỡ avatar' })).toHaveCount(0)
+  const { data } = await admin().from('students').select('avatar_id').eq('id', HAMY_ID).single()
+  expect(data!.avatar_id).toBeNull()
+})
+
+test('xóa ảnh tải lên khỏi thư viện, người đang dùng về mặc định', async ({ page }) => {
+  await open(page)
+  const lib = page.getByTestId('library')
+  const tiles = lib.locator('button[aria-pressed]')
+  await expect(lib.getByRole('button', { name: /^Xóa ảnh/ })).toHaveCount(0)
+  await page.locator('input[type=file]').setInputFiles('tests/e2e/fixtures/avatar.png')
+  await expect(tiles).toHaveCount(13)
+  const { data: up } = await admin().from('avatar_library').select('id, image_path').eq('class_id', CLASS_ID).eq('kind', 'upload').single()
+  await admin().from('students').update({ avatar_id: up!.id }).eq('id', HAMY_ID)
+
+  await lib.getByRole('button', { name: 'Xóa ảnh avatar' }).click()
+  const confirm = page.getByRole('dialog', { name: 'Xóa ảnh avatar?' })
+  await confirm.getByRole('button', { name: 'Xóa ảnh' }).click()
+  await expect(confirm).toHaveCount(0)
+  await expect(tiles).toHaveCount(12)
+
+  const { data: rows } = await admin().from('avatar_library').select('id').eq('class_id', CLASS_ID).eq('kind', 'upload')
+  expect(rows).toHaveLength(0)
+  const { data: hamy } = await admin().from('students').select('avatar_id').eq('id', HAMY_ID).single()
+  expect(hamy!.avatar_id).toBeNull()
+  const dir = up!.image_path!.split('/').slice(0, -1).join('/')
+  const { data: files } = await admin().storage.from('class-media').list(dir)
+  expect((files ?? []).map((f) => f.name)).not.toContain(up!.image_path!.split('/').pop())
+})
+
 test('tải ảnh PNG ~2 MB lên được nhờ nén phía trình duyệt', async ({ page }) => {
   const buffer = noisePng(1000)
   expect(buffer.length).toBeGreaterThan(1024 * 1024)

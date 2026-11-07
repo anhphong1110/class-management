@@ -19,7 +19,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
       theme={data?.cls.theme}
       className="max-lg:pb-28"
       nav={
-        <StudentNav pages={[...pages]} classLogoUrl={data?.classLogoUrl ?? null} schoolLogoUrl={data?.schoolLogoUrl ?? null} className={data?.cls.class_name ?? ''} schoolName={data?.cls.school_name} />
+        <StudentNav pages={[...pages]} classLogoUrl={data?.classLogoUrl ?? null} schoolLogoUrl={data?.schoolLogoUrl ?? null} className={data?.cls.class_name ?? ''} brandName={data?.cls.brand_title} schoolName={data?.cls.school_name} />
       }
     >
       <div className="flex min-w-0 basis-full flex-col gap-5 lg:flex-[999_1_560px]">
@@ -28,6 +28,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
           name={profile?.fullName ?? data?.user.displayName ?? ''}
           avatar={profile?.avatar ?? data?.avatar ?? null}
           showBell={pages.has('news')}
+          canChangePassword={!ctx.preview}
         />
         {ctx.preview && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel bg-star-soft px-4 py-2.5 text-[15px] font-extrabold text-star-ink">

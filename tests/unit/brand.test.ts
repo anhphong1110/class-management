@@ -24,6 +24,32 @@ describe('brandLines / brandSentence', () => {
   })
 })
 
+describe('brand_title tùy chỉnh', () => {
+  const cls = (brand_title: string | null) => ({ class_name: 'Năm 8 (5/8)', brand_title })
+
+  it('ưu tiên brand_title, in hoa', () => {
+    expect(brandTitle(cls('Trạm không gian Năm 9'))).toBe('TRẠM KHÔNG GIAN NĂM 9')
+    expect(brandTitle(cls('Hành tinh Xanh'))).toBe('HÀNH TINH XANH')
+  })
+  it('trống hoặc null thì suy ra từ tên lớp như cũ', () => {
+    expect(brandTitle(cls(null))).toBe('TRẠM KHÔNG GIAN NĂM 8')
+    expect(brandTitle(cls('   '))).toBe('TRẠM KHÔNG GIAN NĂM 8')
+    expect(brandTitle({ class_name: 'Năm 8 (5/8)' })).toBe('TRẠM KHÔNG GIAN NĂM 8')
+  })
+  it('tiền tố "Trạm không gian" thì phần còn lại là dòng nhấn', () => {
+    expect(brandLines(cls('trạm không gian Năm 9'))).toEqual({ top: 'TRẠM KHÔNG GIAN', accent: 'NĂM 9' })
+    expect(brandLines(cls('Trạm không gian'))).toEqual({ top: 'TRẠM KHÔNG GIAN', accent: '' })
+  })
+  it('tên khác hoàn toàn thì cả tên là dòng trên, không có dòng nhấn', () => {
+    expect(brandLines(cls('Hành tinh Xanh'))).toEqual({ top: 'HÀNH TINH XANH', accent: '' })
+  })
+  it('câu thường giữ nguyên chữ cô gõ', () => {
+    expect(brandSentence(cls('  Trạm không gian Năm 9 '))).toBe('Trạm không gian Năm 9')
+    expect(brandSentence(cls('Hành tinh Xanh'))).toBe('Hành tinh Xanh')
+    expect(brandSentence(cls(null))).toBe('Trạm không gian Năm 8')
+  })
+})
+
 describe('schoolLabel', () => {
   it('có tên thì thêm "Trường"', () => expect(schoolLabel(' Tiểu học Chính Nghĩa ')).toBe('Trường Tiểu học Chính Nghĩa'))
   it('trống thì "Trường học"', () => {

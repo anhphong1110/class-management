@@ -15,6 +15,7 @@ type Props = {
   classLogoUrl: string | null
   schoolLogoUrl?: string | null
   className: string
+  brandName?: string | null
   schoolName?: string | null
 }
 
@@ -22,7 +23,7 @@ type Props = {
  * Từ lg trở lên: thanh bên. Dưới lg: thanh tab dưới đáy (icon to + chữ).
  * Nhiều hơn 5 trang thì 4 mục đầu + "Thêm" mở bảng chứa các mục còn lại.
  */
-export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, schoolName }: Props) {
+export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, brandName, schoolName }: Props) {
   const pathname = usePathname()
   const [more, setMore] = useState(false)
   const items = STUDENT_NAV.filter((n) => pages.includes(n.id))
@@ -35,7 +36,7 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, scho
   return (
     <aside className="box-border flex w-full flex-col gap-[18px] text-ink lg:clay-card lg:px-3.5 lg:py-5 lg:sticky lg:top-4">
       <div className="flex flex-col gap-[18px] max-lg:hidden">
-        <BrandBlocks classLogoUrl={classLogoUrl} schoolLogoUrl={schoolLogoUrl} className={className} schoolName={schoolName} />
+        <BrandBlocks classLogoUrl={classLogoUrl} schoolLogoUrl={schoolLogoUrl} className={className} brandName={brandName} schoolName={schoolName} />
       </div>
       <nav
         aria-label="Menu học sinh"

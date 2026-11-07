@@ -4,14 +4,15 @@ import { useRef, useState, useTransition } from 'react'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Button } from '@/components/ui/Button'
 import { Icon, ICONS } from '@/components/ui/Icon'
+import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { Switch } from '@/components/ui/Switch'
 import { compressImage } from '@/lib/domain/compress-image'
 import { MAX_UPLOAD_BYTES, validateImageFile } from '@/lib/domain/upload'
 import { toVietnameseMessage } from '@/lib/errors'
-import { saveAvatar, setStudentCanChangeAvatar, uploadAvatar, type AvatarTarget } from './actions'
+import { deleteAvatarUpload, saveAvatar, setStudentCanChangeAvatar, uploadAvatar, type AvatarTarget } from './actions'
 
-export type LibraryItem = { id: string; label: string; avatar: AvatarValue }
+export type LibraryItem = { id: string; label: string; avatar: AvatarValue; removable: boolean }
 export type Person = { key: string; target: AvatarTarget; name: string; role: string; avatarId: string | null }
 
 export function ProfileClient({
@@ -28,6 +29,7 @@ export function ProfileClient({
   const [msg, setMsg] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
   const [allow, setAllow] = useState(allowStudents)
   const [busy, startTransition] = useTransition()
+  const [removing, setRemoving] = useState<LibraryItem | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const person = people[who]
@@ -51,6 +53,31 @@ export function ProfileClient({
         setPending(null)
         setMsg({ tone: 'success', text: `Đã đổi avatar của ${person.name}.` })
       }
+    })
+  }
+
+  function clearAvatar() {
+    startTransition(async () => {
+      const res = await saveAvatar(person.target, null)
+      if (res.error) setMsg({ tone: 'error', text: res.error })
+      else {
+        setPending(null)
+        setMsg({ tone: 'success', text: `Đã gỡ avatar của ${person.name}.` })
+      }
+    })
+  }
+
+  function confirmRemove() {
+    if (!removing) return
+    const item = removing
+    startTransition(async () => {
+      const res = await deleteAvatarUpload(item.id)
+      if (res.error) setMsg({ tone: 'error', text: res.error })
+      else {
+        if (pending === item.id) setPending(null)
+        setMsg({ tone: 'success', text: `Đã xóa ảnh ${item.label} khỏi thư viện.` })
+      }
+      setRemoving(null)
     })
   }
 
@@ -141,6 +168,18 @@ export function ProfileClient({
             <div className="text-[15px] font-bold text-muted">
               Avatar hiện tại: {current?.label || 'Chưa chọn'}
             </div>
+            {current && (
+              <div>
+                <Button
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={clearAvatar}
+                  className="mt-1 !min-h-10 !px-3.5 !text-sm !border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft"
+                >
+                  Gỡ avatar
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -155,8 +194,8 @@ export function ProfileClient({
             {library.map((a) => {
               const on = a.id === pendingId
               return (
+                <div key={a.id} className="relative">
                 <button
-                  key={a.id}
                   type="button"
                   aria-pressed={on}
                   aria-label={a.label}
@@ -164,7 +203,7 @@ export function ProfileClient({
                     setPending(a.id)
                     setMsg(null)
                   }}
-                  className={`clay-press relative flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-panel border-2 px-1.5 py-3 text-ink [--edge:var(--primary-edge)] ${
+                  className={`clay-press relative flex w-full min-h-[148px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-panel border-2 px-1.5 py-3 text-ink [--edge:var(--primary-edge)] ${
                     on ? 'border-primary-strong bg-primary-soft' : 'border-edge bg-white hover:bg-primary-soft'
                   }`}
                 >
@@ -176,6 +215,18 @@ export function ProfileClient({
                     </span>
                   )}
                 </button>
+                {a.removable && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    aria-label={`Xóa ảnh ${a.label}`}
+                    onClick={() => setRemoving(a)}
+                    className="absolute -right-1.5 -top-1.5 flex size-8 items-center justify-center rounded-full border-0 bg-danger-deep text-base font-extrabold leading-none text-white transition-colors hover:bg-danger disabled:opacity-50"
+                  >
+                    ×
+                  </button>
+                )}
+                </div>
               )
             })}
             <button
@@ -221,6 +272,20 @@ export function ProfileClient({
           />
         </div>
       </div>
+
+      <Modal open={!!removing} onClose={() => setRemoving(null)} title={`Xóa ảnh ${removing?.label ?? ''}?`}>
+        <p className="m-0 mb-4 text-base font-semibold text-muted">
+          Ảnh này sẽ bị xóa khỏi thư viện của lớp. Ai đang dùng ảnh sẽ quay về avatar mặc định.
+        </p>
+        <div className="mt-3 flex flex-wrap justify-end gap-3">
+          <Button variant="secondary" onClick={() => setRemoving(null)} disabled={busy}>
+            Hủy
+          </Button>
+          <Button variant="danger" onClick={confirmRemove} loading={busy}>
+            Xóa ảnh
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

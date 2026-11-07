@@ -7,6 +7,7 @@ import { card, h2, row } from './shared'
 const INFO_FIELDS: [keyof InfoValues, string][] = [
   ['school_name', 'Tên trường'],
   ['class_name', 'Tên lớp'],
+  ['brand_title', 'Tên trạm (chủ đề của lớp)'],
   ['school_year', 'Năm học'],
   ['teacher_name', 'Giáo viên chủ nhiệm'],
   ['slogan', 'Slogan'],
@@ -45,6 +46,8 @@ export function ClassInfoSection({
               <Input
                 {...a}
                 type="text"
+                maxLength={k === 'brand_title' ? 60 : undefined}
+                placeholder={k === 'brand_title' ? 'Để trống: tự lấy từ tên lớp, vd Trạm không gian Năm 8' : undefined}
                 value={vals[k]}
                 disabled={pending}
                 onChange={(e) => setVals({ ...vals, [k]: e.target.value })}

@@ -2,6 +2,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { toVietnameseMessage } from '@/lib/errors'
@@ -14,7 +15,8 @@ function refresh() {
   revalidatePath('/', 'layout')
 }
 
-export async function saveAvatar(target: AvatarTarget, avatarId: string): Promise<{ error?: string }> {
+/** avatarId = null: gỡ avatar, người đó về avatar mặc định. */
+export async function saveAvatar(target: AvatarTarget, avatarId: string | null): Promise<{ error?: string }> {
   const user = await requireTeacher()
   const supabase = await createServerSupabase()
   const { error } =
@@ -52,6 +54,18 @@ export async function uploadAvatar(form: FormData): Promise<{ error?: string; av
   }
   refresh()
   return { avatarId: data.id }
+}
+
+/** Xóa một ảnh avatar tải lên khỏi thư viện (RPC), rồi xóa file trong storage. Người đang dùng ảnh về mặc định. */
+export async function deleteAvatarUpload(id: string): Promise<{ error?: string }> {
+  await requireTeacher()
+  if (!z.guid().safeParse(id).success) return { error: toVietnameseMessage('avatar_not_found') }
+  const supabase = await createServerSupabase()
+  const { data, error } = await supabase.rpc('delete_avatar_upload', { p_id: id })
+  if (error) return { error: toVietnameseMessage(error.message) }
+  if (typeof data === 'string' && data) await supabase.storage.from('class-media').remove([data])
+  refresh()
+  return {}
 }
 
 export async function setStudentCanChangeAvatar(on: boolean): Promise<{ error?: string }> {
