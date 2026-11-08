@@ -123,12 +123,56 @@
   height: 92px;
   margin-top: 4px;
 }
-@media (max-width: 639px) and (max-height: 700px) {
+/* Điện thoại: dùng svh (không đổi khi thanh địa chỉ ẩn/hiện) thay vì media query theo chiều cao.
+   Khung cao hơn và các hình xếp ba vùng (trái, giữa, phải) để không chồng lên nhau. */
+@media (max-width: 639px) {
+  .sp {
+    min-height: 100svh;
+  }
   .sp-art {
-    height: 70px;
+    height: clamp(120px, 20svh, 160px);
   }
   .sp-title-img {
-    height: 64px;
+    height: clamp(62px, 10svh, 82px);
+  }
+  .sp-group {
+    max-width: 44%;
+  }
+  .sp-art .sp-saturn {
+    left: 2%;
+    top: 0;
+    width: 48px;
+  }
+  .sp-art .sp-mascot {
+    left: 19%;
+    top: auto;
+    bottom: 0;
+    width: 34px;
+  }
+  .sp-art .sp-robot {
+    left: 1%;
+    bottom: 0;
+    width: 52px;
+  }
+  .sp-art .sp-rocket {
+    right: 3%;
+    top: 0;
+    width: 42px;
+  }
+  .sp-trail {
+    display: none;
+  }
+  .sp-art .sp-books {
+    right: 2%;
+    bottom: 0;
+    width: 56px;
+  }
+  .sp-art .sp-saturn-2 {
+    display: none;
+  }
+  .sp-art .sp-earth {
+    height: 100%;
+    bottom: 0;
   }
 }
 .sp-art > * {
