@@ -1,5 +1,77 @@
 import { describe, expect, it } from 'vitest'
-import { formatMyStars, formatStudentStars, formatTimetableReply, formatTopStars } from '@/lib/chat/format'
+import {
+  formatClassSize,
+  formatClassStars,
+  formatMyStars,
+  formatRewards,
+  formatStudentStars,
+  formatSubjectPeriods,
+  formatTeacherName,
+  formatTimetableReply,
+  formatTopStars,
+} from '@/lib/chat/format'
+
+describe('formatClassSize / formatTeacherName', () => {
+  it('sĩ số', () => {
+    expect(formatClassSize(35)).toBe('Lớp mình hiện có 35 học sinh.')
+  })
+  it('cô chủ nhiệm, không lặp chữ "cô"', () => {
+    expect(formatTeacherName('Nguyễn Mai Khanh')).toBe('Cô chủ nhiệm lớp mình là cô Nguyễn Mai Khanh.')
+    expect(formatTeacherName('Cô Mai Khanh')).toBe('Cô chủ nhiệm lớp mình là cô Mai Khanh.')
+    expect(formatTeacherName('  ')).toBeNull()
+  })
+})
+
+describe('formatClassStars', () => {
+  it('tổng cộng và trừ của tuần hoặc tháng', () => {
+    expect(formatClassStars('week', { awarded: 86, penalized: 4 })).toBe('Tuần này cả lớp được cộng 86 sao và bị trừ 4 sao.')
+    expect(formatClassStars('month', { awarded: 0, penalized: 0 })).toBe('Tháng này cả lớp được cộng 0 sao và bị trừ 0 sao.')
+  })
+})
+
+describe('formatRewards', () => {
+  const rewards = [
+    { name: 'Bút chì màu', cost: 20, left: 5 },
+    { name: 'Sổ tay', cost: 35, left: 0 },
+  ]
+  it('liệt kê, quà hết thì ghi hết', () => {
+    expect(formatRewards(rewards)).toBe('Các phần quà đang có:\n- Bút chì màu · 20 sao · còn 5\n- Sổ tay · 35 sao · hết')
+  })
+  it('một món cụ thể', () => {
+    expect(formatRewards(rewards, 'Bút chì màu')).toBe('Bút chì màu cần 20 sao, còn 5 phần.')
+    expect(formatRewards(rewards, 'Sổ tay')).toBe('Sổ tay cần 35 sao, hiện đã hết.')
+  })
+  it('chưa có quà nào', () => {
+    expect(formatRewards([])).toBe('Hiện lớp chưa có quà nào để đổi.')
+  })
+  it('liệt kê tối đa 10 món', () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({ name: `Quà ${i + 1}`, cost: 10, left: 1 }))
+    const out = formatRewards(many).split('\n')
+    expect(out).toHaveLength(12)
+    expect(out[11]).toBe('…và 2 món nữa.')
+  })
+})
+
+describe('formatSubjectPeriods', () => {
+  const subjects = [
+    { name: 'Toán', usedCount: 5 },
+    { name: 'Tiếng Việt', usedCount: 8 },
+    { name: 'Mĩ thuật', usedCount: 0 },
+  ]
+  it('một môn', () => {
+    expect(formatSubjectPeriods(subjects, 'Toán')).toBe('Toán học 5 tiết mỗi tuần.')
+    expect(formatSubjectPeriods(subjects, 'Mĩ thuật')).toBe('Mĩ thuật chưa có tiết nào trong tuần.')
+  })
+  it('môn không có trong lớp', () => {
+    expect(formatSubjectPeriods(subjects, 'Võ')).toBe('Mình không thấy môn Võ trong thời khóa biểu.')
+  })
+  it('cả tuần, bỏ môn không có tiết, kèm tổng', () => {
+    expect(formatSubjectPeriods(subjects)).toBe('Số tiết mỗi tuần:\n- Toán: 5 tiết\n- Tiếng Việt: 8 tiết\nTổng cộng 13 tiết.')
+  })
+  it('thời khóa biểu trống', () => {
+    expect(formatSubjectPeriods([{ name: 'Toán', usedCount: 0 }])).toBe('Thời khóa biểu chưa có tiết nào.')
+  })
+})
 
 const subjects = [
   { id: 's1', name: 'Toán', color: 'blue' },
