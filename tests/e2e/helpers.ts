@@ -20,3 +20,9 @@ export async function login(page: Page, tab: 'Giáo viên' | 'Học sinh', usern
   await page.getByLabel('Mật khẩu').fill(pw(username))
   await page.getByRole('button', { name: 'Cất cánh' }).click()
 }
+
+/** Dưới lg menu cô giáo là ngăn kéo: bấm ☰ để mở trước khi thao tác với các liên kết trong đó. */
+export async function openTeacherMenu(page: Page) {
+  const btn = page.getByRole('button', { name: 'Mở menu' })
+  if (await btn.isVisible()) await btn.click()
+}
