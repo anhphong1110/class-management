@@ -10,7 +10,7 @@ type Info = { role: 'teacher' | 'student' | null; theme: string | null; suggesti
 
 const OPEN_KEY = 'bong-chat-open'
 const SEND_ICON = 'M22 2L11 13M22 2l-7 20-4-9-9-4z'
-const LOGO = '/brand/chat/bong.png'
+const LOGO = '/brand/chat/bong.jpg'
 
 function readOpen(): boolean {
   try {
@@ -127,10 +127,10 @@ export function ChatWidget() {
         <div
           role="dialog"
           aria-label="Khung chat với Bông"
-          className="clay-card fixed inset-x-3 bottom-[160px] top-14 z-40 flex flex-col overflow-hidden text-ink shadow-pop sm:inset-x-auto sm:right-5 sm:top-auto sm:bottom-[104px] sm:h-[450px] sm:w-[340px] lg:bottom-[104px]"
+          className="clay-card fixed inset-x-3 bottom-[160px] top-14 z-40 flex flex-col overflow-hidden text-ink shadow-pop sm:inset-x-auto sm:right-5 sm:top-auto sm:bottom-[104px] sm:h-[540px] sm:max-h-[calc(100dvh-8rem)] sm:w-[408px] lg:bottom-[104px]"
         >
           <div className="flex items-center gap-2.5 bg-primary py-3 pl-3.5 pr-3 text-white">
-            <img src={LOGO} alt="" width={40} height={40} className="size-10 flex-none rounded-full border-2 border-white bg-white object-cover" />
+            <img src={LOGO} alt="" width={40} height={40} className="size-10 flex-none rounded-full border-2 border-white bg-white object-contain p-0.5" />
             <div className="min-w-0 flex-1">
               <div className="font-display text-[18px] font-extrabold leading-none">Bông</div>
               <div className="text-[12px] font-bold">Bạn đồng hành học tập</div>
@@ -199,9 +199,9 @@ export function ChatWidget() {
         onClick={() => setOpenPersist(!open)}
         aria-label={open ? 'Đóng khung chat với Bông' : 'Mở khung chat với Bông'}
         aria-expanded={open}
-        className="clay-press fixed bottom-[92px] right-3 z-40 size-14 overflow-hidden rounded-full border-[3px] border-white bg-primary p-0 [--edge:var(--primary-deep)] sm:right-5 lg:bottom-5 lg:size-[68px]"
+        className="clay-press fixed bottom-[92px] right-3 z-40 size-14 overflow-hidden rounded-full border-[3px] border-primary bg-white p-1 [--edge:var(--primary-deep)] sm:right-5 lg:bottom-5 lg:size-[68px]"
       >
-        <img src={LOGO} alt="" width={68} height={68} className="size-full object-cover" />
+        <img src={LOGO} alt="" width={68} height={68} className="size-full object-contain" />
       </button>
     </div>
   )

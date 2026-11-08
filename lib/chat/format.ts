@@ -7,7 +7,7 @@ const DAY_MS = 86_400_000
 
 export type TimetableData = {
   slots: Record<string, string | null>
-  subjects: { id: string; name: string; color: string }[]
+  subjects: { id: string; name: string; color?: string }[]
   saturday: boolean
 }
 
@@ -26,6 +26,13 @@ export function formatTimetableReply(day: TimetableDay, now: Date, tt: Timetable
   if (weekday === 0) return `${label} lớp mình được nghỉ, không có tiết học.`
   if (weekday === 6 && !tt.saturday) return `${label} lớp mình không học.`
 
+  const lines = scheduleLines(weekday, tt)
+  if (lines.length === 0) return `${label} chưa có tiết nào trong thời khóa biểu.`
+  return [`${label} lớp mình học:`, ...lines].join('\n')
+}
+
+/** Các dòng "Sáng: Tiết 1 Toán, ..." và "Chiều: ..." của một thứ; buổi trống thì bỏ. */
+export function scheduleLines(weekday: number, tt: TimetableData): string[] {
   const byId = new Map(tt.subjects.map((s) => [s.id, s.name]))
   const lines: string[] = []
   for (const session of ['morning', 'afternoon'] as const) {
@@ -35,8 +42,7 @@ export function formatTimetableReply(day: TimetableDay, now: Date, tt: Timetable
     })
     if (parts.length) lines.push(`${session === 'morning' ? 'Sáng' : 'Chiều'}: ${parts.join(', ')}`)
   }
-  if (lines.length === 0) return `${label} chưa có tiết nào trong thời khóa biểu.`
-  return [`${label} lớp mình học:`, ...lines].join('\n')
+  return lines
 }
 
 /** Một dòng của leaderboard_for_period (số có thể là chuỗi khi qua PostgREST). */
@@ -73,3 +79,49 @@ export function formatStudentStars(list: StudentStarsData[]): string {
     ...list.map((s) => `- ${s.fullName}: ${s.competition} sao thi đua, ${s.available} sao đổi quà`),
   ].join('\n')
 }
+
+export function formatClassSize(n: number): string {
+  return `Lớp mình hiện có ${n} học sinh.`
+}
+
+/** Null khi chưa nhập tên cô chủ nhiệm. */
+export function formatTeacherName(teacherName: string): string | null {
+  const name = teacherName.trim().replace(/^c[oô]\s+/iu, '')
+  return name ? `Cô chủ nhiệm lớp mình là cô ${name}.` : null
+}
+
+export function formatClassStars(period: 'week' | 'month', t: { awarded: number; penalized: number }): string {
+  return `${PERIOD_LABELS[period]} cả lớp được cộng ${t.awarded} sao và bị trừ ${t.penalized} sao.`
+}
+
+export type RewardData = { name: string; cost: number; left: number }
+const MAX_REWARDS = 10
+
+export function formatRewards(rewards: RewardData[], name?: string): string {
+  if (rewards.length === 0) return 'Hiện lớp chưa có quà nào để đổi.'
+  const one = name ? rewards.find((r) => normalizeName(r.name) === normalizeName(name)) : undefined
+  if (one) {
+    return one.left > 0
+      ? `${one.name} cần ${one.cost} sao, còn ${one.left} phần.`
+      : `${one.name} cần ${one.cost} sao, hiện đã hết.`
+  }
+  const lines = rewards.slice(0, MAX_REWARDS).map((r) => `- ${r.name} · ${r.cost} sao · ${r.left > 0 ? `còn ${r.left}` : 'hết'}`)
+  const more = rewards.length - MAX_REWARDS
+  return ['Các phần quà đang có:', ...lines, ...(more > 0 ? [`…và ${more} món nữa.`] : [])].join('\n')
+}
+
+export type SubjectPeriods = { name: string; usedCount: number }
+
+export function formatSubjectPeriods(subjects: SubjectPeriods[], subject?: string): string {
+  if (subject) {
+    const one = subjects.find((s) => s.name === subject) ?? subjects.find((s) => normalizeName(s.name) === normalizeName(subject))
+    if (!one) return `Mình không thấy môn ${subject} trong thời khóa biểu.`
+    return one.usedCount > 0 ? `${one.name} học ${one.usedCount} tiết mỗi tuần.` : `${one.name} chưa có tiết nào trong tuần.`
+  }
+  const used = subjects.filter((s) => s.usedCount > 0)
+  if (used.length === 0) return 'Thời khóa biểu chưa có tiết nào.'
+  const total = used.reduce((sum, s) => sum + s.usedCount, 0)
+  return ['Số tiết mỗi tuần:', ...used.map((s) => `- ${s.name}: ${s.usedCount} tiết`), `Tổng cộng ${total} tiết.`].join('\n')
+}
+
+const normalizeName = (s: string) => s.trim().toLowerCase()

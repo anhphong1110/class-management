@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSessionUser } from '@/lib/auth/session'
-import { maskNames, matchIntent } from '@/lib/chat/intents'
-import { classifyWithLlm } from '@/lib/chat/llm'
+import { EMPTY_CATALOG, maskNames, matchIntent, needsCatalog, normalize } from '@/lib/chat/intents'
+import { classifyWithLlm, type LlmResult } from '@/lib/chat/llm'
+import { createBreaker, createTtlCache } from '@/lib/chat/cache'
 import { createRateLimiter } from '@/lib/chat/rate-limit'
+import { buildClassFacts } from '@/lib/chat/facts'
 import {
   CHAT_ERROR,
+  loadCatalog,
   loadClassTheme,
   loadFlags,
   loadPublicTheme,
@@ -17,6 +20,9 @@ import { CHAT_UNKNOWN, suggestionsFor } from '@/lib/chat/suggestions'
 
 const MAX_MESSAGE_LENGTH = 200
 const limiter = createRateLimiter({ max: 20, windowMs: 60_000 })
+// Giữ hạn mức gói miễn phí: cùng một câu hỏi trong 5 phút dùng lại kết quả, và gặp 429 thì ngừng gọi AI 60 giây.
+const llmCache = createTtlCache<LlmResult>({ ttlMs: 5 * 60_000 })
+const llmBreaker = createBreaker({ cooldownMs: 60_000 })
 
 const Body = z.object({ message: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH) })
 
@@ -55,16 +61,33 @@ export async function POST(request: Request) {
 
     // Giáo viên được hỏi tên từng bạn; học sinh không, nên không cần danh sách để hiểu câu.
     const roster = user.role === 'teacher' ? await loadTeacherRoster(user) : []
-    let intent = matchIntent(message, roster)
+    const catalog = needsCatalog(message) ? await loadCatalog(user, flags) : EMPTY_CATALOG
+    let intent = matchIntent(message, roster, catalog)
+    let reply: string | null = null
 
-    if (!intent && process.env.GEMINI_API_KEY) {
-      // Câu tự do: nhờ model miễn phí chỉ để hiểu ý. Tên học sinh luôn được che trước khi gửi đi.
-      const { masked, refs } = maskNames(message, await loadRosterForMasking(user))
-      intent = await classifyWithLlm(masked, refs, { apiKey: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL || undefined })
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!intent && apiKey && !llmBreaker.isOpen()) {
+      // Luật không hiểu: nhờ model miễn phí. Model nhận dữ liệu chung của lớp và câu hỏi đã che tên
+      // (học sinh, cô giáo), không nhận tên người nào.
+      const key = `${user.classId}|${user.role}|${normalize(message)}`
+      let result = llmCache.get(key)
+      if (!result) {
+        const { masked, refs } = maskNames(message, await loadRosterForMasking(user))
+        const facts = await buildClassFacts(user, flags)
+        result =
+          (await classifyWithLlm(masked, refs, facts, {
+            apiKey,
+            model: process.env.GEMINI_MODEL || undefined,
+            onRateLimit: () => llmBreaker.trip(),
+          })) ?? undefined
+        if (result) llmCache.set(key, result)
+      }
+      if (result && 'answer' in result) reply = result.answer
+      else if (result) intent = result.intent
     }
 
-    if (!intent) return NextResponse.json({ reply: CHAT_UNKNOWN, suggestions }, { headers: noStore })
-    return NextResponse.json({ reply: await runIntent(intent, user, flags), suggestions }, { headers: noStore })
+    if (reply === null) reply = intent ? await runIntent(intent, user, flags) : CHAT_UNKNOWN
+    return NextResponse.json({ reply, suggestions }, { headers: noStore })
   } catch (e) {
     // Chỉ ghi lý do kỹ thuật, không ghi nội dung câu hỏi.
     console.error('chat POST failed:', e instanceof Error ? e.message : 'unknown')
