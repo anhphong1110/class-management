@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { login } from './helpers'
+import { login, openTeacherMenu } from './helpers'
 
 test('đăng nhập: hiện/ẩn ký tự mật khẩu và nhớ tab lần trước', async ({ page }) => {
   await page.goto('/dang-nhap')
@@ -30,6 +30,7 @@ test('tab đăng nhập đổi được bằng phím mũi tên', async ({ page }
 test('menu cô giáo chia nhóm nhưng vẫn đủ 14 liên kết', async ({ page }, info) => {
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
+  await openTeacherMenu(page)
   const nav = page.getByRole('navigation', { name: 'Menu chính' })
   await expect(nav.getByRole('link')).toHaveCount(14)
   if (info.project.name === 'desktop') {

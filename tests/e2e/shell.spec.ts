@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { TEACHER_NAV } from '../../components/layout/nav'
-import { admin, login } from './helpers'
+import { admin, login, openTeacherMenu } from './helpers'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -26,6 +26,7 @@ const CLASS_ID = '00000000-0000-0000-0000-000000000058'
 test('Sidebar và Header ở /tong-quan', async ({ page }, info) => {
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
+  await openTeacherMenu(page)
   const nav = page.getByRole('navigation', { name: 'Menu chính' })
   await expect(nav.getByRole('link')).toHaveCount(14)
   await expect(nav.getByRole('link', { name: 'Tổng quan' })).toHaveAttribute('aria-current', 'page')
@@ -40,6 +41,7 @@ test('bấm từng link Sidebar không lỗi', async ({ page }) => {
   await expect(page).toHaveURL(/\/tong-quan$/)
   for (const item of TEACHER_NAV) {
     if (item.href === '/trinh-chieu') continue // không có Sidebar sau khi vào
+    await openTeacherMenu(page)
     const nav = page.getByRole('navigation', { name: 'Menu chính' })
     const res = await Promise.all([
       page.waitForURL(`**${item.href}`),
@@ -56,29 +58,31 @@ test('bấm từng link Sidebar không lỗi', async ({ page }) => {
 test('bố cục responsive', async ({ page }, info) => {
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
-  const m = await page.evaluate(() => {
-    const aside = document.querySelector('aside')!.getBoundingClientRect()
-    const header = document.querySelector('header')!.getBoundingClientRect()
-    return {
-      asideW: aside.width,
-      gap: header.top - aside.bottom,
-      dir: getComputedStyle(document.querySelector('aside nav ul')!).flexDirection,
-      innerW: window.innerWidth,
-      fits: document.documentElement.scrollWidth <= window.innerWidth,
-    }
-  })
-  expect(m.fits).toBe(true)
+  const fits = () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+  expect(await fits()).toBe(true)
   if (info.project.name === 'desktop') {
-    expect(m.asideW).toBeGreaterThanOrEqual(248)
-    expect(m.asideW).toBeLessThanOrEqual(272)
-    expect(m.dir).toBe('column')
+    const w = await page.evaluate(() => document.querySelector('aside')!.getBoundingClientRect().width)
+    expect(w).toBeGreaterThanOrEqual(248)
+    expect(w).toBeLessThanOrEqual(272)
+    await expect(page.getByRole('button', { name: 'Mở menu' })).toBeHidden()
     await expect(page.getByTestId('sidebar-foot')).toBeVisible()
-  } else {
-    expect(m.asideW).toBeGreaterThanOrEqual(m.innerW - 40)
-    expect(m.gap).toBeLessThanOrEqual(24)
-    expect(m.dir).toBe('row')
-    await expect(page.getByTestId('sidebar-foot')).toBeHidden()
+    return
   }
+  // Điện thoại và máy tính bảng: menu ẩn sẵn, chỉ có thanh trên với nút ☰.
+  const nav = page.getByRole('navigation', { name: 'Menu chính' })
+  await expect(nav).toBeHidden()
+  await page.getByRole('button', { name: 'Mở menu' }).click()
+  await expect(nav).toBeVisible()
+  await expect(nav.getByRole('link')).toHaveCount(14)
+  await expect(page.getByTestId('sidebar-foot')).toBeVisible()
+  expect(await fits()).toBe(true)
+  // Esc đóng ngăn kéo; chọn một mục thì đi tới trang đó và ngăn kéo tự đóng.
+  await page.keyboard.press('Escape')
+  await expect(nav).toBeHidden()
+  await page.getByRole('button', { name: 'Mở menu' }).click()
+  await nav.getByRole('link', { name: 'Điểm danh', exact: true }).click()
+  await expect(page).toHaveURL(/\/diem-danh$/)
+  await expect(nav).toBeHidden()
 })
 
 test('theme pink đổi --primary và bg-primary', async ({ page }) => {
