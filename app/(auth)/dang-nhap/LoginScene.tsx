@@ -12,10 +12,10 @@ const DIR = '/brand/login'
 // Quả Trái Đất sau nhóm nhân vật: có file trai-dat.webp thì hiện, chưa có thì chỉ còn vầng sáng mềm.
 const hasEarth = () => existsSync(join(process.cwd(), 'public', 'brand', 'login', 'trai-dat.webp'))
 
-function Deco({ src, className, style, eager }: { src: string; className: string; style?: React.CSSProperties; eager?: boolean }) {
+function Deco({ src, className, style }: { src: string; className: string; style?: React.CSSProperties }) {
   // Ảnh trang trí tĩnh, đã tối ưu sẵn: dùng <img> thường (không cần pipeline ảnh của Next).
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={`${DIR}/${src}`} alt="" aria-hidden="true" decoding="async" loading={eager ? 'eager' : 'lazy'} draggable={false} className={`sp-deco ${className}`} style={style} />
+  return <img src={`${DIR}/${src}`} alt="" aria-hidden="true" decoding="async" loading="eager" draggable={false} className={`sp-deco ${className}`} style={style} />
 }
 
 export default function LoginScene({
