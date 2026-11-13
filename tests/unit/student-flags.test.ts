@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { STUDENT_NAV, STUDENT_TITLES, visibleStudentPages, type StudentSettings } from '@/lib/student/flags'
+import { STUDENT_NAV, STUDENT_TITLES, studentPageForPath, visibleStudentPages, type StudentSettings } from '@/lib/student/flags'
 
 const ALL_ON: StudentSettings = {
   feature_rewards: true,
@@ -72,4 +72,14 @@ describe('visibleStudentPages', () => {
   it('mỗi cờ chỉ mở đúng trang của nó', () => {
     expect([...visibleStudentPages({ ...ALL_OFF, student_can_view_rank: true })].sort()).toEqual(['home', 'hub', 'rank'])
   })
+})
+
+describe('studentPageForPath', () => {
+  it.each([
+    ['/em', 'home'], ['/em/sao', 'stars'], ['/em/xep-hang', 'rank'], ['/em/doi-qua', 'gifts'],
+    ['/em/thoi-khoa-bieu', 'tt'], ['/em/diem-danh', 'att'], ['/em/thong-bao', 'news'],
+    ['/em/kho-hoc-lieu', 'hub'], ['/em/xep-hang/abc', 'rank'],
+  ])('%s → %s', (p, id) => expect(studentPageForPath(p)).toBe(id))
+  it.each(['/em/xep-hangx', '/em/khong-co', '/tong-quan', '/emx', '/'])('%s → null', (p) =>
+    expect(studentPageForPath(p)).toBeNull())
 })

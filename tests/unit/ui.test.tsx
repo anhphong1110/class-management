@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Notice } from "@/components/ui/Notice";
 import { Switch } from "@/components/ui/Switch";
+import TeacherLoading from "@/app/(teacher)/loading";
+import StudentLoading from "@/app/em/loading";
 
 afterEach(cleanup);
 
@@ -191,5 +193,15 @@ describe("Notice", () => {
   it("success uses status role", () => {
     render(<Notice tone="success">Xong</Notice>);
     expect(screen.getByRole("status").textContent).toBe("Xong");
+  });
+});
+
+describe("loading của hai khu", () => {
+  it.each([
+    ["cô giáo", TeacherLoading],
+    ["học sinh", StudentLoading],
+  ])("loading của hai khu hiện khung xương (%s)", (_name, Loading) => {
+    render(<Loading />);
+    expect(screen.getByRole("status", { name: "Đang tải" })).toBeInTheDocument();
   });
 });

@@ -2,6 +2,9 @@ import type { Role } from '@/lib/domain/types'
 
 export type RouteDecision = { action: 'allow' } | { action: 'redirect'; to: string }
 
+/** Header do middleware ghi đè bằng đường dẫn thật để layout biết trang đang mở (client không giả được). */
+export const PATHNAME_HEADER = 'x-pathname'
+
 const PUBLIC_PREFIXES = ['/_next', '/brand']
 // /api/chat tự kiểm phiên và trả 401 khi chưa đăng nhập; nếu không mở ở đây thì học sinh bị đẩy về /em,
 // khách bị đẩy về trang đăng nhập và khung chat không hoạt động.

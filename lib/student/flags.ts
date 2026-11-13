@@ -16,6 +16,13 @@ export const STUDENT_NAV: StudentNavItem[] = [
   { id: 'hub', label: 'Kho học liệu', href: '/em/kho-hoc-lieu', icon: ICONS.book },
 ]
 
+/** Trang học sinh ứng với một đường dẫn (`/em/xep-hang/abc` → 'rank'); không phải trang học sinh thì null. */
+export function studentPageForPath(pathname: string): StudentPageId | null {
+  if (pathname === '/em') return 'home'
+  const hit = STUDENT_NAV.find((n) => n.id !== 'home' && (pathname === n.href || pathname.startsWith(n.href + '/')))
+  return hit?.id ?? null
+}
+
 /** Tiêu đề trang ở thanh trên, chép từ TITLES của thiết kế. */
 export const STUDENT_TITLES: Record<StudentPageId, string> = {
   home: 'Trang chủ',

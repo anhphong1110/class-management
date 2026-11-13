@@ -888,3 +888,47 @@
     animation: none !important;
   }
 }
+
+/* ---------- Màn chờ khi đăng nhập (LaunchOverlay, portal ra <body> nên không dùng biến --sp-* của .sp) ---------- */
+.sp-launch {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #fff;
+  background:
+    radial-gradient(55% 45% at 14% 82%, rgb(246 83 166 / 0.42), transparent 70%),
+    radial-gradient(42% 38% at 88% 10%, rgb(50 217 245 / 0.28), transparent 70%),
+    radial-gradient(52% 46% at 34% 38%, rgb(148 112 245 / 0.5), transparent 70%),
+    linear-gradient(165deg, #24246b 0%, #514bdb 52%, #9470f5 100%);
+  /* Hiện trễ 300ms: lần gõ sai mật khẩu quay lại ngay thì không nháy. Mặc định opacity 1 nên khi animation bị tắt vẫn hiện. */
+  animation: sp-launch-in 200ms ease-out 300ms both;
+}
+.sp-launch-rocket {
+  width: 96px;
+  filter: drop-shadow(0 8px 12px rgb(14 10 80 / 0.4));
+  animation: sp-hover 3s ease-in-out infinite;
+}
+.sp-launch-text {
+  margin: 0;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+}
+@keyframes sp-launch-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-launch {
+    animation-duration: 0s;
+  }
+  .sp-launch-rocket {
+    animation: none;
+  }
+}

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Icon, ICONS } from '@/components/ui/Icon'
+import { LinkPendingIcon } from '@/components/ui/LinkPendingIcon'
 import { brandLines } from '@/lib/classes/brand'
 import { BrandBlocks, NavIconChip } from './NavParts'
 import { TEACHER_NAV, TEACHER_NAV_META } from './nav'
@@ -154,7 +155,14 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
                       : 'font-bold text-ink hover:bg-primary-soft hover:text-primary-deep'
                   }`}
                 >
-                  <NavIconChip icon={it.icon} on={on} tone={meta?.tone ?? 'blue'} />
+                  {/* Chỉ mục trình chiếu (sang khu khác, layout mới chạy trước khung xương) mới cần vòng quay. */}
+                  {it.id === 'display' ? (
+                    <LinkPendingIcon>
+                      <NavIconChip icon={it.icon} on={on} tone={meta?.tone ?? 'blue'} />
+                    </LinkPendingIcon>
+                  ) : (
+                    <NavIconChip icon={it.icon} on={on} tone={meta?.tone ?? 'blue'} />
+                  )}
                   {it.label}
                 </Link>
               </li>
@@ -174,7 +182,9 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
           href="/em"
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ctl border-2 border-primary-strong bg-white px-3 text-[14px] font-extrabold text-primary-strong transition-colors hover:bg-primary-soft hover:text-primary-deep"
         >
-          <Icon d={ICONS.eye} size={18} />
+          <LinkPendingIcon>
+            <Icon d={ICONS.eye} size={18} />
+          </LinkPendingIcon>
           Xem như học sinh
         </Link>
       </div>
