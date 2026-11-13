@@ -1,3 +1,5 @@
+import { ICONS } from '@/components/ui/Icon'
+
 export type NavItem = { id: string; label: string; href: string; icon: string }
 
 export const TEACHER_NAV: NavItem[] = [
@@ -13,6 +15,7 @@ export const TEACHER_NAV: NavItem[] = [
   { id: 'missions', label: 'Nhiệm vụ và huy hiệu', href: '/nhiem-vu', icon: 'M4 22V4M4 4h13l-2 4 2 4H4' },
   { id: 'display', label: 'Chế độ trình chiếu', href: '/trinh-chieu', icon: 'M3 4h18v12H3zM8 21h8M12 16v5' },
   { id: 'report', label: 'Thống kê – Báo cáo', href: '/bao-cao', icon: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
+  { id: 'hub', label: 'Kho học liệu', href: '/kho-hoc-lieu', icon: ICONS.book },
   { id: 'settings', label: 'Cài đặt', href: '/cai-dat', icon: 'M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M14 4v4M8 10v4M18 16v4' },
   { id: 'profile', label: 'Hồ sơ và avatar', href: '/ho-so', icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8' },
 ]
@@ -35,6 +38,7 @@ export const TEACHER_NAV_META: Record<string, { group: string; tone: NavTone }> 
   missions: { group: 'Lịch và nhiệm vụ', tone: 'star' },
   display: { group: 'Công cụ', tone: 'purple' },
   report: { group: 'Công cụ', tone: 'mint' },
+  hub: { group: 'Công cụ', tone: 'star' },
   settings: { group: 'Cài đặt', tone: 'blue' },
   profile: { group: 'Cài đặt', tone: 'pink' },
 }

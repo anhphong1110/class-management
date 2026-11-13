@@ -17,6 +17,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/thong-bao': 'Tín hiệu từ trạm chỉ huy',
   '/nhiem-vu': 'Nhiệm vụ phi hành gia',
   '/bao-cao': 'Thống kê – Báo cáo',
+  '/kho-hoc-lieu': 'Kho học liệu',
   '/cai-dat': 'Cài đặt',
   '/ho-so': 'Hồ sơ và avatar',
 }
@@ -27,7 +28,7 @@ test('Sidebar và Header ở /tong-quan', async ({ page }, info) => {
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
   const nav = page.getByRole('navigation', { name: 'Menu chính' })
-  await expect(nav.getByRole('link')).toHaveCount(14)
+  await expect(nav.getByRole('link')).toHaveCount(15)
   await expect(nav.getByRole('link', { name: 'Tổng quan' })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByText('Lớp Năm 8 (5/8) · 2026 – 2027')).toBeVisible()
   await expect(page.getByText(/^(Thứ [^,]+|Chủ Nhật), \d{2}\/\d{2}\/\d{4}$/)).toBeVisible()
