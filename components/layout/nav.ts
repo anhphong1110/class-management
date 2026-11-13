@@ -55,4 +55,5 @@ export const STUDENT_NAV_TONES: Record<string, NavTone> = {
   tt: 'blue',
   att: 'mint',
   news: 'purple',
+  hub: 'purple',
 }
