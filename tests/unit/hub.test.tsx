@@ -27,13 +27,20 @@ describe('getLearningHubUrl', () => {
 describe('HubFrame', () => {
   const url = 'https://abc.netlify.app/#/khoi/5'
 
-  it('iframe có title, src, lazy, không sandbox', () => {
+  it('iframe có title, src, lazy', () => {
     render(<HubFrame url={url} />)
     const frame = screen.getByTitle('Kho học liệu')
     expect(frame.tagName).toBe('IFRAME')
     expect(frame).toHaveAttribute('src', url)
     expect(frame).toHaveAttribute('loading', 'lazy')
-    expect(frame.hasAttribute('sandbox')).toBe(false)
+  })
+  it('sandbox cho game và sách lật mở tab mới bình thường nhưng không cho trang nhúng chuyển cả trang lớp', () => {
+    render(<HubFrame url={url} />)
+    const tokens = (screen.getByTitle('Kho học liệu').getAttribute('sandbox') ?? '').split(/\s+/).filter(Boolean)
+    expect(tokens).toEqual(
+      expect.arrayContaining(['allow-scripts', 'allow-same-origin', 'allow-popups', 'allow-popups-to-escape-sandbox']),
+    )
+    expect(tokens.some((t) => t.startsWith('allow-top-navigation'))).toBe(false)
   })
   it('luôn có nút Mở trong tab mới ngoài iframe', () => {
     render(<HubFrame url={url} />)

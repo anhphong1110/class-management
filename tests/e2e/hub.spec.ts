@@ -30,13 +30,15 @@ test('học sinh: mở Kho học liệu từ menu, khung không bị thanh tab �
   await Promise.all([page.waitForURL('**/em/kho-hoc-lieu'), menu.getByRole('link', { name: 'Kho học liệu' }).click()])
   await expectFrame(page)
   if (page.viewportSize()!.width < 1024) {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-    const gap = await page.evaluate(() => {
-      const frame = document.querySelector('iframe[title="Kho học liệu"]')!.getBoundingClientRect()
+    // Cả khung phải nằm gọn trong vùng nhìn thấy phía trên thanh tab đáy (cuộn khung vào đầu màn hình rồi đo).
+    const fit = await page.evaluate(() => {
+      const el = document.querySelector('iframe[title="Kho học liệu"]')!
+      el.scrollIntoView({ block: 'start' })
+      const frame = el.getBoundingClientRect()
       const bar = document.querySelector('nav[aria-label="Menu học sinh"]')!.getBoundingClientRect()
-      return bar.top - frame.bottom
+      return { frameHeight: frame.height, barTop: bar.top }
     })
-    expect(gap).toBeGreaterThanOrEqual(0)
+    expect(fit.frameHeight).toBeLessThanOrEqual(fit.barTop)
   }
 })
 

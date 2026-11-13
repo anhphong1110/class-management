@@ -27,11 +27,11 @@ test('tab đăng nhập đổi được bằng phím mũi tên', async ({ page }
   await expect(teacher).toHaveAttribute('aria-selected', 'true')
 })
 
-test('menu cô giáo chia nhóm nhưng vẫn đủ 14 liên kết', async ({ page }, info) => {
+test('menu cô giáo chia nhóm nhưng vẫn đủ 15 liên kết', async ({ page }, info) => {
   await login(page, 'Giáo viên', 'co.khanh')
   await expect(page).toHaveURL(/\/tong-quan$/)
   const nav = page.getByRole('navigation', { name: 'Menu chính' })
-  await expect(nav.getByRole('link')).toHaveCount(14)
+  await expect(nav.getByRole('link')).toHaveCount(15)
   if (info.project.name === 'desktop') {
     for (const group of ['Lớp học', 'Thi đua và quà', 'Lịch và nhiệm vụ', 'Công cụ', 'Cài đặt']) {
       await expect(nav.locator('div[aria-hidden=true]').filter({ hasText: new RegExp(`^${group}$`, 'i') })).toBeVisible()

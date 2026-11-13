@@ -27,6 +27,9 @@ export function HubFrame({ url = getLearningHubUrl() }: { url?: string }) {
           title="Kho học liệu"
           loading="lazy"
           allowFullScreen
+          // Không có allow-top-navigation*: trang nhúng không tự chuyển được cả trang lớp. Link target=_blank trong đó
+          // vẫn mở tab mới bình thường nhờ allow-popups-to-escape-sandbox.
+          sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-presentation"
           referrerPolicy="no-referrer-when-downgrade"
           className="block h-[calc(100dvh-14rem)] min-h-[480px] w-full border-0 lg:h-[calc(100dvh-9rem)]"
         />

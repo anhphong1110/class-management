@@ -15,7 +15,7 @@
 - Nhãn menu và tiêu đề trang đều là **"Kho học liệu"**; đường dẫn `/kho-hoc-lieu` (cô) và `/em/kho-hoc-lieu` (học sinh); id mục menu là `hub`.
 - Địa chỉ mặc định **`https://studywithbong.netlify.app/#/khoi/5`**, ghi đè bằng biến `NEXT_PUBLIC_LEARNING_HUB_URL`. Nút "Mở trong tab mới" dùng cùng địa chỉ.
 - Không công tắc, không cột DB, không migration. Học sinh luôn thấy mục này.
-- iframe **không** có thuộc tính `sandbox`; có `title="Kho học liệu"`, `loading="lazy"`, cho phép toàn màn hình.
+- iframe có `sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-presentation"` (không có `allow-top-navigation*`; đã sửa sau review, bản đầu của kế hoạch ghi "không sandbox"), `title="Kho học liệu"`, `loading="lazy"`, cho phép toàn màn hình.
 - Link ra ngoài: `target="_blank"` và `rel="noopener noreferrer"`.
 - Menu cô: mục `hub` thuộc nhóm "Công cụ", đặt sau `report` và trước `settings` (các nhóm phải liền nhau).
 - Không thêm mã hex mới trong file `.tsx` (có `tests/unit/hex-guard.test.ts`); dùng token màu/`TONES`.
