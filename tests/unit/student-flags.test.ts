@@ -15,7 +15,7 @@ const ALL_ON: StudentSettings = {
 const ALL_OFF = Object.fromEntries(Object.keys(ALL_ON).map((k) => [k, false])) as StudentSettings
 
 describe('STUDENT_NAV', () => {
-  it('7 mục đúng thứ tự, nhãn và đường dẫn của thiết kế', () => {
+  it('8 mục đúng thứ tự, nhãn và đường dẫn của thiết kế', () => {
     expect(STUDENT_NAV.map((n) => [n.id, n.label, n.href])).toEqual([
       ['home', 'Trang chủ', '/em'],
       ['stars', 'Sao của em', '/em/sao'],
@@ -24,6 +24,7 @@ describe('STUDENT_NAV', () => {
       ['tt', 'Thời khóa biểu', '/em/thoi-khoa-bieu'],
       ['att', 'Điểm danh của em', '/em/diem-danh'],
       ['news', 'Thông báo', '/em/thong-bao'],
+      ['hub', 'Kho học liệu', '/em/kho-hoc-lieu'],
     ])
     expect(STUDENT_NAV.every((n) => n.icon.length > 10)).toBe(true)
   })
@@ -36,16 +37,20 @@ describe('STUDENT_NAV', () => {
       tt: 'Lịch bay của phi hành gia',
       att: 'Điểm danh của em',
       news: 'Tín hiệu từ trạm chỉ huy',
+      hub: 'Kho học liệu',
     })
   })
 })
 
 describe('visibleStudentPages', () => {
-  it('bật hết: đủ 7 trang', () => {
-    expect([...visibleStudentPages(ALL_ON)].sort()).toEqual(['att', 'gifts', 'home', 'news', 'rank', 'stars', 'tt'])
+  it('bật hết: đủ 8 trang', () => {
+    expect([...visibleStudentPages(ALL_ON)].sort()).toEqual(['att', 'gifts', 'home', 'hub', 'news', 'rank', 'stars', 'tt'])
   })
-  it('tắt hết: chỉ còn home', () => {
-    expect([...visibleStudentPages(ALL_OFF)]).toEqual(['home'])
+  it('tắt hết: còn home và hub', () => {
+    expect([...visibleStudentPages(ALL_OFF)].sort()).toEqual(['home', 'hub'])
+  })
+  it('hub luôn hiện, không phụ thuộc cờ nào', () => {
+    expect(visibleStudentPages(ALL_OFF).has('hub')).toBe(true)
   })
   it.each([
     ['stars', 'student_can_view_history'],
@@ -57,7 +62,7 @@ describe('visibleStudentPages', () => {
   ] as const)('%s ẩn khi tắt %s', (page, flag) => {
     const pages = visibleStudentPages({ ...ALL_ON, [flag]: false })
     expect(pages.has(page)).toBe(false)
-    expect(pages.size).toBe(6)
+    expect(pages.size).toBe(7)
   })
   it('gifts cần cả feature_rewards lẫn student_can_view_rewards', () => {
     expect(visibleStudentPages({ ...ALL_ON, feature_rewards: false }).has('gifts')).toBe(false)
@@ -65,6 +70,6 @@ describe('visibleStudentPages', () => {
     expect(visibleStudentPages({ ...ALL_OFF, feature_rewards: true, student_can_view_rewards: true }).has('gifts')).toBe(true)
   })
   it('mỗi cờ chỉ mở đúng trang của nó', () => {
-    expect([...visibleStudentPages({ ...ALL_OFF, student_can_view_rank: true })].sort()).toEqual(['home', 'rank'])
+    expect([...visibleStudentPages({ ...ALL_OFF, student_can_view_rank: true })].sort()).toEqual(['home', 'hub', 'rank'])
   })
 })

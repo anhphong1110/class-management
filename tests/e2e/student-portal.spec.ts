@@ -88,7 +88,7 @@ async function showAllLinks(page: Page) {
   if (await more.isVisible()) await more.click()
 }
 
-test('menu 7 mục theo thứ tự khi bật hết', async ({ page }) => {
+test('menu 8 mục theo thứ tự khi bật hết', async ({ page }) => {
   await open(page)
   await showAllLinks(page)
   await expect(menu(page).getByRole('link')).toHaveText([
@@ -99,6 +99,7 @@ test('menu 7 mục theo thứ tự khi bật hết', async ({ page }) => {
     'Thời khóa biểu',
     'Điểm danh của em',
     'Thông báo',
+    'Kho học liệu',
   ])
   await expect(menu(page).getByRole('link', { name: 'Trang chủ' })).toHaveAttribute('aria-current', 'page')
 })
@@ -123,7 +124,7 @@ test('cô tắt bảng xếp hạng: mục biến mất và /em/xep-hang trả 4
   await page.reload()
   await showAllLinks(page)
   await expect(menu(page).getByRole('link', { name: 'Bảng xếp hạng' })).toHaveCount(0)
-  await expect(menu(page).getByRole('link')).toHaveCount(6)
+  await expect(menu(page).getByRole('link')).toHaveCount(7)
   const res = await page.goto('/em/xep-hang')
   expect(res?.status()).toBe(404)
 })
