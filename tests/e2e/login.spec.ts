@@ -42,6 +42,9 @@ test('sai mật khẩu', async ({ page }) => {
   await fill(page, 'Giáo viên', 'co.khanh', 'sai-mat-khau-123')
   await expect(page.getByText('Tên đăng nhập hoặc mật khẩu chưa đúng.')).toBeVisible()
   await expect(page).toHaveURL(/\/dang-nhap/)
+  // Lớp phủ tên lửa phải tắt khi đăng nhập lỗi, để cô/em gõ lại được.
+  await expect(page.getByTestId('launch-overlay')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Cất cánh' })).toBeEnabled()
 })
 
 test('tên đăng nhập có dấu', async ({ page }) => {

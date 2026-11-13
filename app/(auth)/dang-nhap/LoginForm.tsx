@@ -6,6 +6,7 @@ import { Field, Input } from '@/components/ui/Field'
 import { Icon, ICONS } from '@/components/ui/Icon'
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs'
 import { signIn, type SignInState } from '../actions'
+import { LaunchOverlay } from './LaunchOverlay'
 
 const TABS = [
   {
@@ -76,6 +77,7 @@ export default function LoginForm({ next, initialError }: { next?: string; initi
   return (
     <form action={action} className="flex flex-col gap-[18px]">
       <input type="hidden" name="next" value={next ?? ''} />
+      <LaunchOverlay show={pending} />
       <SegmentedTabs items={TAB_ITEMS} value={tab} onChange={choose} idPrefix="tab" panelId="login-panel" label="Loại tài khoản" />
       <div id="login-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-[18px]">
         <Field label={t.userLabel}>
