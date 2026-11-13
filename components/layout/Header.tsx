@@ -3,6 +3,7 @@ import { AvatarImage } from '@/components/avatar/AvatarImage'
 import { signOut } from '@/app/(auth)/actions'
 import { Button } from '@/components/ui/Button'
 import { Icon, ICONS } from '@/components/ui/Icon'
+import { LinkPendingIcon } from '@/components/ui/LinkPendingIcon'
 import { formatVietnameseDate } from '@/lib/domain/date'
 import { getShellData } from '@/lib/layout/shell-data'
 import { PageHeaderShell } from './PageHeaderShell'
@@ -22,7 +23,9 @@ export async function Header({ title, subtitle }: { title: string; subtitle: str
       )}
       <div className="text-sm font-bold text-muted">{today}</div>
       <Link href="/em" aria-label="Xem như học sinh" title="Xem như học sinh" className={iconLink}>
-        <Icon d={ICONS.eye} />
+        <LinkPendingIcon size={22}>
+          <Icon d={ICONS.eye} />
+        </LinkPendingIcon>
       </Link>
       <Link href="/thong-bao" aria-label="Thông báo" title="Thông báo" className={iconLink}>
         <Icon d={ICONS.bell} />

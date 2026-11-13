@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LinkPendingIcon } from '@/components/ui/LinkPendingIcon'
 import { requireTeacher } from '@/lib/auth/session'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getDisplayData } from '@/lib/display/queries'
@@ -18,8 +19,9 @@ export default async function Page() {
           <p className="m-0 text-xl font-bold">Tính năng này đang tắt. Cô bật lại trong Cài đặt.</p>
           <Link
             href="/tong-quan"
-            className="mt-5 inline-flex min-h-12 items-center rounded-ctl border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline"
+            className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-ctl border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline"
           >
+            <LinkPendingIcon />
             Thoát trình chiếu
           </Link>
         </div>

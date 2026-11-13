@@ -5,6 +5,7 @@ import { useRef, useState, useTransition } from 'react'
 import { ButtonLink } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Icon, ICONS } from '@/components/ui/Icon'
+import { LinkPendingIcon } from '@/components/ui/LinkPendingIcon'
 import { Notice } from '@/components/ui/Notice'
 import { compressImage } from '@/lib/domain/compress-image'
 import type { ThemeKey } from '@/lib/domain/theme'
@@ -206,7 +207,9 @@ export function SettingsClient({ cls, settings, saturdaySlots }: SettingsData) {
           Muốn biết học sinh nhìn thấy gì sau khi cô đổi cài đặt? Cô xem thử rồi quay lại nhé.
         </p>
         <ButtonLink href="/em" variant="secondary">
-          <Icon d={ICONS.eye} size={20} />
+          <LinkPendingIcon size={20}>
+            <Icon d={ICONS.eye} size={20} />
+          </LinkPendingIcon>
           Xem như học sinh
         </ButtonLink>
       </div>

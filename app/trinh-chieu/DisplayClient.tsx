@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { AvatarImage } from '@/components/avatar/AvatarImage'
+import { LinkPendingIcon } from '@/components/ui/LinkPendingIcon'
 import { announcementColors } from '@/lib/announcements/types'
 import { schoolLabel } from '@/lib/classes/brand'
 import { DISPLAY_BLOCKS, nextBlockIndex, type DisplayBlock } from '@/lib/display/logic'
@@ -126,8 +127,9 @@ export function DisplayClient({ data, brand }: { data: DisplayData; brand: { top
             </button>
             <Link
               href="/tong-quan"
-              className="inline-flex min-h-12 items-center rounded-ctl border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-white"
+              className="inline-flex min-h-12 items-center gap-2 rounded-ctl border-2 border-white/60 px-5 text-base font-extrabold text-white no-underline transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-white"
             >
+              <LinkPendingIcon />
               Thoát trình chiếu
             </Link>
           </div>

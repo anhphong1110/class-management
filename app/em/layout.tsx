@@ -4,6 +4,7 @@ import { StudentHeader } from '@/components/layout/StudentHeader'
 import { getShellData } from '@/lib/layout/shell-data'
 import { AppShell } from '@/components/layout/AppShell'
 import Link from 'next/link'
+import { LinkPendingIcon } from '@/components/ui/LinkPendingIcon'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { PATHNAME_HEADER } from '@/lib/auth/route-guard'
@@ -42,8 +43,9 @@ export default async function StudentLayout({ children }: { children: ReactNode 
             <span>Đang xem thử giao diện học sinh</span>
             <Link
               href="/tong-quan"
-              className="inline-flex min-h-11 items-center rounded-ctl border-2 border-star-ink bg-white px-4 text-star-ink transition-colors hover:bg-star-soft"
+              className="inline-flex min-h-11 items-center gap-2 rounded-ctl border-2 border-star-ink bg-white px-4 text-star-ink transition-colors hover:bg-star-soft"
             >
+              <LinkPendingIcon />
               Quay lại trang cô giáo
             </Link>
           </div>
