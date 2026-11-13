@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { resolveRoute } from '@/lib/auth/route-guard'
+import { PATHNAME_HEADER, resolveRoute } from '@/lib/auth/route-guard'
 import type { Role } from '@/lib/domain/types'
 
 // Middleware chạy ở Edge gần người dùng, còn Supabase ở Ireland: mỗi lần hỏi profiles mất vài trăm ms.
@@ -33,6 +33,8 @@ export async function readRoleCookie(value: string | undefined, uid: string, now
 }
 
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
+  // Ghi đè (không thêm vào) để client không tự gửi được giá trị giả; cả hai NextResponse.next bên dưới đều chuyển nó xuống.
+  request.headers.set(PATHNAME_HEADER, request.nextUrl.pathname)
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
