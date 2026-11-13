@@ -4,14 +4,21 @@ import { StudentHeader } from '@/components/layout/StudentHeader'
 import { getShellData } from '@/lib/layout/shell-data'
 import { AppShell } from '@/components/layout/AppShell'
 import Link from 'next/link'
+import { headers } from 'next/headers'
+import { notFound } from 'next/navigation'
+import { PATHNAME_HEADER } from '@/lib/auth/route-guard'
 import { formatVietnameseDate } from '@/lib/domain/date'
-import { visibleStudentPages } from '@/lib/student/flags'
+import { studentPageForPath, visibleStudentPages } from '@/lib/student/flags'
 import { getStudentContext, getStudentProfile } from '@/lib/student/queries'
 
 export default async function StudentLayout({ children }: { children: ReactNode }) {
   const ctx = await getStudentContext()
   const [data, profile] = await Promise.all([getShellData(), getStudentProfile()])
   const pages = visibleStudentPages(ctx.settings)
+  // loading.tsx làm mã trả về bị chốt 200 trước khi trang kịp gọi notFound(); nên chặn trang bị cô tắt ở đây,
+  // ngoài vùng chờ, để mở thẳng link vẫn trả 404 thật. Không có header thì để từng trang tự chặn (requireStudentPage).
+  const pageId = studentPageForPath((await headers()).get(PATHNAME_HEADER) ?? '')
+  if (pageId && !pages.has(pageId)) notFound()
   const subtitle = `Lớp ${data?.cls.class_name ?? ''} · ${formatVietnameseDate(new Date())}`
   return (
     <AppShell
