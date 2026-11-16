@@ -70,7 +70,7 @@ test('tiêu đề, ngày, năm học, Top 5, sao tuần, thành tích, thông b�
   await expect(page.getByText('Ôn tập Toán: hoàn thành trang 45')).toBeVisible()
   await expect(page.getByText('Thông báo không ghim')).toHaveCount(0)
 
-  for (const banned of ['Điểm danh', 'Đăng xuất', 'co.khanh', 'Nói chuyện riêng', 'Cài đặt']) {
+  for (const banned of ['Đăng xuất', 'co.khanh', 'Nói chuyện riêng', 'Cài đặt']) {
     await expect(page.locator('body')).not.toContainText(banned)
   }
 })

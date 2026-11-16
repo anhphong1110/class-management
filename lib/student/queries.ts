@@ -36,7 +36,6 @@ const DEFAULT_SETTINGS: StudentSettings = {
   student_can_view_rank: false,
   student_can_view_rewards: false,
   student_can_view_timetable: false,
-  student_can_view_attendance: false,
   student_can_view_news: false,
   student_can_change_avatar: false,
 }
@@ -340,20 +339,4 @@ export async function getGiftsData(ctx: StudentContext): Promise<{
     enforceStars: (cfg?.only_enough ?? true) || (cfg?.reserve_on_request ?? true),
     requireApproval: cfg?.require_approval ?? true,
   }
-}
-
-export type AttendanceRow = { date: string; status: string }
-
-export async function getMyAttendance(ctx: StudentContext): Promise<AttendanceRow[]> {
-  if (!ctx.studentId) return []
-  const supabase = await createServerSupabase()
-  // RLS cho học sinh chỉ trả dòng của chính em; giáo viên xem thử lọc theo học sinh đầu tiên.
-  const { data, error } = await supabase
-    .from('attendance')
-    .select('date, status')
-    .eq('student_id', ctx.studentId)
-    .order('date', { ascending: false })
-    .limit(1000)
-  if (error) throw new Error(error.message)
-  return (data ?? []).map((r) => ({ date: r.date as string, status: r.status as string }))
 }

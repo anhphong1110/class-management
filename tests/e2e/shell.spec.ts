@@ -8,7 +8,6 @@ test.describe.configure({ mode: 'serial' })
 const PAGE_TITLES: Record<string, string> = {
   '/tong-quan': 'Tổng quan',
   '/hoc-sinh': 'Quản lý học sinh',
-  '/diem-danh': 'Điểm danh phi hành đoàn',
   '/thi-dua': 'Trạm năng lượng ngôi sao',
   '/xep-hang': 'Bảng xếp hạng phi hành gia xuất sắc',
   '/doi-qua': 'Trạm đổi quà vũ trụ',
@@ -29,7 +28,7 @@ test('Sidebar và Header ở /tong-quan', async ({ page }, info) => {
   await expect(page).toHaveURL(/\/tong-quan$/)
   await openTeacherMenu(page)
   const nav = page.getByRole('navigation', { name: 'Menu chính' })
-  await expect(nav.getByRole('link')).toHaveCount(15)
+  await expect(nav.getByRole('link')).toHaveCount(14)
   await expect(nav.getByRole('link', { name: 'Tổng quan' })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByText('Lớp Năm 8 (5/8) · 2026 – 2027')).toBeVisible()
   await expect(page.getByText(/^(Thứ [^,]+|Chủ Nhật), \d{2}\/\d{2}\/\d{4}$/)).toBeVisible()
@@ -74,15 +73,15 @@ test('bố cục responsive', async ({ page }, info) => {
   await expect(nav).toBeHidden()
   await page.getByRole('button', { name: 'Mở menu' }).click()
   await expect(nav).toBeVisible()
-  await expect(nav.getByRole('link')).toHaveCount(14)
+  await expect(nav.getByRole('link')).toHaveCount(13)
   await expect(page.getByTestId('sidebar-foot')).toBeVisible()
   expect(await fits()).toBe(true)
   // Esc đóng ngăn kéo; chọn một mục thì đi tới trang đó và ngăn kéo tự đóng.
   await page.keyboard.press('Escape')
   await expect(nav).toBeHidden()
   await page.getByRole('button', { name: 'Mở menu' }).click()
-  await nav.getByRole('link', { name: 'Điểm danh', exact: true }).click()
-  await expect(page).toHaveURL(/\/diem-danh$/)
+  await nav.getByRole('link', { name: 'Quản lý học sinh', exact: true }).click()
+  await expect(page).toHaveURL(/\/hoc-sinh$/)
   await expect(nav).toBeHidden()
 })
 

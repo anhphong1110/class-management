@@ -15,7 +15,6 @@ const VIEWS: [FlagKey, string][] = [
   ['student_can_view_rewards', 'Phần thưởng và đổi quà'],
   ['student_can_view_timetable', 'Thời khóa biểu'],
   ['student_can_view_news', 'Thông báo'],
-  ['student_can_view_attendance', 'Lịch sử điểm danh của mình'],
 ]
 
 export function FeaturesSection({

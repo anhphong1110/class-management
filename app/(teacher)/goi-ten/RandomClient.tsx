@@ -17,7 +17,6 @@ type StudentView = {
   avatar: AvatarValue
   groupId: string | null
   groupName: string | null
-  presentToday: boolean
 }
 type GroupView = { id: string; name: string }
 type Msg = { text: string; error: boolean } | null
@@ -58,7 +57,6 @@ function reducedMotion(): boolean {
 export function RandomClient({ today, students, groups }: { today: string; students: StudentView[]; groups: GroupView[] }) {
   const [scope, setScope] = useState<'all' | string>('all')
   const [noRepeat, setNoRepeat] = useState(true)
-  const [onlyPresent, setOnlyPresent] = useState(true)
   const [called, setCalled] = useState<string[]>([])
   const [curId, setCurId] = useState<string | null>(null)
   const [spinning, setSpinning] = useState(false)
@@ -78,8 +76,8 @@ export function RandomClient({ today, students, groups }: { today: string; stude
 
   const byId = useMemo(() => new Map(students.map((s) => [s.id, s])), [students])
   const pool = useMemo(
-    () => buildPool(students.map((s) => ({ id: s.id, groupId: s.groupId, presentToday: s.presentToday })), { scope, onlyPresent }),
-    [students, scope, onlyPresent],
+    () => buildPool(students.map((s) => ({ id: s.id, groupId: s.groupId })), { scope }),
+    [students, scope],
   )
   const cur = curId ? (byId.get(curId) ?? null) : null
   const calledList = called.map((id) => byId.get(id)).filter((s): s is StudentView => !!s)
@@ -156,15 +154,6 @@ export function RandomClient({ today, students, groups }: { today: string; stude
   const scopes: [string, string][] = [['all', 'Cả lớp'], ...groups.map((g): [string, string] => [g.id, g.name])]
   const toggles = [
     { label: 'Không gọi lại bạn đã được gọi', on: noRepeat, flip: () => setNoRepeat(!noRepeat) },
-    {
-      label: 'Chỉ gọi bạn có mặt hôm nay',
-      on: onlyPresent,
-      flip: () => {
-        setOnlyPresent(!onlyPresent)
-        setCurId(null)
-        setResult(false)
-      },
-    },
   ]
 
   return (

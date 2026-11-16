@@ -47,7 +47,6 @@ const settingsInput = z
     student_can_view_rewards: flag,
     student_can_view_timetable: flag,
     student_can_view_news: flag,
-    student_can_view_attendance: flag,
     weekly_redeem_limit: z.number().int().min(-1000).max(100000),
     star_steps: z.array(z.number().int().min(-1000).max(100000)).max(100),
   })

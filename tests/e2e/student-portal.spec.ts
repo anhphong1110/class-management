@@ -24,7 +24,6 @@ const FLAGS = [
   'student_can_view_rewards',
   'student_can_view_timetable',
   'student_can_view_news',
-  'student_can_view_attendance',
   'student_can_change_avatar',
 ] as const
 
@@ -42,7 +41,7 @@ async function reset() {
   resetTimetable()
   await resetAnnouncements()
   sql(`delete from public.student_badges where class_id = '${CLASS_ID}'`)
-  await setFlags({ ...original, student_can_view_attendance: true, feature_rewards: true })
+  await setFlags({ ...original, feature_rewards: true })
 }
 
 test.beforeAll(async () => {
@@ -88,7 +87,7 @@ async function showAllLinks(page: Page) {
   if (await more.isVisible()) await more.click()
 }
 
-test('menu 8 mục theo thứ tự khi bật hết', async ({ page }) => {
+test('menu 7 mục theo thứ tự khi bật hết', async ({ page }) => {
   await open(page)
   await showAllLinks(page)
   await expect(menu(page).getByRole('link')).toHaveText([
@@ -97,7 +96,6 @@ test('menu 8 mục theo thứ tự khi bật hết', async ({ page }) => {
     'Bảng xếp hạng',
     'Đổi quà',
     'Thời khóa biểu',
-    'Điểm danh của em',
     'Thông báo',
     'Kho học liệu',
   ])
@@ -124,7 +122,7 @@ test('cô tắt bảng xếp hạng: mục biến mất và /em/xep-hang trả 4
   await page.reload()
   await showAllLinks(page)
   await expect(menu(page).getByRole('link', { name: 'Bảng xếp hạng' })).toHaveCount(0)
-  await expect(menu(page).getByRole('link')).toHaveCount(7)
+  await expect(menu(page).getByRole('link')).toHaveCount(6)
   const res = await page.goto('/em/xep-hang')
   expect(res?.status()).toBe(404)
 })

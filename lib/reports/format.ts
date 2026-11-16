@@ -5,7 +5,6 @@ export function kpiCards(k: ReportSummary['kpis']): { label: string; value: stri
   return [
     { label: 'Sao đã cộng', value: `+${k.added}`, n: k.added, color: '#2C37A8' },
     { label: 'Sao đã trừ', value: `-${k.deducted}`, n: k.deducted, color: '#8E1B3B' },
-    { label: 'Tỉ lệ chuyên cần', value: `${k.attendancePct}%`, n: k.attendancePct, color: '#0B5A4D' },
     { label: 'Lượt đổi quà', value: String(k.redeemed), n: k.redeemed, color: '#5E35B1' },
     { label: 'Học sinh tiến bộ', value: String(k.improved), n: k.improved, color: '#7A4E00' },
   ]

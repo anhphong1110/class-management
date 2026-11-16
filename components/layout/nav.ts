@@ -5,7 +5,6 @@ export type NavItem = { id: string; label: string; href: string; icon: string }
 export const TEACHER_NAV: NavItem[] = [
   { id: 'home', label: 'Tổng quan', href: '/tong-quan', icon: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z' },
   { id: 'students', label: 'Quản lý học sinh', href: '/hoc-sinh', icon: 'M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M20 20v-1a4 4 0 0 0-3-3.8M16 4.2a3.5 3.5 0 0 1 0 6.6' },
-  { id: 'attendance', label: 'Điểm danh', href: '/diem-danh', icon: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9' },
   { id: 'stars', label: 'Trạm thi đua', href: '/thi-dua', icon: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z' },
   { id: 'rank', label: 'Bảng xếp hạng', href: '/xep-hang', icon: 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3' },
   { id: 'rewards', label: 'Trạm đổi quà', href: '/doi-qua', icon: 'M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z' },
@@ -28,7 +27,6 @@ export type NavTone = Tone
 export const TEACHER_NAV_META: Record<string, { group: string; tone: NavTone }> = {
   home: { group: 'Lớp học', tone: 'blue' },
   students: { group: 'Lớp học', tone: 'purple' },
-  attendance: { group: 'Lớp học', tone: 'mint' },
   stars: { group: 'Thi đua và quà', tone: 'star' },
   rank: { group: 'Thi đua và quà', tone: 'pink' },
   rewards: { group: 'Thi đua và quà', tone: 'mint' },
@@ -53,7 +51,6 @@ export const STUDENT_NAV_TONES: Record<string, NavTone> = {
   rank: 'pink',
   gifts: 'mint',
   tt: 'blue',
-  att: 'mint',
   news: 'purple',
   hub: 'purple',
 }

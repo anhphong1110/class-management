@@ -10,33 +10,16 @@ import { Modal } from '@/components/ui/Modal'
 import { Notice } from '@/components/ui/Notice'
 import { givenNameKey, matchesSearch } from '@/lib/domain/vn-text'
 import type { StarGroup } from '@/lib/stars/queries'
-import type { StudentCard, TodayStatus } from '@/lib/students/queries'
+import type { StudentCard } from '@/lib/students/queries'
 import { archiveStudent, deleteStudent, exportStudents, loadProfile, type ProfileDetail } from './actions'
-import { CLOCK, X_CIRCLE } from '../diem-danh/status-icons'
 import { GroupsView } from './GroupsView'
 import { ImportDialog } from './ImportDialog'
 import { ProfilePanel } from './ProfilePanel'
 import { StudentForm, type EditTarget } from './StudentForm'
 
 type Sort = 'name' | 'stars' | 'no'
-type Filter = 'all' | 'present' | 'absent' | 'late'
 type View = 'all' | 'groups'
 
-// [nhãn, lớp màu, icon]: luôn có chữ và icon, không chỉ dựa vào màu.
-const TODAY: Record<NonNullable<TodayStatus> | 'none', [string, string, string]> = {
-  present: ['Có mặt', 'bg-success-soft text-success-deep', ICONS.checkCircle],
-  late: ['Đi trễ', 'bg-star-soft text-star-ink', CLOCK],
-  absent_excused: ['Vắng có phép', 'bg-primary-soft text-primary-deep', ICONS.calendar],
-  absent_unexcused: ['Vắng', 'bg-danger-soft text-danger-deep', X_CIRCLE],
-  none: ['Chưa điểm danh', 'bg-[#F0EEFA] text-muted', ICONS.minus],
-}
-
-const FILTERS: [Filter, string][] = [
-  ['all', 'Tất cả'],
-  ['present', 'Có mặt hôm nay'],
-  ['absent', 'Vắng hôm nay'],
-  ['late', 'Đi trễ'],
-]
 const VIEWS: [View, string][] = [
   ['all', 'Tất cả học sinh'],
   ['groups', 'Chia tổ'],
@@ -59,7 +42,6 @@ function groupLabel(s: StudentCard): string {
 export function StudentsClient({ students, groups, allCodes }: { students: StudentCard[]; groups: StarGroup[]; allCodes: string[] }) {
   const [q, setQ] = useState('')
   const [sort, setSort] = useState<Sort>('name')
-  const [filter, setFilter] = useState<Filter>('all')
   const [view, setView] = useState<View>('all')
   const [selId, setSelId] = useState<string | null>(null)
   const [detail, setDetail] = useState<{ id: string; data: ProfileDetail | null; failed: boolean } | null>(null)
@@ -74,14 +56,11 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
 
   const list = useMemo(() => {
     let out = students.filter((s) => matchesSearch(q, [s.fullName, s.code]))
-    if (filter === 'present') out = out.filter((s) => s.today === 'present' || s.today === 'late')
-    if (filter === 'absent') out = out.filter((s) => s.today === 'absent_excused' || s.today === 'absent_unexcused')
-    if (filter === 'late') out = out.filter((s) => s.today === 'late')
     if (sort === 'name') out = [...out].sort((a, b) => givenNameKey(a.fullName).localeCompare(givenNameKey(b.fullName), 'vi'))
     if (sort === 'stars') out = [...out].sort((a, b) => b.competition - a.competition || a.rollNo - b.rollNo)
     if (sort === 'no') out = [...out].sort((a, b) => a.rollNo - b.rollNo)
     return out
-  }, [students, q, sort, filter])
+  }, [students, q, sort])
 
   const existingCodes = useMemo(() => new Set(allCodes), [allCodes])
   const sel = students.find((s) => s.id === selId) ?? null
@@ -189,20 +168,6 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
             </Button>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map(([k, label]) => (
-            <button
-              key={k}
-              type="button"
-              aria-pressed={filter === k}
-              onClick={() => setFilter(k)}
-              className={`min-h-11 rounded-full px-4 text-sm ${pill(filter === k)}`}
-            >
-              {filter === k ? <Icon d={ICONS.check} size={16} /> : null}
-              {label}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -271,21 +236,19 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
               variant="secondary"
               onClick={() => {
                 setQ('')
-                setFilter('all')
               }}
             >
-              Xóa bộ lọc
+              Xóa từ khóa
             </Button>
           }
         >
-          Cô thử đổi từ khóa hoặc bộ lọc nhé.
+          Cô thử đổi từ khóa nhé.
         </EmptyState>
       )}
 
       {view === 'all' && (
         <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))' }}>
           {list.map((s) => {
-            const [label, tone, icon] = TODAY[s.today ?? 'none']
             const chosen = selId === s.id
             return (
               <button
@@ -309,10 +272,6 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
                   </svg>
                   {s.competition} sao
                 </div>
-                <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[12.5px] font-extrabold ${tone}`}>
-                  <Icon d={icon} size={14} />
-                  {label}
-                </span>
               </button>
             )
           })}
@@ -352,7 +311,7 @@ export function StudentsClient({ students, groups, allCodes }: { students: Stude
         <p className="m-0 mb-2 flex items-start gap-3 text-base font-semibold text-muted">
           <Icon d={ICONS.alert} size={22} className="mt-0.5 text-danger" />
           <span>
-            {sel?.fullName} sẽ bị xóa hẳn cùng toàn bộ sao, lịch sử đổi quà, điểm danh, huy hiệu và tài khoản đăng nhập của em. Việc này không hoàn tác được.
+            {sel?.fullName} sẽ bị xóa hẳn cùng toàn bộ sao, lịch sử đổi quà, huy hiệu và tài khoản đăng nhập của em. Việc này không hoàn tác được.
           </span>
         </p>
         <p className="m-0 mb-4 text-base font-semibold text-muted">

@@ -7,7 +7,7 @@ test.describe.configure({ mode: 'serial' })
 const FLAGS = [
   'require_approval', 'reserve_on_request', 'only_enough', 'feature_missions', 'feature_random', 'feature_display',
   'feature_rewards', 'student_can_view_profile', 'student_can_view_history', 'student_can_view_rank',
-  'student_can_view_rewards', 'student_can_view_timetable', 'student_can_view_news', 'student_can_view_attendance',
+  'student_can_view_rewards', 'student_can_view_timetable', 'student_can_view_news',
   'weekly_redeem_limit', 'star_steps', 'timetable_saturday',
 ]
 const INFO = 'school_name, class_name, brand_title, school_year, teacher_name, slogan, theme, term1_start, term1_end, term2_start, term2_end, logo_path, class_logo_path, cover_path'

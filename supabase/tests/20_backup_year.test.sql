@@ -76,8 +76,6 @@ insert into public.star_transactions (id, class_id, student_id, delta, kind, cri
   (pg_temp.u('46'), pg_temp.u('c1'), pg_temp.u('a2'), -4, 'reserve', null, pg_temp.u('32'), null, null, pg_temp.u('d1'), now() - interval '2 days'),
   (pg_temp.u('47'), pg_temp.u('c1'), pg_temp.u('a3'), 3, 'award', null, null, null, pg_temp.u('95'), pg_temp.u('d1'), now() - interval '1 day'),
   (pg_temp.u('48'), pg_temp.u('c2'), pg_temp.u('b1'), 9, 'award', null, null, null, pg_temp.u('96'), null, now());
-insert into public.attendance (class_id, student_id, date, status) values
-  (pg_temp.u('c1'), pg_temp.u('a1'), '2026-10-30', 'present'), (pg_temp.u('c1'), pg_temp.u('a2'), '2026-10-30', 'late');
 insert into public.subjects (id, class_id, name) values (pg_temp.u('51'), pg_temp.u('c1'), 'Toán');
 insert into public.timetable_slots (class_id, weekday, session, period, subject_id) values
   (pg_temp.u('c1'), 1, 'morning', 1, pg_temp.u('51')), (pg_temp.u('c1'), 6, 'afternoon', 1, null);
@@ -100,7 +98,7 @@ create temp table bal_before as
 grant select on bal_before to public;
 
 select is((select count(*)::int from bk_tables where pg_temp.cnt(t, pg_temp.u('c1')) = 0), 0, 'dữ liệu thử có ít nhất một dòng ở mọi bảng');
-select cmp_ok((select count(*)::int from bk_tables), '=', 17, 'liệt kê được các bảng có class_id');
+select cmp_ok((select count(*)::int from bk_tables), '=', 16, 'liệt kê được các bảng có class_id');
 
 -- ===== quyền hàm =====
 select ok(has_function_privilege('authenticated', 'public.export_class_backup(uuid)', 'execute'), 'authenticated gọi được export_class_backup');

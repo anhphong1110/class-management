@@ -40,7 +40,6 @@ describe('toVietnameseMessage', () => {
     ['badge_not_found', 'Huy hiệu này không còn nữa.'],
     ['class_list_changed', 'Danh sách lớp vừa thay đổi, cô tải lại trang nhé.'],
     ['invalid_input_student', 'Có lỗi nhỏ, em tải lại trang rồi thử lại nhé.'],
-    ['future_date', 'Chưa thể điểm danh cho ngày trong tương lai.'],
     ['subject_in_use', 'Môn này đang có trong thời khóa biểu. Cô hãy đổi các tiết đó sang môn khác trước khi xóa.'],
     ['subject_exists', 'Môn này đã có trong danh sách.'],
     ['subject_name_required', 'Cô hãy nhập tên môn học.'],

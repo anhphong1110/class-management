@@ -27,7 +27,7 @@ export function BackupCard({
             Sao lưu dữ liệu
           </span>
           <span className="text-sm font-semibold leading-snug text-muted">
-            Tải bản sao lưu toàn bộ lớp (học sinh, sao, điểm danh, quà).
+            Tải bản sao lưu toàn bộ lớp (học sinh, sao, quà).
           </span>
         </a>
         <RestoreCard classId={classId} pending={pending} startTransition={startTransition} setError={setError} />

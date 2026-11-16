@@ -3,11 +3,10 @@ import type { LbRow } from '@/lib/stars/leaderboard-row'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { resolveAvatars, type AvatarValue } from '@/lib/avatars/resolve'
 import { periodRange } from '@/lib/domain/period'
-import { todayInVietnam } from '@/lib/domain/date'
 import { joinNames } from '@/lib/domain/names'
 import { formatRelative } from '@/lib/domain/relative-time'
 import { getRecentBatches, getStudentsWithStars } from '@/lib/stars/queries'
-import { buildOverviewStats, type AttendanceCounts, type OverviewStat } from './stats'
+import { buildOverviewStats, type OverviewStat } from './stats'
 
 export { buildOverviewStats } from './stats'
 
@@ -48,15 +47,9 @@ export async function getOverview(classId: string, now: Date = new Date()): Prom
   const supabase = await createServerSupabase()
   const { from, to } = periodRange('week', now, NO_TERMS)
 
-  const [students, cls, att, week, reqs, redeemedCount, pendingCount, lb, news, batches] = await Promise.all([
+  const [students, cls, week, reqs, redeemedCount, pendingCount, lb, news, batches] = await Promise.all([
     getStudentsWithStars(classId),
     supabase.from('classes').select('teacher_name, cover_path').eq('id', classId).single(),
-    supabase
-      .from('attendance')
-      .select('status, students!inner(archived_at)')
-      .eq('class_id', classId)
-      .eq('date', todayInVietnam(now))
-      .is('students.archived_at', null),
     supabase.rpc('class_star_totals_between', { p_from: from!, p_to: to! }),
     supabase
       .from('reward_requests')
@@ -80,10 +73,7 @@ export async function getOverview(classId: string, now: Date = new Date()): Prom
   ])
   if (cls.error) throw new Error(cls.error.message)
   if (lb.error) throw new Error(lb.error.message)
-  for (const r of [att, week, reqs, news]) if (r.error) throw new Error(r.error.message)
-
-  const attendanceToday: AttendanceCounts = { present: 0, late: 0, absent_excused: 0, absent_unexcused: 0 }
-  for (const r of att.data ?? []) attendanceToday[r.status as keyof AttendanceCounts]++
+  for (const r of [week, reqs, news]) if (r.error) throw new Error(r.error.message)
 
   const totals = (week.data ?? [])[0]
   const weekAwarded = Number(totals?.awarded ?? 0)
@@ -92,7 +82,6 @@ export async function getOverview(classId: string, now: Date = new Date()): Prom
 
   const stats = buildOverviewStats({
     studentCount: students.length,
-    attendanceToday,
     weekAwarded,
     weekPenalized,
     redeemedCount,

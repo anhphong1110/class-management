@@ -33,7 +33,7 @@ export function DeleteDemoModal({
         <div className="flex flex-col gap-4">
           <p className="m-0 flex items-start gap-3 text-base font-semibold text-muted">
             <Icon d={ICONS.alert} size={22} className="mt-0.5 text-danger" />
-            <span>Học sinh mẫu, sao, điểm danh và các dữ liệu đi kèm sẽ bị xóa. Học sinh thật cô đã nhập không bị ảnh hưởng.</span>
+            <span>Học sinh mẫu, sao và các dữ liệu đi kèm sẽ bị xóa. Học sinh thật cô đã nhập không bị ảnh hưởng.</span>
           </p>
           <div className="flex flex-wrap justify-end gap-2.5">
             <Button variant="secondary" onClick={onClose} disabled={pending}>

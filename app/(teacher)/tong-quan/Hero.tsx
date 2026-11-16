@@ -22,10 +22,7 @@ export function Hero({ greeting, coverUrl, brand }: { greeting: string; coverUrl
         <h2 className="ov-title">Xin chào, {greeting}!</h2>
         <p className="ov-sub">Chào mừng cô trở lại {brand}. Hôm nay cả phi hành đoàn đã sẵn sàng cất cánh!</p>
         <div className="ov-actions">
-          <ButtonLink variant="accent" href="/diem-danh" className="ov-btn ov-btn-gold">
-            Bắt đầu điểm danh
-          </ButtonLink>
-          <ButtonLink href="/thi-dua" className="ov-btn ov-btn-pink">
+          <ButtonLink variant="accent" href="/thi-dua" className="ov-btn ov-btn-gold">
             Cộng sao cho lớp
           </ButtonLink>
         </div>

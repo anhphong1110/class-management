@@ -1,6 +1,6 @@
 -- Đợt 6, Task 7: mở năm học mới (start_new_school_year) và xóa dữ liệu demo (delete_demo_data).
 begin;
-select plan(106);
+select plan(105);
 
 create function pg_temp.u(h text) returns uuid language sql immutable
 as $$ select ('00000000-0000-0000-0000-' || lpad(h, 12, '0'))::uuid $$;
@@ -211,8 +211,6 @@ insert into public.badges (id, class_id, name, is_demo) values
   (pg_temp.u('ce3'), pg_temp.u('c2'), 'HH thật', false);
 insert into public.announcements (id, class_id, title, is_demo) values
   (pg_temp.u('cf1'), pg_temp.u('c2'), 'TB demo', true), (pg_temp.u('cf2'), pg_temp.u('c2'), 'TB thật', false);
-insert into public.attendance (class_id, student_id, date, status, is_demo) values
-  (pg_temp.u('c2'), pg_temp.u('b1'), '2026-10-30', 'present', true), (pg_temp.u('c2'), pg_temp.u('b3'), '2026-10-30', 'present', false);
 -- Sổ sao: demo (kể cả hoàn tác), thật. Demo có yêu cầu đang giữ sao.
 insert into public.star_transactions (id, class_id, student_id, delta, kind, criterion_id, batch_id, is_demo) values
   (pg_temp.u('c11'), pg_temp.u('c2'), pg_temp.u('b1'), 10, 'award', pg_temp.u('ca2'), pg_temp.u('91'), true),
@@ -296,7 +294,6 @@ select is((select array_agg(id order by id) from public.badges where class_id = 
 select is((select array_agg(id order by id) from public.groups where class_id = pg_temp.u('c2')), array[pg_temp.u('f2')], 'tổ demo còn bạn thật được giữ lại');
 select is((select array_agg(id order by id) from public.avatar_library where class_id = pg_temp.u('c2')), array[pg_temp.u('e12'), pg_temp.u('e14')], 'avatar demo còn được dùng được giữ lại');
 select is((select count(*)::int from public.announcements where class_id = pg_temp.u('c2')), 1, 'thông báo demo đã xóa');
-select is((select count(*)::int from public.attendance where class_id = pg_temp.u('c2')), 1, 'điểm danh của học sinh demo đã xóa');
 select is((select count(*)::int from public.group_members where class_id = pg_temp.u('c2')), 1, 'thành viên tổ của học sinh demo đã xóa');
 select is((select count(*)::int from public.mission_completions where class_id = pg_temp.u('c2')), 1, 'lượt nhiệm vụ của học sinh demo đã xóa');
 select is((select count(*)::int from public.student_badges where class_id = pg_temp.u('c2')), 1, 'huy hiệu của học sinh demo đã xóa');

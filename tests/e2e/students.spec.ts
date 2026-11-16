@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { admin, login } from './helpers'
-import { CLASS_ID, deleteTestStudents, resetAttendance, resetGroups, resetStars, seedAttendance, resetRewards, seedStars, sid, sql } from './helpers/ledger'
+import { CLASS_ID, deleteTestStudents, resetGroups, resetStars, resetRewards, seedStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -8,7 +8,6 @@ async function reset() {
   await deleteTestStudents()
   resetStars()
   await resetRewards()
-  resetAttendance()
 }
 test.beforeEach(reset)
 test.afterAll(reset)
@@ -31,7 +30,7 @@ test('tìm không dấu và trạng thái rỗng', async ({ page }) => {
   await expect(cards(page).first()).toContainText('Phạm Đức Dũng')
   await page.getByLabel('Tìm học sinh').fill('zzz')
   await expect(page.getByText('Chưa tìm thấy phi hành gia nào')).toBeVisible()
-  await expect(page.getByText('Cô thử đổi từ khóa hoặc bộ lọc nhé.')).toBeVisible()
+  await expect(page.getByText('Cô thử đổi từ khóa nhé.')).toBeVisible()
 })
 
 test('sắp xếp theo tên và theo số sao', async ({ page }) => {
@@ -44,43 +43,17 @@ test('sắp xếp theo tên và theo số sao', async ({ page }) => {
   await expect(cards(page).first()).toContainText('Nguyễn Minh Anh')
 })
 
-test('lọc theo điểm danh hôm nay', async ({ page }) => {
-  await open(page)
-  await expect(cards(page).first()).toContainText('Chưa điểm danh')
-  await page.getByRole('button', { name: 'Đi trễ', exact: true }).click()
-  await expect(cards(page)).toHaveCount(0)
-  await expect(page.getByText('Chưa tìm thấy phi hành gia nào')).toBeVisible()
-
-  seedAttendance(4, 'late')
-  seedAttendance(1, 'present')
-  seedAttendance(7, 'absent_excused')
-  await page.reload()
-  await page.getByRole('button', { name: 'Đi trễ', exact: true }).click()
-  await expect(cards(page)).toHaveCount(1)
-  await expect(cards(page).first()).toContainText('Phạm Đức Dũng')
-  await expect(cards(page).first()).toContainText('Đi trễ')
-  await page.getByRole('button', { name: 'Có mặt hôm nay', exact: true }).click()
-  await expect(cards(page)).toHaveCount(2)
-  await page.getByRole('button', { name: 'Vắng hôm nay', exact: true }).click()
-  await expect(cards(page)).toHaveCount(1)
-  await expect(cards(page).first()).toContainText('Vắng có phép')
-})
-
 test('hồ sơ phi hành gia', async ({ page }, info) => {
   seedStars(5, 3)
-  seedAttendance(5, 'present', 1)
-  seedAttendance(5, 'late', 2)
-  seedAttendance(5, 'absent_unexcused', 3)
-  seedAttendance(5, 'absent_excused', 4)
   await open(page)
   await cards(page).filter({ hasText: 'Võ Hà My' }).click()
   const p = profile(page)
   await expect(p.getByText('HỒ SƠ PHI HÀNH GIA')).toBeVisible()
   await expect(p.getByText('Mã HS05 · Số thứ tự 5')).toBeVisible()
-  for (const label of ['Sao thi đua tích lũy', 'Sao khả dụng', 'Thứ hạng cả năm', 'Tỉ lệ chuyên cần']) {
+  for (const label of ['Sao thi đua tích lũy', 'Sao khả dụng', 'Thứ hạng cả năm']) {
     await expect(p.getByText(label, { exact: true })).toBeVisible()
   }
-  await expect(p.getByTestId('stat-Tỉ lệ chuyên cần')).toHaveText('50%')
+  await expect(p.getByText('Tỉ lệ chuyên cần')).toHaveCount(0)
   await expect(p.getByTestId('stat-Sao thi đua tích lũy')).toHaveText('3')
   await expect(p.getByTestId('stat-Thứ hạng cả năm')).toHaveText('#1')
   await expect(p.getByText('Lịch sử cộng/trừ sao')).toBeVisible()
@@ -91,12 +64,6 @@ test('hồ sơ phi hành gia', async ({ page }, info) => {
   if (info.project.name === 'desktop') await page.screenshot({ path: 'test-results/students-desktop.png', fullPage: true })
   await p.getByRole('button', { name: 'Đóng hồ sơ' }).click()
   await expect(profile(page)).toHaveCount(0)
-})
-
-test('chưa điểm danh: tỉ lệ chuyên cần là dấu gạch', async ({ page }) => {
-  await open(page)
-  await cards(page).filter({ hasText: 'Võ Hà My' }).click()
-  await expect(profile(page).getByTestId('stat-Tỉ lệ chuyên cần')).toHaveText('—')
 })
 
 test('thêm, sửa, lưu trữ học sinh', async ({ page }) => {

@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import { field, safe } from '@/lib/attendance/csv'
+import { field, safe } from '@/lib/csv'
 import { normalizeVn } from '@/lib/domain/vn-text'
 import { kpiCards, viDate } from './format'
 import type { ReportData } from './types'
@@ -14,24 +14,11 @@ function blocks(d: ReportData): Block[] {
   return [
     {
       sheet: 'KPI',
-      rows: [['Chỉ số', 'Giá trị'], ...kpiCards(d.kpis).map((k) => [k.label === 'Tỉ lệ chuyên cần' ? 'Tỉ lệ chuyên cần (%)' : k.label, k.n])],
+      rows: [['Chỉ số', 'Giá trị'], ...kpiCards(d.kpis).map((k) => [k.label, k.n])],
     },
     {
       sheet: 'Theo thời gian',
       rows: [['Mốc', 'Sao cộng', 'Sao trừ'], ...d.buckets.map((b) => [b.label, b.added, b.deducted])],
-    },
-    {
-      sheet: 'Chuyên cần',
-      rows: [
-        ['Trạng thái', 'Tỉ lệ (%)'],
-        ['Có mặt', d.attendance.present],
-        ['Đi trễ', d.attendance.late],
-        ['Vắng có phép', d.attendance.excused],
-        ['Vắng không phép', d.attendance.unexcused],
-        [],
-        ['Cần quan tâm (vắng nhiều nhất)', 'Số buổi vắng'],
-        ...d.lowAttendance.map((l) => [l.name, l.days]),
-      ],
     },
     {
       sheet: 'Tiêu chí',

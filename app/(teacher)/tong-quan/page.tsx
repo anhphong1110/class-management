@@ -15,20 +15,16 @@ import { Hero } from './Hero'
 import { Top3Podium } from './Top3Podium'
 
 const ARROW = 'M5 12h14M13 6l6 6-6 6'
-const USER_X = 'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 8l5 5M22 8l-5 5'
 
 // Thứ tự khớp với buildOverviewStats (lib/overview/stats.ts); mỗi thẻ dẫn tới trang liên quan.
 const STATS = [
   { icon: ICONS.users, art: '/brand/overview/stat-hoc-sinh.webp', tone: 'blue', href: '/hoc-sinh' },
-  { icon: ICONS.checkCircle, art: '/brand/overview/stat-co-mat.webp', tone: 'mint', href: '/diem-danh' },
-  { icon: USER_X, art: '/brand/overview/stat-vang.webp', tone: 'pink', href: '/diem-danh' },
   { icon: ICONS.star, art: '/brand/overview/stat-sao.webp', tone: 'star', href: '/thi-dua' },
   { icon: ICONS.gift, art: '/brand/overview/stat-doi-qua.webp', tone: 'pink', href: '/doi-qua' },
   { icon: ICONS.trophy, art: '/brand/overview/stat-noi-bat.webp', tone: 'blue', href: '/xep-hang' },
 ] as const
 
 const ACTIONS = [
-  { label: 'Điểm danh', href: '/diem-danh', bg: 'bg-[#DDF6F1]', ink: 'text-[#0B6B5F]', d: ICONS.checkCircle },
   { label: 'Cộng sao', href: '/thi-dua', bg: 'bg-[#FFF1CC]', ink: 'text-star-ink', d: ICONS.star },
   { label: 'Trừ sao', href: '/thi-dua?che-do=tru', bg: 'bg-[#FFE3EE]', ink: 'text-[#9E2257]', d: ICONS.minus },
   { label: 'Đổi quà', href: '/doi-qua', bg: 'bg-[#F0E8FF]', ink: 'text-[#5E35B1]', d: ICONS.gift },
@@ -45,9 +41,6 @@ const DELTA_STYLE = {
 /** Khối "Việc hôm nay": chỉ hiện những việc có dữ liệu thật, mỗi việc một nút bấm tới trang xử lý. */
 function TodayBlock({ tasks }: { tasks: TodayTasks }) {
   const items: { key: string; icon: string; title: string; hint: string; href: string; cta: string }[] = []
-  if (tasks.attendanceTaken === false) {
-    items.push({ key: 'att', icon: ICONS.calendar, title: 'Hôm nay chưa điểm danh', hint: 'Mất khoảng một phút cho cả lớp.', href: '/diem-danh', cta: 'Điểm danh ngay' })
-  }
   if (tasks.pendingGifts !== null && tasks.pendingGifts > 0) {
     items.push({
       key: 'gift',
@@ -58,8 +51,7 @@ function TodayBlock({ tasks }: { tasks: TodayTasks }) {
       cta: 'Xem yêu cầu',
     })
   }
-  const known = tasks.attendanceTaken !== null || tasks.pendingGifts !== null
-  if (!known) return null
+  if (tasks.pendingGifts === null) return null
   return (
     <section data-testid="today-tasks" aria-labelledby="today-h" className="flex flex-col gap-3">
       <h2 id="today-h" className="m-0 font-display text-2xl font-extrabold">Việc hôm nay</h2>
@@ -102,7 +94,7 @@ export default async function Page() {
   const [info, data, tasks] = await Promise.all([
     getClassHeaderInfo(user.classId),
     getOverview(user.classId, now),
-    getTodayTasks(user.classId, now),
+    getTodayTasks(user.classId),
   ])
   const order: Top3Row[] = [data.top3[1], data.top3[0], data.top3[2]].filter((r): r is Top3Row => !!r)
 
@@ -148,7 +140,7 @@ export default async function Page() {
             <h2 className="m-0 font-display text-[22px] font-extrabold">Hoạt động gần đây</h2>
             {data.activity.length === 0 ? (
               <EmptyState title="Chưa có hoạt động nào." icon={ICONS.star}>
-                Cộng sao hoặc điểm danh, hoạt động mới sẽ hiện ở đây.
+                Cộng sao hoặc đổi quà, hoạt động mới sẽ hiện ở đây.
               </EmptyState>
             ) : null}
             {data.activity.map((ac) => {

@@ -45,7 +45,6 @@ const MESSAGES: Record<string, string> = {
   already_processed: 'Yêu cầu này đã được xử lý.',
   reward_has_requests: 'Quà này đã có lịch sử đổi nên không xóa được. Cô dùng nút Ẩn để quà không còn hiện nữa nhé.',
   stock_below_held: 'Số quà không được ít hơn số yêu cầu đang chờ.',
-  future_date: 'Chưa thể điểm danh cho ngày trong tương lai.',
   subject_in_use: 'Môn này đang có trong thời khóa biểu. Cô hãy đổi các tiết đó sang môn khác trước khi xóa.',
   subject_exists: 'Môn này đã có trong danh sách.',
   subject_name_required: 'Cô hãy nhập tên môn học.',

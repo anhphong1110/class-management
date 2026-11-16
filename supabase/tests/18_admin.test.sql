@@ -1,5 +1,5 @@
 begin;
-select plan(172);
+select plan(166);
 
 create function pg_temp.as_user(u uuid) returns void language sql
 as $$ select set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true) $$;
@@ -182,8 +182,8 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
 select lives_ok($$select public.save_class_settings('{"require_approval":false,"reserve_on_request":false,"only_enough":false,"feature_missions":false,
   "feature_random":false,"feature_display":false,"feature_rewards":false,"student_can_view_profile":false,"student_can_view_history":false,
   "student_can_view_rank":false,"student_can_view_rewards":false,"student_can_view_timetable":false,"student_can_view_news":false,
-  "student_can_view_attendance":true,"student_can_change_avatar":false,"weekly_redeem_limit":5,"star_steps":[1,2,4,8]}')$$, 'save_class_settings thành công');
-select is((select (not require_approval and not feature_rewards and student_can_view_attendance and not student_can_change_avatar and weekly_redeem_limit = 5)
+  "student_can_change_avatar":false,"weekly_redeem_limit":5,"star_steps":[1,2,4,8]}')$$, 'save_class_settings thành công');
+select is((select (not require_approval and not feature_rewards and not student_can_change_avatar and weekly_redeem_limit = 5)
   from public.class_settings where class_id = '00000000-0000-0000-0000-0000000000c1'), true, 'các cờ đã lưu');
 select is((select star_steps from public.class_settings where class_id = '00000000-0000-0000-0000-0000000000c1'), array[1,2,4,8], 'star_steps đã lưu');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000d2');
@@ -282,23 +282,6 @@ select is((select available_stars from public.my_profile_summary()), 10, 'cờ t
 select is((select full_name from public.my_profile_summary()), 'A1', 'cờ tắt: lời chào (họ tên) vẫn trả');
 reset role;
 update public.class_settings set student_can_view_profile = true where class_id = '00000000-0000-0000-0000-0000000000c1';
-
--- ===== attendance chỉ ghi qua save_attendance =====
-update public.classes set term1_start = (now() at time zone 'Asia/Ho_Chi_Minh')::date - 30 where id = '00000000-0000-0000-0000-0000000000c1';
-set local role authenticated;
-select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1');
-select throws_ok($$insert into public.attendance (class_id, student_id, date, status)
-  values ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', current_date, 'present')$$, '42501', null, 'giáo viên INSERT trực tiếp attendance bị chặn');
-select lives_ok($$select public.save_attendance((now() at time zone 'Asia/Ho_Chi_Minh')::date,
-  '[{"student_id":"00000000-0000-0000-0000-0000000000a1","status":"present"}]')$$, 'save_attendance vẫn ghi được');
-update public.attendance set status = 'late' where student_id = '00000000-0000-0000-0000-0000000000a1';
-select is((select status::text from public.attendance where student_id = '00000000-0000-0000-0000-0000000000a1'), 'present', 'giáo viên UPDATE trực tiếp attendance không có tác dụng');
-select throws_ok($$select public.save_attendance((now() at time zone 'Asia/Ho_Chi_Minh')::date - 31,
-  '[{"student_id":"00000000-0000-0000-0000-0000000000a1","status":"present"}]')$$, 'P0001', 'before_school_year', 'ngày trước term1_start');
-select lives_ok($$select public.save_attendance((now() at time zone 'Asia/Ho_Chi_Minh')::date - 30,
-  '[{"student_id":"00000000-0000-0000-0000-0000000000a1","status":"present"}]')$$, 'đúng ngày term1_start được ghi');
-select pg_temp.as_user('00000000-0000-0000-0000-0000000000d2');
-select lives_ok($$select public.save_attendance((now() at time zone 'Asia/Ho_Chi_Minh')::date - 31, '[]')$$, 'lớp chưa đặt term1_start thì không chặn');
 
 -- ===== undo khi sao đang được giữ cho yêu cầu đổi quà =====
 reset role;
