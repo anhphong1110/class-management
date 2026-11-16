@@ -1,5 +1,5 @@
 begin;
-select plan(45);
+select plan(44);
 
 create function pg_temp.as_user(u uuid) returns void language sql
 as $$ select set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true) $$;
@@ -35,9 +35,6 @@ insert into public.groups (id, class_id, name) values
 insert into public.group_members (class_id, group_id, student_id) values
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a1'),
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a2');
-insert into public.attendance (class_id, student_id, date, status) values
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '2026-09-10', 'present'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a2', '2026-09-10', 'present');
 insert into public.missions (id, class_id, name, period, reward_stars, active) values
   ('00000000-0000-0000-0000-0000000000e2', '00000000-0000-0000-0000-0000000000c1', 'M1', 'week', 0, true);
 insert into public.mission_completions (class_id, mission_id, student_id, period_key) values
@@ -77,7 +74,6 @@ reset role;
 select is((select count(*)::int from public.students where id = '00000000-0000-0000-0000-0000000000a1'), 0, 'học sinh đã mất');
 select is((select count(*)::int from public.star_transactions where student_id = '00000000-0000-0000-0000-0000000000a1'), 0, 'sổ sao của học sinh đã mất');
 select is((select count(*)::int from public.reward_requests where student_id = '00000000-0000-0000-0000-0000000000a1'), 0, 'yêu cầu quà đã mất');
-select is((select count(*)::int from public.attendance where student_id = '00000000-0000-0000-0000-0000000000a1'), 0, 'điểm danh đã mất');
 select is((select count(*)::int from public.group_members where student_id = '00000000-0000-0000-0000-0000000000a1'), 0, 'thành viên tổ đã mất');
 select is((select count(*)::int from public.mission_completions where student_id = '00000000-0000-0000-0000-0000000000a1'), 0, 'nhiệm vụ đã hoàn thành đã mất');
 select is((select count(*)::int from public.student_badges where student_id = '00000000-0000-0000-0000-0000000000a1'), 0, 'huy hiệu đã mất');

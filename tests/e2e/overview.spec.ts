@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { expect, test, type Page } from '@playwright/test'
 import { login, pw } from './helpers'
-import { CLASS_ID, resetRewards, resetAttendance, resetStars, seedAttendance, seedStars, sid, sql } from './helpers/ledger'
+import { CLASS_ID, resetRewards, resetStars, seedStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -33,13 +33,11 @@ function resetRequests() {
 
 test.beforeEach(async () => {
   resetStars()
-  resetAttendance()
   await resetRewards()
   sql(`update public.classes set cover_path = null where id = '${CLASS_ID}'`)
 })
 test.afterAll(async () => {
   resetStars()
-  resetAttendance()
   await resetRewards()
 })
 
@@ -48,9 +46,6 @@ test('khối chào, nút hành động và hình vẽ sẵn', async ({ page }, i
   await expect(page.getByRole('heading', { level: 2, name: 'Xin chào, cô Khanh!' })).toBeVisible()
   await expect(page.getByTestId('hero-art')).toBeVisible()
   await expect(page.getByTestId('hero-cover')).toHaveCount(0)
-  await page.getByRole('link', { name: 'Bắt đầu điểm danh' }).click()
-  await expect(page).toHaveURL(/\/diem-danh$/)
-  await page.goBack()
   await page.getByRole('link', { name: 'Cộng sao cho lớp' }).click()
   await expect(page).toHaveURL(/\/thi-dua$/)
   if (info.project.name === 'desktop') {
@@ -63,7 +58,6 @@ test('thao tác nhanh dẫn đúng trang', async ({ page }) => {
   await open(page)
   const qa = page.getByTestId('quick-actions')
   const links: [string, string][] = [
-    ['Điểm danh', '/diem-danh'],
     ['Cộng sao', '/thi-dua'],
     ['Trừ sao', '/thi-dua?che-do=tru'],
     ['Đổi quà', '/doi-qua'],
@@ -78,18 +72,12 @@ test('?che-do=tru mở sẵn chế độ trừ sao', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Xác nhận trừ sao' })).toBeVisible()
 })
 
-test('thẻ số liệu: chưa điểm danh rồi có điểm danh', async ({ page }) => {
+test('thẻ số liệu: bốn thẻ, không còn thẻ điểm danh', async ({ page }) => {
   await open(page)
   const stat = (label: string) => page.getByTestId('stat').filter({ hasText: label })
+  await expect(page.getByTestId('stat')).toHaveCount(4)
   await expect(stat('Tổng số học sinh')).toContainText('10')
-  await expect(stat('Có mặt hôm nay')).toContainText('Chưa điểm danh')
-  seedAttendance(1, 'present')
-  seedAttendance(2, 'late')
-  seedAttendance(3, 'absent_excused')
-  await page.reload()
-  await expect(stat('Có mặt hôm nay')).toContainText('2/10')
-  await expect(stat('Có mặt hôm nay')).toContainText('1 bạn đi trễ')
-  await expect(stat('Vắng hôm nay')).toContainText('vắng có phép')
+  await expect(page.getByTestId('stat').filter({ hasText: /Có mặt hôm nay|Vắng hôm nay/ })).toHaveCount(0)
 })
 
 test('cộng 2 sao: Top 3, hoạt động gần đây, thông báo rỗng', async ({ page }) => {

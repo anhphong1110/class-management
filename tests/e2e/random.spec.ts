@@ -1,12 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
 import { admin, login } from './helpers'
-import { CLASS_ID, resetAttendance, resetGroups, resetStars, seedAttendance, sid, sql } from './helpers/ledger'
+import { CLASS_ID, resetGroups, resetStars, sid, sql } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
 function reset() {
   resetStars()
-  resetAttendance()
   resetGroups()
   sql(`update public.class_settings set feature_random = true where class_id = '${CLASS_ID}'`)
 }
@@ -40,25 +39,21 @@ test.describe('giảm chuyển động (dừng ngay)', () => {
   test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
   test('phạm vi, công tắc, quay số, cộng sao, vòng mới', async ({ page }) => {
-    seedAttendance(7, 'absent_unexcused')
+    // HS07 ra khỏi Tổ 3 để tổ chỉ còn một bạn (HS08), giúp kết quả quay số cố định. resetGroups trả lại như seed.
+    sql(`delete from public.group_members where class_id = '${CLASS_ID}' and student_id = '${sid(7)}'`)
     await open(page)
 
     for (const name of ['Cả lớp', 'Tổ 1', 'Tổ 2', 'Tổ 3', 'Tổ 4']) await expect(scope(page, name)).toBeVisible()
     await expect(scope(page, 'Cả lớp')).toHaveAttribute('aria-pressed', 'true')
     await expect(page.getByRole('switch', { name: 'Không gọi lại bạn đã được gọi' })).toHaveAttribute('aria-checked', 'true')
-    await expect(page.getByRole('switch', { name: 'Chỉ gọi bạn có mặt hôm nay' })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Chỉ gọi bạn có mặt hôm nay' })).toHaveCount(0)
     await expect(page.getByText('SẴN SÀNG QUAY')).toBeVisible()
     await expect(page.getByText('Bấm quay để chọn')).toBeVisible()
     await expect(page.getByText('Chưa gọi bạn nào trong vòng này.')).toBeVisible()
-    // HS07 vắng nên cả lớp còn 9 bạn.
-    await expect(heading(page, 'Đã được gọi (0/9)')).toBeVisible()
+    await expect(heading(page, 'Đã được gọi (0/10)')).toBeVisible()
 
     await scope(page, 'Tổ 3').click()
     await expect(scope(page, 'Tổ 3')).toHaveAttribute('aria-pressed', 'true')
-    await expect(heading(page, 'Đã được gọi (0/1)')).toBeVisible()
-    await page.getByRole('switch', { name: 'Chỉ gọi bạn có mặt hôm nay' }).click()
-    await expect(heading(page, 'Đã được gọi (0/2)')).toBeVisible()
-    await page.getByRole('switch', { name: 'Chỉ gọi bạn có mặt hôm nay' }).click()
     await expect(heading(page, 'Đã được gọi (0/1)')).toBeVisible()
 
     await page.getByRole('button', { name: 'Quay số', exact: true }).click()
@@ -128,7 +123,6 @@ test('hiệu ứng quay rồi dừng ở một bạn', async ({ page }) => {
 test('ảnh chụp màn hình bản desktop', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop')
   await page.setViewportSize({ width: 1360, height: 1100 })
-  seedAttendance(7, 'absent_unexcused')
   await open(page)
   await scope(page, 'Tổ 1').click()
   await page.getByRole('button', { name: 'Quay số', exact: true }).click()

@@ -1,6 +1,5 @@
 'use server'
 
-import { attended } from '@/lib/attendance/rules'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireTeacher } from '@/lib/auth/session'
@@ -208,7 +207,6 @@ export async function deleteGroup(groupId: string): Promise<Result> {
 
 export type ProfileDetail = {
   rank: number | null
-  attendanceRate: string
   history: { key: string; delta: number; text: string; date: string }[]
   badges: { id: string; name: string; icon: string }[]
   gifts: { id: string; name: string; date: string; status: RewardRequestStatus }[]
@@ -222,9 +220,8 @@ export async function loadProfile(id: string): Promise<{ error?: string; detail?
   const supabase = await createServerSupabase()
   const now = new Date()
 
-  const [lb, att, tx, badges, gifts] = await Promise.all([
+  const [lb, tx, badges, gifts] = await Promise.all([
     supabase.rpc('leaderboard_between', { p_from: null, p_to: null }),
-    supabase.from('attendance').select('status').eq('class_id', user.classId).eq('student_id', id),
     supabase
       .from('star_transactions')
       .select(TX_COLUMNS)
@@ -248,13 +245,9 @@ export async function loadProfile(id: string): Promise<{ error?: string; detail?
       .order('created_at', { ascending: false })
       .limit(8),
   ])
-  if (lb.error || att.error || tx.error || badges.error || gifts.error) return { error: toVietnameseMessage('unknown') }
+  if (lb.error || tx.error || badges.error || gifts.error) return { error: toVietnameseMessage('unknown') }
 
   const rankRow = ((lb.data ?? []) as { student_id: string; rank: number | string }[]).find((r) => r.student_id === id)
-
-  const attRows = att.data ?? []
-  const attendedCount = attRows.filter((a) => attended(a.status)).length
-  const attendanceRate = attRows.length ? `${Math.round((attendedCount / attRows.length) * 100)}%` : '—'
 
   let rows = (tx.data ?? []) as TxRow[]
   const have = new Set(rows.map((r) => r.id))
@@ -289,7 +282,6 @@ export async function loadProfile(id: string): Promise<{ error?: string; detail?
   return {
     detail: {
       rank: rankRow ? Number(rankRow.rank) : null,
-      attendanceRate,
       history,
       badges: ((badges.data ?? []) as unknown as BadgeRow[]).flatMap((b) => {
         const x = one(b.badges)

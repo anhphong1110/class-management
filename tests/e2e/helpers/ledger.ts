@@ -44,7 +44,7 @@ export function seedDelta(studentNo: number, delta: number, daysAgo = 0) {
        values ('${CLASS_ID}', '${sid(studentNo)}', ${delta}, '${kind}', 'seed', gen_random_uuid(), ${at})`)
 }
 
-/** Xóa học sinh test (không phải học sinh demo) cùng tài khoản Auth (profiles xóa theo), sổ sao và điểm danh của họ. */
+/** Xóa học sinh test (không phải học sinh demo) cùng tài khoản Auth (profiles xóa theo) và sổ sao của họ. */
 export async function deleteTestStudents() {
   const db = admin()
   const { data: test, error } = await db.from('students').select('id').eq('class_id', CLASS_ID).eq('is_demo', false)
@@ -63,20 +63,10 @@ export async function deleteTestStudents() {
     delete from public.star_transactions where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
     alter table public.star_transactions enable trigger star_transactions_immutable;
     delete from public.reward_requests where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
-    delete from public.attendance where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
     delete from public.group_members where student_id in (select id from public.students where class_id = '${CLASS_ID}' and is_demo = false);
     delete from public.students where class_id = '${CLASS_ID}' and is_demo = false;
     commit;
   `)
-}
-
-export function resetAttendance() {
-  sql(`delete from public.attendance where class_id = '${CLASS_ID}'`)
-}
-
-export function seedAttendance(studentNo: number, status: 'present' | 'late' | 'absent_excused' | 'absent_unexcused', daysAgo = 0) {
-  const d = `(now() at time zone 'Asia/Ho_Chi_Minh')::date - ${Math.floor(daysAgo)}`
-  sql(`insert into public.attendance (class_id, student_id, date, status) values ('${CLASS_ID}', '${sid(studentNo)}', ${d}, '${status}')`)
 }
 
 /** Khôi phục tổ như seed (xóa tổ thêm trong test, trả vai và thành viên, bỏ lưu trữ học sinh demo). */

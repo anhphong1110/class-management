@@ -5,7 +5,6 @@ import { todayInVietnam } from '@/lib/domain/date'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getGroups } from '@/lib/stars/queries'
 import { getStudentCards } from '@/lib/students/queries'
-import { isPresentToday } from '@/lib/random/pick'
 import { RandomClient } from './RandomClient'
 
 export default async function Page() {
@@ -38,8 +37,6 @@ export default async function Page() {
           avatar: s.avatar,
           groupId: s.groupId,
           groupName: s.groupName,
-          // Chưa có dòng điểm danh hôm nay thì tính là có mặt.
-          presentToday: isPresentToday(s.today),
         }))}
       />
     </>

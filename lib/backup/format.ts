@@ -11,7 +11,6 @@ export const BACKUP_TABLES = [
   'rewards',
   'reward_requests',
   'star_transactions',
-  'attendance',
   'subjects',
   'timetable_slots',
   'announcements',

@@ -8,20 +8,17 @@ const data: ReportData = {
   from: '2026-03-02',
   to: '2026-03-08',
   bucket: 'day',
-  kpis: { added: 12, deducted: 2, attendancePct: 50, redeemed: 3, improved: 2 },
+  kpis: { added: 12, deducted: 2, redeemed: 3, improved: 2 },
   buckets: [{ label: 'Thứ 2', added: 5, deducted: 0 }, { label: 'Thứ 3', added: 0, deducted: 2 }],
-  attendance: { present: 38, late: 12, excused: 25, unexcused: 25 },
-  lowAttendance: [{ name: '=HYPERLINK("x")', days: 3 }],
   criteria: [{ label: 'Phát biểu, xây dựng', kind: 'award', n: 2 }, { label: 'Quên đồ', kind: 'penalty', n: 1 }],
-  progress: [{ studentId: 'a1', name: 'Nguyễn Minh Anh', avatarId: null, up: 5 }],
+  progress: [{ studentId: 'a1', name: '=HYPERLINK("x")', avatarId: null, up: 5 }],
   gifts: [{ label: 'Bút', n: 2 }],
 }
 const empty: ReportData = {
   ...data,
-  kpis: { added: 0, deducted: 0, attendancePct: 0, redeemed: 0, improved: 0 },
+  kpis: { added: 0, deducted: 0, redeemed: 0, improved: 0 },
   buckets: [{ label: 'Thứ 2', added: 0, deducted: 0 }],
-  attendance: { present: 0, late: 0, excused: 0, unexcused: 0 },
-  lowAttendance: [], criteria: [], progress: [], gifts: [],
+  criteria: [], progress: [], gifts: [],
 }
 
 describe('buildReportCsv', () => {
@@ -42,7 +39,7 @@ describe('buildReportCsv', () => {
     expect(csv).toContain('Tuần này')
     expect(csv).toContain('02/03/2026')
     expect(csv).toContain('Sao đã cộng,12')
-    for (const t of ['Theo thời gian', 'Chuyên cần', 'Tiêu chí', 'Tiến bộ', 'Đổi quà']) expect(csv).toContain(t)
+    for (const t of ['Theo thời gian', 'Tiêu chí', 'Tiến bộ', 'Đổi quà']) expect(csv).toContain(t)
   })
   it('kỳ trống: không có NaN/Infinity/undefined', () => {
     const e = buildReportCsv(empty, 'Tuần này')
@@ -54,11 +51,11 @@ describe('buildReportCsv', () => {
 describe('buildReportWorkbook', () => {
   it('mỗi khối một sheet theo đúng tên và thứ tự', () => {
     const wb = XLSX.read(buildReportWorkbook(data, 'Tuần này'), { type: 'array' })
-    expect(wb.SheetNames).toEqual(['KPI', 'Theo thời gian', 'Chuyên cần', 'Tiêu chí', 'Tiến bộ', 'Đổi quà'])
+    expect(wb.SheetNames).toEqual(['KPI', 'Theo thời gian', 'Tiêu chí', 'Tiến bộ', 'Đổi quà'])
   })
   it('kỳ trống vẫn có đủ sheet và không có NaN', () => {
     const wb = XLSX.read(buildReportWorkbook(empty, 'Tuần này'), { type: 'array' })
-    expect(wb.SheetNames).toHaveLength(6)
+    expect(wb.SheetNames).toHaveLength(5)
     const kpi = XLSX.utils.sheet_to_json<string[]>(wb.Sheets['KPI'], { header: 1 })
     expect(JSON.stringify(kpi)).not.toMatch(/NaN|Infinity/)
   })
@@ -75,9 +72,9 @@ describe('reportFileName', () => {
 describe('format', () => {
   it('thẻ KPI theo thiết kế, kỳ trống toàn 0', () => {
     expect(kpiCards(data.kpis).map((k) => [k.label, k.value])).toEqual([
-      ['Sao đã cộng', '+12'], ['Sao đã trừ', '-2'], ['Tỉ lệ chuyên cần', '50%'], ['Lượt đổi quà', '3'], ['Học sinh tiến bộ', '2'],
+      ['Sao đã cộng', '+12'], ['Sao đã trừ', '-2'], ['Lượt đổi quà', '3'], ['Học sinh tiến bộ', '2'],
     ])
-    expect(kpiCards(empty.kpis).map((k) => k.value)).toEqual(['+0', '-0', '0%', '0', '0'])
+    expect(kpiCards(empty.kpis).map((k) => k.value)).toEqual(['+0', '-0', '0', '0'])
   })
   it('đơn vị của biểu đồ', () => {
     expect([unitLabel('day'), unitLabel('week'), unitLabel('month')]).toEqual(['ngày', 'tuần', 'tháng'])

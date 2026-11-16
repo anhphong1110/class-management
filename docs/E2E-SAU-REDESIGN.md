@@ -7,7 +7,7 @@ Cập nhật 07/11/2026. Dự án chỉ dùng trên trình duyệt máy tính, n
 
 ## Chưa chạy
 - Project `mobile` (375px) và `tablet` (768px): bỏ qua theo yêu cầu. Lần chạy cũ trước khi sửa `Modal` có 3 lỗi ở mobile (2 chập chờn, 1 là `Modal` không cuộn, đã sửa); sau đó mobile/tablet chưa chạy lại toàn bộ. Nếu sau này cần giao diện điện thoại thì chạy `pnpm exec playwright test --project=mobile` và `--project=tablet`.
-- Test e2e chưa viết cho: `UndoToast` Hoàn tác ở `/thi-dua`, "Tất cả có mặt" và nhãn "Đã lưu" ở `/diem-danh`, tiến độ "Còn N sao nữa" ở `/em/doi-qua`.
+- Test e2e chưa viết cho: `UndoToast` Hoàn tác ở `/thi-dua`, tiến độ "Còn N sao nữa" ở `/em/doi-qua`.
 - Test unit riêng cho `Modal` cuộn (hiện chỉ `students-import.spec.ts` bắt được).
 
 ## Cách chạy lại

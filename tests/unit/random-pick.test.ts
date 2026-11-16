@@ -1,31 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { buildPool, isPresentToday, pickNext } from '@/lib/random/pick'
+import { buildPool, pickNext } from '@/lib/random/pick'
 
 const students = [
-  { id: 'a', groupId: 'g1', presentToday: true },
-  { id: 'b', groupId: 'g1', presentToday: false },
-  { id: 'c', groupId: 'g2', presentToday: true },
-  { id: 'd', groupId: null, presentToday: true },
+  { id: 'a', groupId: 'g1' },
+  { id: 'b', groupId: 'g1' },
+  { id: 'c', groupId: 'g2' },
+  { id: 'd', groupId: null },
 ]
 
 describe('buildPool', () => {
-  it('Cả lớp, tắt "chỉ có mặt": lấy tất cả', () => {
-    expect(buildPool(students, { scope: 'all', onlyPresent: false })).toEqual(['a', 'b', 'c', 'd'])
+  it('Cả lớp: lấy tất cả', () => {
+    expect(buildPool(students, { scope: 'all' })).toEqual(['a', 'b', 'c', 'd'])
   })
   it('lọc theo tổ', () => {
-    expect(buildPool(students, { scope: 'g1', onlyPresent: false })).toEqual(['a', 'b'])
-    expect(buildPool(students, { scope: 'g2', onlyPresent: false })).toEqual(['c'])
-  })
-  it('bỏ bạn vắng khi onlyPresent', () => {
-    expect(buildPool(students, { scope: 'all', onlyPresent: true })).toEqual(['a', 'c', 'd'])
-    expect(buildPool(students, { scope: 'g1', onlyPresent: true })).toEqual(['a'])
-  })
-  it('cô chưa điểm danh (ai cũng presentToday) thì không loại ai', () => {
-    const none = students.map((s) => ({ ...s, presentToday: true }))
-    expect(buildPool(none, { scope: 'all', onlyPresent: true })).toHaveLength(4)
+    expect(buildPool(students, { scope: 'g1' })).toEqual(['a', 'b'])
+    expect(buildPool(students, { scope: 'g2' })).toEqual(['c'])
   })
   it('tổ không có ai trả về rỗng', () => {
-    expect(buildPool(students, { scope: 'g9', onlyPresent: false })).toEqual([])
+    expect(buildPool(students, { scope: 'g9' })).toEqual([])
   })
 })
 
@@ -49,16 +41,5 @@ describe('pickNext', () => {
   })
   it('bỏ qua id đã gọi không còn trong phạm vi', () => {
     expect(pickNext(['a'], ['zzz'], true, () => 0)).toBe('a')
-  })
-})
-
-describe('isPresentToday', () => {
-  it('chưa có dòng điểm danh hôm nay thì vào pool khi onlyPresent', () => {
-    const list = [
-      { id: 'x', groupId: 'g1', presentToday: isPresentToday(null) },
-      { id: 'y', groupId: 'g1', presentToday: isPresentToday('absent_unexcused') },
-      { id: 'z', groupId: 'g1', presentToday: isPresentToday('late') },
-    ]
-    expect(buildPool(list, { scope: 'all', onlyPresent: true })).toEqual(['x', 'z'])
   })
 })

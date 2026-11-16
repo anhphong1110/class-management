@@ -19,12 +19,6 @@ import { exportReport } from './actions'
 const H2 = 'm-0 font-display text-[22px] font-extrabold'
 /** Sao trừ có sọc chéo, để phân biệt với sao cộng không chỉ bằng màu. */
 const STRIPES = 'repeating-linear-gradient(135deg, rgba(255,255,255,.5) 0 3px, transparent 3px 7px)'
-const ATTEND = [
-  { key: 'present', label: 'Có mặt', cls: 'bg-success' },
-  { key: 'late', label: 'Đi trễ', cls: 'bg-[#B45309]' },
-  { key: 'excused', label: 'Vắng có phép', cls: 'bg-primary-strong' },
-  { key: 'unexcused', label: 'Vắng không phép', cls: 'bg-danger' },
-] as const
 
 const TAB =
   'clay-press flex min-h-12 items-center gap-2 rounded-ctl border-2 px-5 text-[15px] font-extrabold no-underline [--edge:var(--primary-edge)]'
@@ -91,7 +85,7 @@ export function ReportsClient({
   const giftMax = data ? Math.max(1, ...data.gifts.map((g) => g.n)) : 1
 
   const summary = data
-    ? `Từ ${viDate(data.from)} đến ${viDate(data.to)}: lớp được cộng ${data.kpis.added} sao, bị trừ ${data.kpis.deducted} sao, chuyên cần ${data.kpis.attendancePct}%, có ${data.kpis.redeemed} lượt đổi quà.`
+    ? `Từ ${viDate(data.from)} đến ${viDate(data.to)}: lớp được cộng ${data.kpis.added} sao, bị trừ ${data.kpis.deducted} sao, có ${data.kpis.redeemed} lượt đổi quà.`
     : ''
 
   return (
@@ -134,7 +128,7 @@ export function ReportsClient({
           <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
             {kpiCards(data.kpis).map((k, i) => (
               <div key={k.label} data-testid="kpi" className="clay-card px-[18px] py-4">
-                <Icon d={[ICONS.star, ICONS.minus, ICONS.checkCircle, ICONS.gift, ICONS.trophy][i] ?? ICONS.star} size={22} className="mb-1" />
+                <Icon d={[ICONS.star, ICONS.minus, ICONS.gift, ICONS.trophy][i] ?? ICONS.star} size={22} className="mb-1" />
                 <div className="text-sm font-bold text-muted">{k.label}</div>
                 <div className="font-display text-[32px] font-extrabold leading-[1.15]" style={{ color: k.color }}>
                   {k.value}
@@ -203,31 +197,6 @@ export function ReportsClient({
           </Card>
 
           <div className="flex flex-wrap items-stretch gap-4">
-            <Card className="flex min-w-0 flex-[1_1_360px] flex-col gap-3">
-              <h2 className={H2}>Tình hình chuyên cần</h2>
-              <div role="img" aria-label="Tỉ lệ chuyên cần" className="flex h-[34px] overflow-hidden rounded-xl bg-primary-soft">
-                {ATTEND.map((a) => (
-                  <div key={a.key} className={a.cls} style={{ width: `${data.attendance[a.key]}%` }} />
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {ATTEND.map((a) => (
-                  <div key={a.key} className="flex items-center gap-2 text-[15px] font-bold">
-                    <span className={`size-4 rounded ${a.cls}`} />
-                    {a.label}: {data.attendance[a.key]}%
-                  </div>
-                ))}
-              </div>
-              <div className="mt-1 text-[15px] font-extrabold text-ink">Cần quan tâm (vắng nhiều nhất)</div>
-              {data.lowAttendance.length === 0 && <Empty>Chưa có bạn nào vắng trong kỳ này.</Empty>}
-              {data.lowAttendance.map((l, i) => (
-                <div key={`${i}-${l.name}`} className="flex justify-between rounded-xl bg-field px-3 py-2 text-[15px] font-bold">
-                  <span>{l.name}</span>
-                  <span className="text-danger-deep">{l.days} buổi vắng</span>
-                </div>
-              ))}
-            </Card>
-
             <Card className="flex min-w-0 flex-[1_1_360px] flex-col gap-3">
               <h2 className={H2}>Tiêu chí thường gặp</h2>
               {data.criteria.length === 0 && <Empty>Chưa có lượt cộng hoặc trừ sao nào trong kỳ này.</Empty>}

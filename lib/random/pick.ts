@@ -1,12 +1,10 @@
-import { attended } from '@/lib/attendance/rules'
+export type PickStudent = { id: string; groupId: string | null }
+export type PoolOptions = { scope: 'all' | string }
 
-export type PickStudent = { id: string; groupId: string | null; presentToday: boolean }
-export type PoolOptions = { scope: 'all' | string; onlyPresent: boolean }
-
-/** Danh sách id được phép gọi. Bạn chưa có dòng điểm danh hôm nay được tính là có mặt (presentToday = true). */
+/** Danh sách id được phép gọi theo phạm vi (cả lớp hoặc một tổ). */
 export function buildPool(students: PickStudent[], opts: PoolOptions): string[] {
   return students
-    .filter((s) => (opts.scope === 'all' || s.groupId === opts.scope) && (!opts.onlyPresent || s.presentToday))
+    .filter((s) => opts.scope === 'all' || s.groupId === opts.scope)
     .map((s) => s.id)
 }
 
@@ -16,9 +14,4 @@ export function pickNext(pool: string[], called: string[], noRepeat: boolean, ra
   const left = pool.filter((id) => !skip.has(id))
   if (!left.length) return null
   return left[Math.min(left.length - 1, Math.floor(rand() * left.length))]
-}
-
-/** Chưa có dòng điểm danh hôm nay (null) thì tính là có mặt; còn lại theo quy tắc `attended`. */
-export function isPresentToday(status: string | null): boolean {
-  return status === null || attended(status)
 }

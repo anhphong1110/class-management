@@ -5,11 +5,9 @@ import { admin, login, pw } from './helpers'
 import {
   CLASS_ID,
   resetAnnouncements,
-  resetAttendance,
   resetRewards,
   resetStars,
   resetTimetable,
-  seedAttendance,
   seedSlot,
   seedStars,
   sid,
@@ -24,7 +22,6 @@ const FLAGS = [
   'student_can_view_rewards',
   'student_can_view_timetable',
   'student_can_view_news',
-  'student_can_view_attendance',
   'timetable_saturday',
   'require_approval',
   'reserve_on_request',
@@ -43,10 +40,9 @@ async function setSettings(values: Record<string, boolean | number>) {
 async function reset() {
   resetStars()
   resetTimetable()
-  resetAttendance()
   await resetRewards()
   await resetAnnouncements()
-  await setSettings({ ...original, feature_rewards: true, student_can_view_rewards: true, student_can_view_timetable: true, student_can_view_news: true, student_can_view_attendance: true })
+  await setSettings({ ...original, feature_rewards: true, student_can_view_rewards: true, student_can_view_timetable: true, student_can_view_news: true })
 }
 
 test.beforeAll(async () => {
@@ -58,7 +54,6 @@ test.beforeEach(reset)
 test.afterAll(async () => {
   resetStars()
   resetTimetable()
-  resetAttendance()
   await resetRewards()
   await resetAnnouncements()
   await setSettings(original)
@@ -209,41 +204,6 @@ test('Thời khóa biểu: hiện môn đã gán, cột hôm nay tô #4F5BD5, th
   await page.reload()
   await expect(table.getByRole('columnheader')).toHaveCount(6)
   await expect(table.getByRole('columnheader', { name: 'Thứ Bảy' })).toBeVisible()
-})
-
-test('Điểm danh: 4 ô đúng theo quy tắc attended, danh sách ngày gần nhất', async ({ page }) => {
-  seedAttendance(5, 'present', 1)
-  seedAttendance(5, 'present', 2)
-  seedAttendance(5, 'late', 3)
-  seedAttendance(5, 'absent_excused', 4)
-  seedAttendance(5, 'absent_unexcused', 5)
-  seedAttendance(1, 'absent_unexcused', 1) // bạn khác không được tính
-  await open(page, '/em/diem-danh')
-  await expect(page.getByRole('heading', { level: 1, name: 'Điểm danh của em' })).toBeVisible()
-  const stats = page.getByTestId('att-stat')
-  await expect(stats).toHaveCount(4)
-  await expect(stats.nth(0)).toContainText('Tỉ lệ chuyên cần')
-  await expect(stats.nth(0)).toContainText('60%')
-  await expect(stats.nth(1)).toContainText('Số buổi vắng')
-  await expect(stats.nth(1)).toContainText('1')
-  await expect(stats.nth(2)).toContainText('Số buổi đi trễ')
-  await expect(stats.nth(2)).toContainText('1')
-  await expect(stats.nth(3)).toContainText('Vắng có phép')
-  await expect(stats.nth(3)).toContainText('1')
-  await expect(page.getByText('Trang này chỉ hiện khi cô giáo bật quyền xem.')).toBeVisible()
-  const days = page.getByTestId('att-day')
-  await expect(days).toHaveCount(5)
-  await expect(days.nth(0)).toContainText('Có mặt')
-  await expect(days.nth(2)).toContainText('Đi trễ')
-  await expect(days.nth(3)).toContainText('Vắng có phép')
-  await expect(days.nth(4)).toContainText('Vắng không phép')
-})
-
-test('Điểm danh: tắt student_can_view_attendance thì 404', async ({ page }) => {
-  await setSettings({ student_can_view_attendance: false })
-  await open(page, '/em')
-  const res = await page.goto('/em/diem-danh')
-  expect(res?.status()).toBe(404)
 })
 
 test('Thông báo: ghim trước, màu theo loại, ảnh; thông báo đã xóa không hiện và ảnh của nó không ký được', async ({ page }) => {

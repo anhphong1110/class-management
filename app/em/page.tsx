@@ -18,7 +18,6 @@ const SHORTCUTS: Partial<Record<StudentPageId, { label: string; hint: string }>>
   stars: { label: 'Lịch sử sao', hint: 'Xem em đã được cộng sao gì' },
   rank: { label: 'Bảng xếp hạng', hint: 'Xem ai đang sáng nhất lớp' },
   tt: { label: 'Thời khóa biểu', hint: 'Xem hôm nay học môn gì' },
-  att: { label: 'Điểm danh', hint: 'Xem em đi học đủ chưa' },
   news: { label: 'Thông báo', hint: 'Tin mới từ cô giáo' },
 }
 

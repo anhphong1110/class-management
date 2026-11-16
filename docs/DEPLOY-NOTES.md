@@ -68,7 +68,7 @@ Làm lần lượt từng bước. Mọi bước chạm vào Supabase hoặc Ver
    - Advisor của Supabase sẽ cảnh báo `security_definer_view` cho các view `v_*`. Đây là cố ý, bỏ qua.
    - Vercel giới hạn request và response 4,5 MB. Vì vậy sao lưu đi qua Storage (bucket `class-backups`) chứ không qua body của request.
    - Mỗi năm học cập nhật ngày học kỳ trong Cài đặt.
-   - Sao lưu định kỳ (Cài đặt → Sao lưu), nhất là trước khi mở năm học mới. Một năm học nặng có thể cho file sao lưu hàng chục MB (khoảng 380 byte mỗi dòng sổ sao, điểm danh, yêu cầu); xuất thử một lần giữa năm và xem dung lượng file tải về. Vượt 50 MB thì xuất sẽ báo lỗi.
+   - Sao lưu định kỳ (Cài đặt → Sao lưu), nhất là trước khi mở năm học mới. Một năm học nặng có thể cho file sao lưu hàng chục MB (khoảng 380 byte mỗi dòng sổ sao, yêu cầu); xuất thử một lần giữa năm và xem dung lượng file tải về. Vượt 50 MB thì xuất sẽ báo lỗi.
    - Nếu học sinh cùng đăng nhập mà gặp lỗi 429: tăng giới hạn ở bước 3 (Authentication → Rate Limits).
 
 10. **Bảng kiểm tra sau triển khai.**

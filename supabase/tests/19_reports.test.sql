@@ -1,5 +1,5 @@
 begin;
-select plan(52);
+select plan(45);
 
 create function pg_temp.as_user(u uuid) returns void language sql
 as $$ select set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true) $$;
@@ -50,19 +50,6 @@ insert into public.rewards (id, class_id, name, cost, stock) values
   ('00000000-0000-0000-0000-0000000000f5', '00000000-0000-0000-0000-0000000000c1', 'Bút', 5, 30),
   ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000c1', 'Nhãn', 3, 30);
 
--- Điểm danh
-insert into public.attendance (class_id, student_id, date, status) values
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '2026-03-02', 'present'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '2026-03-03', 'late'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '2026-03-04', 'absent_excused'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '2026-03-05', 'present'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '2026-03-09', 'absent_unexcused'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a2', '2026-03-02', 'absent_unexcused'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a2', '2026-03-03', 'absent_unexcused'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a2', '2026-03-04', 'present'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a2', '2026-03-05', 'absent_excused'),
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a3', '2026-03-02', 'absent_unexcused');
-
 -- Yêu cầu đổi quà
 insert into public.reward_requests (class_id, student_id, reward_id, cost, status, decided_at) values
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000f5', 5, 'approved', '2026-03-03 10:00:00+07'),
@@ -95,7 +82,6 @@ select lives_ok($$select public.report_summary('2026-03-02', '2026-03-02', 'day'
 -- ===== kpis =====
 select is(pg_temp.rep()->'kpis'->>'added', '12', 'added: bỏ lần cộng đã hoàn tác, bỏ học sinh lưu trữ, tính cả hai đầu');
 select is(pg_temp.rep()->'kpis'->>'deducted', '2', 'deducted dương, bỏ lần trừ đã hoàn tác');
-select is(pg_temp.rep()->'kpis'->>'attendancePct', '50', 'attendancePct = (present+late)/tổng, bỏ học sinh lưu trữ');
 select is(pg_temp.rep()->'kpis'->>'redeemed', '3', 'redeemed: approved+delivered có decided_at trong kỳ');
 select is(pg_temp.rep()->'kpis'->>'improved', '2', 'improved: sao thi đua kỳ này > kỳ trước');
 select is(jsonb_typeof(pg_temp.rep()->'kpis'->'added'), 'number', 'kpi là số');
@@ -125,11 +111,6 @@ select is((select jsonb_agg((b->>'added')::int) from jsonb_array_elements(public
 select is((select jsonb_agg(b->>'label') from jsonb_array_elements(public.report_summary('2026-09-01', '2027-01-31', 'month')->'buckets') b),
   '["T9","T10","T11","T12","T1"]'::jsonb, 'tháng qua năm: đủ mốc, kể cả mốc 0');
 
--- ===== attendance =====
-select is(pg_temp.rep()->'attendance', '{"present":38,"late":12,"excused":25,"unexcused":25}'::jsonb, 'attendance: tổng 100 (chia phần dư theo phần lớn nhất)');
-select is((select (a->>'present')::int + (a->>'late')::int + (a->>'excused')::int + (a->>'unexcused')::int from (select pg_temp.rep()->'attendance' a) x), 100, 'tổng attendance = 100');
-select is(pg_temp.rep()->'lowAttendance', '[{"name":"A2","days":3},{"name":"A1","days":1}]'::jsonb, 'lowAttendance: có phép + không phép, bỏ lưu trữ');
-
 -- ===== criteria =====
 select is(pg_temp.rep()->'criteria',
   '[{"label":"Phát biểu","kind":"award","n":2},{"label":"Giúp bạn","kind":"award","n":1},{"label":"Quên đồ","kind":"penalty","n":1}]'::jsonb,
@@ -146,12 +127,10 @@ select ok((pg_temp.rep()->'progress'->0) ? 'avatarId' and (pg_temp.rep()->'progr
 select is(pg_temp.rep()->'gifts', '[{"label":"Bút","n":2},{"label":"Nhãn","n":1}]'::jsonb, 'gifts theo tên quà, n giảm dần, bỏ pending/rejected/ngoài kỳ/lưu trữ');
 
 -- ===== khoảng không có dữ liệu =====
-select is(public.report_summary('2025-01-01', '2025-01-07', 'day')->'kpis', '{"added":0,"deducted":0,"attendancePct":0,"redeemed":0,"improved":0}'::jsonb, 'kỳ trống: mọi KPI = 0');
-select is(public.report_summary('2025-01-01', '2025-01-07', 'day')->'attendance', '{"present":0,"late":0,"excused":0,"unexcused":0}'::jsonb, 'kỳ trống: attendance toàn 0');
+select is(public.report_summary('2025-01-01', '2025-01-07', 'day')->'kpis', '{"added":0,"deducted":0,"redeemed":0,"improved":0}'::jsonb, 'kỳ trống: mọi KPI = 0');
 select is(jsonb_array_length(public.report_summary('2025-01-01', '2025-01-07', 'day')->'buckets'), 7, 'kỳ trống: vẫn đủ 7 mốc');
 select is((select count(*)::int from jsonb_array_elements(public.report_summary('2025-01-01', '2025-01-07', 'day')->'buckets') b
   where (b->>'added')::int = 0 and (b->>'deducted')::int = 0), 7, 'kỳ trống: mọi mốc 0');
-select is(public.report_summary('2025-01-01', '2025-01-07', 'day')->'lowAttendance', '[]'::jsonb, 'kỳ trống: lowAttendance rỗng');
 select is(public.report_summary('2025-01-01', '2025-01-07', 'day')->'criteria', '[]'::jsonb, 'kỳ trống: criteria rỗng');
 select is(public.report_summary('2025-01-01', '2025-01-07', 'day')->'progress', '[]'::jsonb, 'kỳ trống: progress rỗng');
 select is(public.report_summary('2025-01-01', '2025-01-07', 'day')->'gifts', '[]'::jsonb, 'kỳ trống: gifts rỗng');
@@ -160,7 +139,6 @@ select is(public.report_summary('2025-01-01', '2025-01-07', 'day')->'gifts', '[]
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000d2');
 select is(pg_temp.rep()->'kpis'->>'added', '0', 'cô lớp khác không thấy sao lớp 5A');
 select is(pg_temp.rep()->'kpis'->>'redeemed', '0', 'cô lớp khác không thấy đổi quà lớp 5A');
-select is(pg_temp.rep()->'lowAttendance', '[]'::jsonb, 'cô lớp khác không thấy điểm danh lớp 5A');
 
 -- ===== lần cộng bị hoàn tác sau kỳ vẫn bị loại =====
 reset role;

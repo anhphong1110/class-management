@@ -1,5 +1,5 @@
 begin;
-select plan(45);
+select plan(42);
 
 -- dữ liệu nền (quyền postgres)
 insert into public.classes (id, class_name) values
@@ -25,8 +25,6 @@ insert into public.star_transactions (class_id, student_id, delta, kind, note, b
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', -2, 'penalty', 'Nói chuyện riêng', gen_random_uuid()),
   ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', 4, 'award', null, gen_random_uuid()),
   ('00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-0000000000e1', 7, 'award', null, gen_random_uuid());
-insert into public.attendance (class_id, student_id, date, status) values
-  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000a1', '2026-11-02', 'present');
 
 -- vai học sinh A
 set local role authenticated;
@@ -42,14 +40,6 @@ select throws_ok($$
 $$, '42501', null, 'A không insert được giao dịch');
 select is_empty($$update public.students set full_name = 'x' returning 1$$, 'A không update được students');
 select is_empty($$update public.class_settings set require_approval = false returning 1$$, 'A không update được class_settings');
-select is((select count(*)::int from public.attendance), 0, 'cờ điểm danh tắt: A không thấy điểm danh');
-
-reset role;
-update public.class_settings set student_can_view_attendance = true
-  where class_id = '00000000-0000-0000-0000-0000000000c1';
-set local role authenticated;
-select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000d2', 'role', 'authenticated')::text, true);
-select is((select count(*)::int from public.attendance), 1, 'cờ điểm danh bật: A thấy 1 dòng');
 
 reset role;
 update public.class_settings set student_can_view_history = false
@@ -92,7 +82,7 @@ set local role anon;
 select set_config('request.jwt.claims', '', true);
 select is_empty(format('select 1 from public.%I', t), 'anon: ' || t || ' rỗng') from unnest(array[
   'classes','profiles','students','groups','group_members','star_criteria',
-  'star_transactions','rewards','reward_requests','attendance','subjects',
+  'star_transactions','rewards','reward_requests','subjects',
   'timetable_slots','announcements','missions','mission_completions','badges',
   'student_badges','avatar_library','class_settings','audit_logs']) as t;
 select throws_ok(format('select 1 from public.%I', v), '42501', null, 'anon bị chặn: ' || v)

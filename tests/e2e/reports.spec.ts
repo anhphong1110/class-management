@@ -3,14 +3,13 @@ import { expect, test, type Page } from '@playwright/test'
 import * as XLSX from 'xlsx'
 import { login } from './helpers'
 import {
-  CLASS_ID, resetAttendance, resetRewards, resetStars, seedAttendance, seedDelta, seedStars, sid, sql,
+  CLASS_ID, resetRewards, resetStars, seedDelta, seedStars, sid, sql,
 } from './helpers/ledger'
 
 test.describe.configure({ mode: 'serial' })
 
 function reset() {
   resetStars()
-  resetAttendance()
   return resetRewards()
 }
 test.beforeEach(reset)
@@ -31,15 +30,11 @@ function seedRedeem(studentNo: number, rewardNo: number, status: 'approved' | 'd
        values ('${CLASS_ID}', '${sid(studentNo)}', '00000000-0000-0000-0000-0000000e000${rewardNo}', 10, '${status}', ${decided})`)
 }
 
-test('KPI "Sao đã cộng" đúng +n, kèm trừ sao, chuyên cần và đổi quà', async ({ page }, info) => {
+test('KPI "Sao đã cộng" đúng +n, kèm trừ sao và đổi quà', async ({ page }, info) => {
   seedStars(1, 5)
   seedStars(2, 4)
   seedStars(3, 3)
   seedDelta(3, -2)
-  seedAttendance(1, 'present')
-  seedAttendance(2, 'late')
-  seedAttendance(3, 'absent_excused')
-  seedAttendance(4, 'absent_unexcused')
   seedRedeem(1, 1, 'approved')
   seedRedeem(2, 2, 'delivered')
   seedRedeem(2, 1, 'pending')
@@ -47,11 +42,8 @@ test('KPI "Sao đã cộng" đúng +n, kèm trừ sao, chuyên cần và đổi 
   await expect(page.getByRole('tab', { name: 'Tháng này' })).toHaveAttribute('aria-selected', 'true')
   await expect(kpi(page, 'Sao đã cộng')).toContainText('+12')
   await expect(kpi(page, 'Sao đã trừ')).toContainText('-2')
-  await expect(kpi(page, 'Tỉ lệ chuyên cần')).toContainText('50%')
   await expect(kpi(page, 'Lượt đổi quà')).toContainText('2')
   await expect(page.getByRole('heading', { name: 'Sao cộng và sao trừ theo tuần' })).toBeVisible()
-  await expect(page.getByText('Cần quan tâm (vắng nhiều nhất)')).toBeVisible()
-  await expect(page.getByText('1 buổi vắng')).toHaveCount(2)
   await expect(page.getByTestId('report-bar').first()).toBeVisible()
   if (info.project.name === 'desktop') await page.screenshot({ path: 'test-results/reports-desktop.png', fullPage: true })
 })
@@ -87,7 +79,7 @@ test('Xuất CSV và Xuất Excel tải về file đúng tên và đúng nội d
   const xlsx = await xlsxWait
   expect(xlsx.suggestedFilename()).toMatch(/^bao-cao-tuan-nay-\d{4}-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}\.xlsx$/)
   const wb = XLSX.readFile(await xlsx.path())
-  expect(wb.SheetNames).toEqual(['KPI', 'Theo thời gian', 'Chuyên cần', 'Tiêu chí', 'Tiến bộ', 'Đổi quà'])
+  expect(wb.SheetNames).toEqual(['KPI', 'Theo thời gian', 'Tiêu chí', 'Tiến bộ', 'Đổi quà'])
 })
 
 test('Chọn ngày: hộp thoại hai ô ngày, "Xem báo cáo" mở khoảng đã chọn', async ({ page }) => {
@@ -118,7 +110,6 @@ test('khoảng ngày không có dữ liệu: mọi KPI là 0, không có NaN, v�
   await open(page, '?ky=custom&tu=2020-01-01&den=2020-01-07')
   await expect(kpi(page, 'Sao đã cộng')).toContainText('+0')
   await expect(kpi(page, 'Sao đã trừ')).toContainText('-0')
-  await expect(kpi(page, 'Tỉ lệ chuyên cần')).toContainText('0%')
   await expect(kpi(page, 'Lượt đổi quà')).toContainText(/^Lượt đổi quà0$/)
   await expect(kpi(page, 'Học sinh tiến bộ')).toContainText(/^Học sinh tiến bộ0$/)
   await expect(page.getByTestId('report-bar')).toHaveCount(7)

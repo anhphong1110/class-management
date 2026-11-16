@@ -33,7 +33,6 @@ export function ProfilePanel({
     { label: 'Sao thi đua tích lũy', value: String(student.competition) },
     { label: 'Sao khả dụng', value: String(student.available) },
     { label: 'Thứ hạng cả năm', value: detail?.rank != null ? `#${detail.rank}` : '—' },
-    { label: 'Tỉ lệ chuyên cần', value: detail?.attendanceRate ?? '—' },
   ]
   const crown = detail?.rank === 1 && student.competition > 0
   return (
