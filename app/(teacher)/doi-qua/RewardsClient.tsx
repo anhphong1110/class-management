@@ -167,17 +167,17 @@ export function RewardsClient({
                     {`Còn ${w.left}${w.held ? ` (đang giữ ${w.held})` : ''}`}
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button
                     variant="secondary"
-                    className={`flex-1 ${editingThis ? '!bg-primary-soft' : ''}`}
+                    className={`min-w-0 !px-2 ${editingThis ? '!bg-primary-soft' : ''}`}
                     onClick={() => open({ kind: 'edit', id: w.id })}
                   >
                     Sửa
                   </Button>
                   <Button
                     variant="secondary"
-                    className="flex-1"
+                    className="min-w-0 !px-2"
                     loading={busy.has(hiddenKey)}
                     onClick={() => run(hiddenKey, () => setRewardHidden(w.id, !w.hidden))}
                   >
@@ -185,7 +185,7 @@ export function RewardsClient({
                   </Button>
                   <Button
                     variant="secondary"
-                    className="flex-1 !border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft"
+                    className="min-w-0 !px-2 !border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft"
                     onClick={() => {
                       setDeleteError('')
                       setDeleting({ id: w.id, name: w.name })
