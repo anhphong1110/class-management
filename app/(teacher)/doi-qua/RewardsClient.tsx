@@ -150,49 +150,51 @@ export function RewardsClient({
                   </Badge>
                 </div>
                 <div className="text-sm font-semibold leading-[1.4] text-muted">{w.description}</div>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="flex flex-wrap gap-1.5">
-                    <Badge tone={out ? 'danger' : 'success'}>
-                      <Icon d={out ? ICONS.x : ICONS.check} size={14} />
-                      {out ? 'Hết quà' : 'Còn quà'}
-                    </Badge>
-                    {w.hidden && (
-                      <Badge>
-                        <Icon d={ICONS.eyeOff} size={14} />
-                        Đã ẩn
+                <div className="mt-auto flex flex-col gap-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="flex flex-wrap gap-1.5">
+                      <Badge tone={out ? 'danger' : 'success'}>
+                        <Icon d={out ? ICONS.x : ICONS.check} size={14} />
+                        {out ? 'Hết quà' : 'Còn quà'}
                       </Badge>
-                    )}
-                  </span>
-                  <span className="text-[13px] font-bold text-muted">
-                    {`Còn ${w.left}${w.held ? ` (đang giữ ${w.held})` : ''}`}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button
-                    variant="secondary"
-                    className={`min-w-0 !px-2 ${editingThis ? '!bg-primary-soft' : ''}`}
-                    onClick={() => open({ kind: 'edit', id: w.id })}
-                  >
-                    Sửa
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="min-w-0 !px-2"
-                    loading={busy.has(hiddenKey)}
-                    onClick={() => run(hiddenKey, () => setRewardHidden(w.id, !w.hidden))}
-                  >
-                    {w.hidden ? 'Hiện' : 'Ẩn'}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="min-w-0 !px-2 !border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft"
-                    onClick={() => {
-                      setDeleteError('')
-                      setDeleting({ id: w.id, name: w.name })
-                    }}
-                  >
-                    Xóa
-                  </Button>
+                      {w.hidden && (
+                        <Badge>
+                          <Icon d={ICONS.eyeOff} size={14} />
+                          Đã ẩn
+                        </Badge>
+                      )}
+                    </span>
+                    <span className="text-[13px] font-bold text-muted">
+                      {`Còn ${w.left}${w.held ? ` (đang giữ ${w.held})` : ''}`}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant="secondary"
+                      className={`min-w-0 !px-2 ${editingThis ? '!bg-primary-soft' : ''}`}
+                      onClick={() => open({ kind: 'edit', id: w.id })}
+                    >
+                      Sửa
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="min-w-0 !px-2"
+                      loading={busy.has(hiddenKey)}
+                      onClick={() => run(hiddenKey, () => setRewardHidden(w.id, !w.hidden))}
+                    >
+                      {w.hidden ? 'Hiện' : 'Ẩn'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="min-w-0 !px-2 !border-danger !text-danger-deep [--edge:var(--color-danger-soft)] hover:!bg-danger-soft"
+                      onClick={() => {
+                        setDeleteError('')
+                        setDeleting({ id: w.id, name: w.name })
+                      }}
+                    >
+                      Xóa
+                    </Button>
+                  </div>
                 </div>
               </div>
             )
