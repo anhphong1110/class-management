@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { usePathname } from 'next/navigation'
 import { themeVars } from '@/lib/domain/theme'
 import { CHAT_GREETING, CHAT_LOGIN_HINT } from '@/lib/chat/suggestions'
 import { Icon } from '@/components/ui/Icon'
@@ -11,6 +12,12 @@ type Info = { role: 'teacher' | 'student' | null; theme: string | null; suggesti
 const OPEN_KEY = 'bong-chat-open'
 const SEND_ICON = 'M22 2L11 13M22 2l-7 20-4-9-9-4z'
 const LOGO = '/brand/chat/bong.jpg'
+/** Trang Kho học liệu nhúng web Study with Bông (đã có Bông riêng), nên ẩn khung chat nổi ở đó cho khỏi đè lên. */
+const HIDDEN_PATHS = ['/kho-hoc-lieu', '/em/kho-hoc-lieu']
+
+function isHiddenPath(pathname: string | null): boolean {
+  return !!pathname && HIDDEN_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+}
 
 function readOpen(): boolean {
   try {
@@ -30,6 +37,7 @@ function writeOpen(open: boolean) {
 
 /** Khung chat nổi của Bông. Màu theo theme lớp, hiện ở mọi trang (gắn một lần ở root layout). */
 export function ChatWidget() {
+  const hidden = isHiddenPath(usePathname())
   const [open, setOpen] = useState(false)
   const [info, setInfo] = useState<Info>({ role: null, theme: null, suggestions: [] })
   const [messages, setMessages] = useState<Msg[]>([])
@@ -120,6 +128,8 @@ export function ChatWidget() {
   }
 
   const guest = info.role === null
+
+  if (hidden) return null
 
   return (
     <div style={themeVars(info.theme) as CSSProperties} className="print:hidden">
