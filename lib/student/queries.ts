@@ -38,6 +38,7 @@ const DEFAULT_SETTINGS: StudentSettings = {
   student_can_view_timetable: false,
   student_can_view_news: false,
   student_can_change_avatar: false,
+  student_can_message: false,
 }
 
 /** Một lần mỗi yêu cầu: layout và page dùng chung. */

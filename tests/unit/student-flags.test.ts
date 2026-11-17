@@ -10,11 +10,12 @@ const ALL_ON: StudentSettings = {
   student_can_view_timetable: true,
   student_can_view_news: true,
   student_can_change_avatar: true,
+  student_can_message: true,
 }
 const ALL_OFF = Object.fromEntries(Object.keys(ALL_ON).map((k) => [k, false])) as StudentSettings
 
 describe('STUDENT_NAV', () => {
-  it('7 mục đúng thứ tự, nhãn và đường dẫn của thiết kế', () => {
+  it('8 mục đúng thứ tự, nhãn và đường dẫn của thiết kế', () => {
     expect(STUDENT_NAV.map((n) => [n.id, n.label, n.href])).toEqual([
       ['home', 'Trang chủ', '/em'],
       ['stars', 'Sao của em', '/em/sao'],
@@ -22,6 +23,7 @@ describe('STUDENT_NAV', () => {
       ['gifts', 'Đổi quà', '/em/doi-qua'],
       ['tt', 'Thời khóa biểu', '/em/thoi-khoa-bieu'],
       ['news', 'Thông báo', '/em/thong-bao'],
+      ['inbox', 'Hộp thư của em', '/em/hop-thu'],
       ['hub', 'Kho học liệu', '/em/kho-hoc-lieu'],
     ])
     expect(STUDENT_NAV.every((n) => n.icon.length > 10)).toBe(true)
@@ -34,14 +36,15 @@ describe('STUDENT_NAV', () => {
       gifts: 'Trạm đổi quà vũ trụ',
       tt: 'Lịch bay của phi hành gia',
       news: 'Tín hiệu từ trạm chỉ huy',
+      inbox: 'Hộp thư của em',
       hub: 'Kho học liệu',
     })
   })
 })
 
 describe('visibleStudentPages', () => {
-  it('bật hết: đủ 7 trang', () => {
-    expect([...visibleStudentPages(ALL_ON)].sort()).toEqual(['gifts', 'home', 'hub', 'news', 'rank', 'stars', 'tt'])
+  it('bật hết: đủ 8 trang', () => {
+    expect([...visibleStudentPages(ALL_ON)].sort()).toEqual(['gifts', 'home', 'hub', 'inbox', 'news', 'rank', 'stars', 'tt'])
   })
   it('tắt hết: còn home và hub', () => {
     expect([...visibleStudentPages(ALL_OFF)].sort()).toEqual(['home', 'hub'])
@@ -55,10 +58,11 @@ describe('visibleStudentPages', () => {
     ['gifts', 'student_can_view_rewards'],
     ['tt', 'student_can_view_timetable'],
     ['news', 'student_can_view_news'],
+    ['inbox', 'student_can_message'],
   ] as const)('%s ẩn khi tắt %s', (page, flag) => {
     const pages = visibleStudentPages({ ...ALL_ON, [flag]: false })
     expect(pages.has(page)).toBe(false)
-    expect(pages.size).toBe(6)
+    expect(pages.size).toBe(7)
   })
   it('gifts cần cả feature_rewards lẫn student_can_view_rewards', () => {
     expect(visibleStudentPages({ ...ALL_ON, feature_rewards: false }).has('gifts')).toBe(false)
@@ -73,7 +77,7 @@ describe('visibleStudentPages', () => {
 describe('studentPageForPath', () => {
   it.each([
     ['/em', 'home'], ['/em/sao', 'stars'], ['/em/xep-hang', 'rank'], ['/em/doi-qua', 'gifts'],
-    ['/em/thoi-khoa-bieu', 'tt'], ['/em/thong-bao', 'news'],
+    ['/em/thoi-khoa-bieu', 'tt'], ['/em/thong-bao', 'news'], ['/em/hop-thu', 'inbox'],
     ['/em/kho-hoc-lieu', 'hub'], ['/em/xep-hang/abc', 'rank'],
   ])('%s → %s', (p, id) => expect(studentPageForPath(p)).toBe(id))
   it.each(['/em/xep-hangx', '/em/khong-co', '/tong-quan', '/emx', '/'])('%s → null', (p) =>

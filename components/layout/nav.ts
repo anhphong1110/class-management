@@ -11,6 +11,7 @@ export const TEACHER_NAV: NavItem[] = [
   { id: 'random', label: 'Gọi tên ngẫu nhiên', href: '/goi-ten', icon: 'M4 4h16v16H4zM8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01' },
   { id: 'timetable', label: 'Thời khóa biểu', href: '/thoi-khoa-bieu', icon: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4' },
   { id: 'news', label: 'Thông báo', href: '/thong-bao', icon: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0' },
+  { id: 'inbox', label: 'Hộp thư giáo viên', href: '/hop-thu', icon: ICONS.message },
   { id: 'missions', label: 'Nhiệm vụ và huy hiệu', href: '/nhiem-vu', icon: 'M4 22V4M4 4h13l-2 4 2 4H4' },
   { id: 'display', label: 'Chế độ trình chiếu', href: '/trinh-chieu', icon: 'M3 4h18v12H3zM8 21h8M12 16v5' },
   { id: 'report', label: 'Thống kê – Báo cáo', href: '/bao-cao', icon: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
@@ -33,6 +34,7 @@ export const TEACHER_NAV_META: Record<string, { group: string; tone: NavTone }> 
   random: { group: 'Thi đua và quà', tone: 'purple' },
   timetable: { group: 'Lịch và nhiệm vụ', tone: 'blue' },
   news: { group: 'Lịch và nhiệm vụ', tone: 'pink' },
+  inbox: { group: 'Lịch và nhiệm vụ', tone: 'mint' },
   missions: { group: 'Lịch và nhiệm vụ', tone: 'star' },
   display: { group: 'Công cụ', tone: 'purple' },
   report: { group: 'Công cụ', tone: 'mint' },
@@ -52,5 +54,6 @@ export const STUDENT_NAV_TONES: Record<string, NavTone> = {
   gifts: 'mint',
   tt: 'blue',
   news: 'purple',
+  inbox: 'mint',
   hub: 'purple',
 }

@@ -4,11 +4,15 @@ import { getShellData } from '@/lib/layout/shell-data'
 import { AppShell } from '@/components/layout/AppShell'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { FlashNotice } from '@/components/layout/FlashNotice'
+import { InboxProvider } from '@/components/inbox/InboxProvider'
+import { getUnreadCount } from '@/lib/inbox/queries'
+import { fetchUnreadCount } from './hop-thu/actions'
 
 export default async function TeacherLayout({ children }: { children: ReactNode }) {
-  await requireTeacher()
-  const data = await getShellData()
+  const user = await requireTeacher()
+  const [data, unread] = await Promise.all([getShellData(), getUnreadCount()])
   return (
+    <InboxProvider initialCount={unread} classId={user.classId} enabled fetchCount={fetchUnreadCount}>
     <AppShell
       testId="teacher-shell"
       theme={data?.cls.theme}
@@ -28,5 +32,6 @@ export default async function TeacherLayout({ children }: { children: ReactNode 
         {children}
       </main>
     </AppShell>
+    </InboxProvider>
   )
 }

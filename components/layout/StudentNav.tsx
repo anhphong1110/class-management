@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icon, ICONS } from '@/components/ui/Icon'
 import { STUDENT_NAV, type StudentPageId } from '@/lib/student/flags'
+import { InboxCountChip } from '@/components/inbox/InboxBadge'
 import { BrandBlocks, NavIconChip } from './NavParts'
 import { STUDENT_NAV_TONES } from './nav'
 
@@ -51,7 +52,7 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, bran
                 <Link
                   href={it.href}
                   aria-current={on ? 'page' : undefined}
-                  className={`flex items-center gap-3 rounded-2xl px-2.5 py-1.5 text-[15px] transition-colors lg:min-h-[48px] max-lg:min-h-[64px] max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-1 max-lg:text-[12.5px] max-lg:leading-tight max-lg:text-center ${
+                  className={`relative flex items-center gap-3 rounded-2xl px-2.5 py-1.5 text-[15px] transition-colors lg:min-h-[48px] max-lg:min-h-[64px] max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-1 max-lg:text-[12.5px] max-lg:leading-tight max-lg:text-center ${
                     on
                       ? 'bg-primary-strong font-extrabold text-white lg:shadow-ledge-active max-lg:bg-primary-soft max-lg:text-primary-deep'
                       : 'font-bold text-ink hover:bg-primary-soft hover:text-primary-deep'
@@ -66,6 +67,7 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, bran
                     onClassName="bg-white/25 text-[#FFE08A] max-lg:bg-primary-strong max-lg:text-white"
                   />
                   {it.label}
+                  {it.id === 'inbox' && <InboxCountChip className="max-lg:absolute max-lg:right-2 max-lg:top-1 max-lg:ml-0" />}
                 </Link>
               </li>
             )
@@ -104,6 +106,7 @@ export function StudentNav({ pages, classLogoUrl, schoolLogoUrl, className, bran
                   >
                     <NavIconChip icon={it.icon} on={false} tone={STUDENT_NAV_TONES[it.id] ?? 'blue'} className="size-9 rounded-chip" />
                     {it.label}
+                    {it.id === 'inbox' && <InboxCountChip />}
                   </Link>
                 </li>
               ))}
