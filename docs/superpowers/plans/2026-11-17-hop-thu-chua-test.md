@@ -1,6 +1,6 @@
 # Hộp thư giáo viên: việc chưa kiểm thử
 
-Ngày: 2026-11-17. Nhánh: `feat/teacher-inbox`.
+Ngày: 2026-11-17. Nhánh: `feat/teacher-inbox`, cập nhật trên `test/inbox-verification`.
 
 ## Đã kiểm tra
 - `supabase db reset` + `pnpm db:test`: 24 file pass (`23_inbox` chạy 103 test).
@@ -8,22 +8,18 @@ Ngày: 2026-11-17. Nhánh: `feat/teacher-inbox`.
 - `pnpm build`: pass.
 - Kiểm tay bằng Playwright tạm (đã xóa) trên desktop: học sinh gửi thì badge giáo viên tăng không cần tải lại; giáo viên mở thì badge về 0 và học sinh thấy "Đã đọc"; giáo viên trả lời thì học sinh thấy ngay; gửi khi offline hiện "Gửi lại", gửi lại xong DB chỉ có 1 dòng.
 
+- e2e (Playwright, 3 viewport mobile/tablet/desktop): `tests/e2e/inbox.spec.ts` (5 test) và `tests/e2e/inbox-extra.spec.ts` (8 test) pass. Gồm: công tắc `student_can_message` (menu biến mất, `/em/hop-thu` 404, bật lại), chế độ xem thử của cô (chỉ có thông báo, không có ô nhập), hai cô cùng lớp cùng trả lời một hội thoại, khung chat cô cập nhật trực tiếp khi học sinh gửi, đăng xuất rồi đăng nhập lại còn lịch sử (cả hai phía), chống spam (tin thứ 6 trong 30 giây), phân trang (60 tin: hiện 50, "Xem tin cũ hơn" tải nốt, cả hai phía), danh sách của cô (trạng thái rỗng và ba bộ lọc), bản sao lưu tải về có chứa hội thoại và tin nhắn.
+- `tests/e2e/shell.spec.ts` đã sửa số mục menu cô (có "Hộp thư giáo viên", 15 liên kết) và `helpers.ts` `openTeacherMenu` không bấm ☰ khi ngăn kéo đã mở. Đã chạy cả 3 viewport, pass: inbox, inbox-extra, shell, settings, student-portal, student-pages, backup.
+- `admin()` trong `tests/e2e/helpers.ts` chạy tốt trên Node 20, không cần sửa.
+- `pnpm lint` (đã thêm `.claude/**` vào ignores): 0 lỗi, 3 cảnh báo cũ. `pnpm test`: 560 pass. `pnpm build`: pass.
+
+- Xem bằng mắt trên dev server local (2026-11-17): trang giáo viên desktop 1440px (hai cột, badge ở header và menu, mở hội thoại thì badge giảm, tin "Đã gửi") và mobile 375px (danh sách, nút quay lại, bong bóng tin, ô nhập và nút gửi dùng được khi cuộn, không tràn ngang). Ghi nhận nhỏ: trên mobile phần header chiếm nhiều chỗ nên ô nhập nằm dưới màn hình đầu tiên, phải cuộn xuống.
+
 ## Chưa kiểm thử
-- **`tests/e2e/inbox.spec.ts` (5 test) chưa chạy lần nào xong.** Lần chạy cuối bị dừng giữa chừng, nên chưa biết pass hay fail.
-- **`tests/e2e/student-portal.spec.ts`** đã sửa số mục menu (7→8, 6→7) nhưng chưa chạy lại.
-- **Toàn bộ e2e suite** chưa chạy sau khi thêm tính năng (menu mới, chip đếm trên Header/Sidebar có thể làm vỡ spec cũ như `shell`, `settings`, `student-pages`).
-- `tests/e2e/helpers.ts` `admin()` có thể lỗi WebSocket trên Node 20; chưa xác nhận hướng sửa.
-- **Giao diện mobile (375px)**: chỉ xem ảnh chụp trang học sinh. Chưa xem trang giáo viên (danh sách ↔ khung chat, nút quay lại) và chưa gửi tin thử trên mobile.
-- **Giao diện giáo viên trên desktop**: chưa xem bằng mắt (hai cột, bộ lọc Tất cả / Chưa đọc / Chờ phản hồi, trạng thái rỗng, chọn học sinh để bắt đầu hội thoại).
-- **Khung chat giáo viên cập nhật trực tiếp** khi đang mở đúng hội thoại: mới qua kênh chung, chưa có test riêng.
-- **Hai giáo viên cùng lớp** cùng trả lời một hội thoại.
-- **Tải thêm tin cũ** (phân trang `before`, trên 50 tin) và danh sách giáo viên với hơn 200 hội thoại (giới hạn hiện tại là 200).
-- **Sao lưu/khôi phục thật qua giao diện** (tải file, khôi phục file có tin nhắn và file cũ không có). Mới có pgTAP và unit test.
-- **Công tắc `student_can_message` ở Cài đặt**: chưa thử bằng giao diện (tắt thì menu biến mất, `/em/hop-thu` trả 404).
-- **Chế độ xem thử** giao diện học sinh của giáo viên (`/em/hop-thu` chỉ hiện thông báo, không gửi được).
+- **Khôi phục thật qua giao diện** file sao lưu có tin nhắn (và file cũ không có tin nhắn). Khôi phục tạo lớp mới và lưu trữ lớp seed, làm vỡ mọi spec dùng lớp seed; mới có pgTAP và unit test, cùng e2e xác nhận file sao lưu chứa tin nhắn.
+- **Danh sách giáo viên với hơn 200 hội thoại** (giới hạn hiện tại là 200).
 - **Realtime trên môi trường deploy** (Vercel + Supabase cloud): chưa bật publication và chưa kiểm tra. Cần chạy migration `20261101000023` trên DB thật trước.
-- Đăng xuất rồi đăng nhập lại vẫn còn lịch sử; chống spam (tin thứ 6 trong 30 giây) qua giao diện.
-- `pnpm lint` lỗi chỉ do thư mục `.claude/worktrees/` chưa theo dõi; chưa xử lý.
+- **Các spec còn lại của e2e (random, rewards, login, new-year, stars, students, missions, hub...) chưa chạy lại sau hộp thư.** Lần chạy cả bộ bị dừng giữa chừng; các lỗi thấy được (random, login, rewards, stars, students, student-pages) là timeout hoặc mục menu ở ngăn kéo, không liên quan hộp thư, và chưa xác nhận trên `main`.
 
 ## Cần lưu ý khi gộp
 - `components/chat/ChatWidget.tsx`: nhánh `fix/hide-chat-in-hub` (commit `e8a47c4`) cũng sửa dòng `HIDDEN_PATHS`. Khi gộp sẽ xung đột, giữ đủ cả bốn đường dẫn.
