@@ -13,10 +13,10 @@ Ngày: 2026-11-17. Nhánh: `feat/teacher-inbox`, cập nhật trên `test/inbox-
 - `admin()` trong `tests/e2e/helpers.ts` chạy tốt trên Node 20, không cần sửa.
 - `pnpm lint` (đã thêm `.claude/**` vào ignores): 0 lỗi, 3 cảnh báo cũ. `pnpm test`: 560 pass. `pnpm build`: pass.
 
+- Xem bằng mắt trên dev server local (2026-11-17): trang giáo viên desktop 1440px (hai cột, badge ở header và menu, mở hội thoại thì badge giảm, tin "Đã gửi") và mobile 375px (danh sách, nút quay lại, bong bóng tin, ô nhập và nút gửi dùng được khi cuộn, không tràn ngang). Ghi nhận nhỏ: trên mobile phần header chiếm nhiều chỗ nên ô nhập nằm dưới màn hình đầu tiên, phải cuộn xuống.
+
 ## Chưa kiểm thử
 - **Khôi phục thật qua giao diện** file sao lưu có tin nhắn (và file cũ không có tin nhắn). Khôi phục tạo lớp mới và lưu trữ lớp seed, làm vỡ mọi spec dùng lớp seed; mới có pgTAP và unit test, cùng e2e xác nhận file sao lưu chứa tin nhắn.
-- **Giao diện mobile (375px) trang giáo viên** (danh sách ↔ khung chat, nút quay lại): e2e chỉ gửi tin được trên 375px, chưa xem bằng mắt.
-- **Giao diện giáo viên trên desktop** chưa xem bằng mắt (bố cục hai cột); logic lọc, trạng thái rỗng, chọn hội thoại đã có e2e.
 - **Danh sách giáo viên với hơn 200 hội thoại** (giới hạn hiện tại là 200).
 - **Realtime trên môi trường deploy** (Vercel + Supabase cloud): chưa bật publication và chưa kiểm tra. Cần chạy migration `20261101000023` trên DB thật trước.
 - **Các spec còn lại của e2e (random, rewards, login, new-year, stars, students, missions, hub...) chưa chạy lại sau hộp thư.** Lần chạy cả bộ bị dừng giữa chừng; các lỗi thấy được (random, login, rewards, stars, students, student-pages) là timeout hoặc mục menu ở ngăn kéo, không liên quan hộp thư, và chưa xác nhận trên `main`.
