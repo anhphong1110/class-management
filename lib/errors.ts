@@ -73,6 +73,9 @@ const MESSAGES: Record<string, string> = {
   student_account_left: 'Đã xóa học sinh nhưng chưa xóa được tài khoản đăng nhập của em. Cô báo người quản trị hệ thống nhé.',
   demo_accounts_left: 'Đã xóa dữ liệu demo nhưng chưa xóa hết tài khoản đăng nhập của các bạn mẫu. Cô báo người quản trị hệ thống nhé.',
   class_list_changed: 'Danh sách lớp vừa thay đổi, cô tải lại trang nhé.',
+  rate_limited: 'Nhắn nhanh quá rồi, chờ một lát rồi gửi tiếp nhé.',
+  message_invalid: 'Tin nhắn cần có nội dung và không quá 2000 ký tự nhé.',
+  conversation_not_found: 'Không tìm thấy cuộc trò chuyện này.',
   before_school_year: 'Ngày này trước khi năm học bắt đầu.',
 }
 
