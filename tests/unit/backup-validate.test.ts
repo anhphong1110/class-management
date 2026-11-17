@@ -38,6 +38,20 @@ describe('validateBackup', () => {
     expect(BACKUP_TABLES.length).toBe(new Set(BACKUP_TABLES).size)
   })
 
+  it('nhận bản sao lưu cũ thiếu conversations/messages (coi như rỗng)', () => {
+    const v = valid()
+    delete (v.tables as Record<string, unknown>).conversations
+    delete (v.tables as Record<string, unknown>).messages
+    const r = validateBackup(v)
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.summary.counts).toMatchObject({ conversations: 0, messages: 0 })
+  })
+  it('conversations/messages có mặt thì phải là mảng', () => {
+    const v = valid()
+    ;(v.tables as Record<string, unknown>).messages = {}
+    expect(validateBackup(v)).toEqual({ ok: false })
+  })
+
   const bad: [string, unknown][] = [
     ['null', null],
     ['chuỗi', 'x'],

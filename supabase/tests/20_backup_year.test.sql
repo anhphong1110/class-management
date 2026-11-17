@@ -88,6 +88,11 @@ insert into public.mission_completions (class_id, mission_id, student_id, period
 insert into public.badges (id, class_id, name) values (pg_temp.u('71'), pg_temp.u('c1'), 'Ngôi sao');
 insert into public.student_badges (class_id, badge_id, student_id, awarded_by) values
   (pg_temp.u('c1'), pg_temp.u('71'), pg_temp.u('a1'), pg_temp.u('d1'));
+insert into public.conversations (id, class_id, student_id, last_sender_role) values
+  (pg_temp.u('a9'), pg_temp.u('c1'), pg_temp.u('a1'), 'teacher');
+insert into public.messages (class_id, conversation_id, sender_role, sender_id, body, client_id) values
+  (pg_temp.u('c1'), pg_temp.u('a9'), 'student', pg_temp.u('d3'), 'Em chào cô', pg_temp.u('b9')),
+  (pg_temp.u('c1'), pg_temp.u('a9'), 'teacher', pg_temp.u('d1'), 'Cô chào em', pg_temp.u('b8'));
 
 create temp table bal_before as
   select s.code, coalesce(sum(t.delta), 0)::bigint as avail,
@@ -98,7 +103,7 @@ create temp table bal_before as
 grant select on bal_before to public;
 
 select is((select count(*)::int from bk_tables where pg_temp.cnt(t, pg_temp.u('c1')) = 0), 0, 'dữ liệu thử có ít nhất một dòng ở mọi bảng');
-select cmp_ok((select count(*)::int from bk_tables), '=', 16, 'liệt kê được các bảng có class_id');
+select cmp_ok((select count(*)::int from bk_tables), '=', 18, 'liệt kê được các bảng có class_id');
 
 -- ===== quyền hàm =====
 select ok(has_function_privilege('authenticated', 'public.export_class_backup(uuid)', 'execute'), 'authenticated gọi được export_class_backup');

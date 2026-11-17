@@ -18,8 +18,13 @@ export const BACKUP_TABLES = [
   'mission_completions',
   'badges',
   'student_badges',
+  'conversations',
+  'messages',
   'class_settings',
 ] as const
+
+/** Bảng mới thêm sau: bản sao lưu cũ có thể thiếu khóa này (coi như rỗng). */
+export const BACKUP_OPTIONAL_TABLES: readonly string[] = ['conversations', 'messages']
 
 /** Bảng duy nhất không có cột id (khóa chính là class_id). */
 export const BACKUP_TABLES_WITHOUT_ID: readonly string[] = ['class_settings']

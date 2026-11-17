@@ -1,4 +1,4 @@
-import { BACKUP_FORMAT, BACKUP_TABLES, BACKUP_TABLES_WITHOUT_ID, BACKUP_VERSION, type BackupCheck } from './format'
+import { BACKUP_FORMAT, BACKUP_OPTIONAL_TABLES, BACKUP_TABLES, BACKUP_TABLES_WITHOUT_ID, BACKUP_VERSION, type BackupCheck } from './format'
 
 const GUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
 
@@ -19,6 +19,10 @@ export function validateBackup(json: unknown): BackupCheck {
   const counts: Record<string, number> = {}
   for (const t of BACKUP_TABLES) {
     const rows = json.tables[t]
+    if (rows === undefined && BACKUP_OPTIONAL_TABLES.includes(t)) {
+      counts[t] = 0
+      continue
+    }
     if (!Array.isArray(rows)) return { ok: false }
     // Cài đặt lớp: đúng một dòng.
     if (t === 'class_settings' && rows.length !== 1) return { ok: false }
