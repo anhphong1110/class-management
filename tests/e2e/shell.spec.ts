@@ -14,6 +14,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/goi-ten': 'Gọi tên ngẫu nhiên',
   '/thoi-khoa-bieu': 'Lịch bay của phi hành gia',
   '/thong-bao': 'Tín hiệu từ trạm chỉ huy',
+  '/hop-thu': 'Hộp thư giáo viên',
   '/nhiem-vu': 'Nhiệm vụ phi hành gia',
   '/bao-cao': 'Thống kê – Báo cáo',
   '/kho-hoc-lieu': 'Kho học liệu',
@@ -28,7 +29,8 @@ test('Sidebar và Header ở /tong-quan', async ({ page }, info) => {
   await expect(page).toHaveURL(/\/tong-quan$/)
   await openTeacherMenu(page)
   const nav = page.getByRole('navigation', { name: 'Menu chính' })
-  await expect(nav.getByRole('link')).toHaveCount(14)
+  await expect(nav.getByRole('link')).toHaveCount(15)
+  await expect(nav.getByRole('link', { name: /Hộp thư/ })).toHaveCount(1)
   await expect(nav.getByRole('link', { name: 'Tổng quan' })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByText('Lớp Năm 8 (5/8) · 2026 – 2027')).toBeVisible()
   await expect(page.getByText(/^(Thứ [^,]+|Chủ Nhật), \d{2}\/\d{2}\/\d{4}$/)).toBeVisible()
@@ -73,7 +75,7 @@ test('bố cục responsive', async ({ page }, info) => {
   await expect(nav).toBeHidden()
   await page.getByRole('button', { name: 'Mở menu' }).click()
   await expect(nav).toBeVisible()
-  await expect(nav.getByRole('link')).toHaveCount(13)
+  await expect(nav.getByRole('link')).toHaveCount(15)
   await expect(page.getByTestId('sidebar-foot')).toBeVisible()
   expect(await fits()).toBe(true)
   // Esc đóng ngăn kéo; chọn một mục thì đi tới trang đó và ngăn kéo tự đóng.

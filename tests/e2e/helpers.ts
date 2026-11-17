@@ -24,5 +24,6 @@ export async function login(page: Page, tab: 'Giáo viên' | 'Học sinh', usern
 /** Dưới lg menu cô giáo là ngăn kéo: bấm ☰ để mở trước khi thao tác với các liên kết trong đó. */
 export async function openTeacherMenu(page: Page) {
   const btn = page.getByRole('button', { name: 'Mở menu' })
-  if (await btn.isVisible()) await btn.click()
+  // Bấm vào mục đang mở sẵn không đổi đường dẫn nên ngăn kéo vẫn mở; lúc đó nút ☰ bị lớp phủ che, đừng bấm lại.
+  if ((await btn.isVisible()) && (await btn.getAttribute('aria-expanded')) !== 'true') await btn.click()
 }

@@ -29,6 +29,13 @@ async function resetInbox() {
   expect(b.error).toBeNull()
 }
 
+/** Chờ cờ trong DB đổi (thông báo "Đã lưu" của lần bấm trước có thể còn hiện, nên không dựa vào nó). */
+async function expectFlag(value: boolean) {
+  await expect
+    .poll(async () => (await admin().from('class_settings').select('student_can_message').eq('class_id', CLASS_ID).single()).data?.student_can_message)
+    .toBe(value)
+}
+
 async function setFlag(value: boolean) {
   const { error } = await admin().from('class_settings').update({ student_can_message: value }).eq('class_id', CLASS_ID)
   expect(error).toBeNull()
@@ -193,6 +200,7 @@ test('cô tắt "Học sinh được nhắn tin cho cô": mục menu biến mấ
     await sw.click()
     await expect(teacher.getByRole('status').filter({ hasText: 'Đã lưu cài đặt.' })).toBeVisible()
     await expect(sw).toHaveAttribute('aria-checked', 'false')
+    await expectFlag(false)
 
     expect((await student.goto('/em/hop-thu'))?.status()).toBe(404)
     await student.goto('/em')
@@ -202,6 +210,7 @@ test('cô tắt "Học sinh được nhắn tin cho cô": mục menu biến mấ
     await sw.click()
     await expect(teacher.getByRole('status').filter({ hasText: 'Đã lưu cài đặt.' })).toBeVisible()
     await expect(sw).toHaveAttribute('aria-checked', 'true')
+    await expectFlag(true)
     expect((await student.goto('/em/hop-thu'))?.status()).toBe(200)
   } finally {
     await setFlag(true)
