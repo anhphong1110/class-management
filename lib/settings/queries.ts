@@ -33,6 +33,7 @@ export type SettingsFlags = {
   student_can_view_rewards: boolean
   student_can_view_timetable: boolean
   student_can_view_news: boolean
+  student_can_message: boolean
   timetable_saturday: boolean
   weekly_redeem_limit: number
   star_steps: number[]
@@ -42,7 +43,7 @@ export type SettingsData = { cls: SettingsClass; settings: SettingsFlags; saturd
 
 const CLASS_COLUMNS = 'school_name, class_name, brand_title, school_year, teacher_name, slogan, theme, logo_path, class_logo_path, cover_path, term1_start, term1_end, term2_start, term2_end'
 const SETTINGS_COLUMNS =
-  'require_approval, reserve_on_request, only_enough, feature_missions, feature_random, feature_display, feature_rewards, student_can_view_profile, student_can_view_history, student_can_view_rank, student_can_view_rewards, student_can_view_timetable, student_can_view_news, timetable_saturday, weekly_redeem_limit, star_steps'
+  'require_approval, reserve_on_request, only_enough, feature_missions, feature_random, feature_display, feature_rewards, student_can_view_profile, student_can_view_history, student_can_view_rank, student_can_view_rewards, student_can_view_timetable, student_can_view_news, student_can_message, timetable_saturday, weekly_redeem_limit, star_steps'
 
 export async function getSettingsData(classId: string): Promise<SettingsData> {
   const supabase = await createServerSupabase()

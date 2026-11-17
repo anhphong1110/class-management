@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Icon, ICONS } from '@/components/ui/Icon'
 import { ChangePasswordButton } from '@/components/layout/ChangePasswordButton'
 import { STUDENT_NAV, STUDENT_TITLES } from '@/lib/student/flags'
+import { InboxBadge } from '@/components/inbox/InboxBadge'
 import { PageHeaderShell } from './PageHeaderShell'
 
 type Props = {
@@ -15,15 +16,17 @@ type Props = {
   name: string
   avatar: AvatarValue
   showBell: boolean
+  showInbox: boolean
   canChangePassword: boolean
 }
 
-export function StudentHeader({ subtitle, name, avatar, showBell, canChangePassword }: Props) {
+export function StudentHeader({ subtitle, name, avatar, showBell, showInbox, canChangePassword }: Props) {
   const pathname = usePathname()
   const page = STUDENT_NAV.find((n) => (n.href === '/em' ? pathname === '/em' : pathname === n.href || pathname.startsWith(n.href + '/')))
   const id = page?.id ?? 'home'
   return (
     <PageHeaderShell title={STUDENT_TITLES[id]} subtitle={subtitle} as={id === 'home' ? 'div' : 'h1'}>
+      {showInbox && <InboxBadge href="/em/hop-thu" className="!size-12" />}
       {showBell && (
         <Link
           href="/em/thong-bao"

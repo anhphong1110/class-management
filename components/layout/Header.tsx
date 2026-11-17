@@ -6,6 +6,7 @@ import { Icon, ICONS } from '@/components/ui/Icon'
 import { LinkPendingIcon } from '@/components/ui/LinkPendingIcon'
 import { formatVietnameseDate } from '@/lib/domain/date'
 import { getShellData } from '@/lib/layout/shell-data'
+import { InboxBadge } from '@/components/inbox/InboxBadge'
 import { PageHeaderShell } from './PageHeaderShell'
 
 const iconLink =
@@ -27,6 +28,7 @@ export async function Header({ title, subtitle }: { title: string; subtitle: str
           <Icon d={ICONS.eye} />
         </LinkPendingIcon>
       </Link>
+      <InboxBadge href="/hop-thu" />
       <Link href="/thong-bao" aria-label="Thông báo" title="Thông báo" className={iconLink}>
         <Icon d={ICONS.bell} />
       </Link>

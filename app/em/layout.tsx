@@ -10,18 +10,25 @@ import { notFound } from 'next/navigation'
 import { PATHNAME_HEADER } from '@/lib/auth/route-guard'
 import { formatVietnameseDate } from '@/lib/domain/date'
 import { studentPageForPath, visibleStudentPages } from '@/lib/student/flags'
+import { InboxProvider } from '@/components/inbox/InboxProvider'
+import { getUnreadCount } from '@/lib/inbox/queries'
+import { fetchUnreadCount } from './hop-thu/actions'
 import { getStudentContext, getStudentProfile } from '@/lib/student/queries'
 
 export default async function StudentLayout({ children }: { children: ReactNode }) {
   const ctx = await getStudentContext()
   const [data, profile] = await Promise.all([getShellData(), getStudentProfile()])
   const pages = visibleStudentPages(ctx.settings)
+  // Giáo viên xem thử không phải học sinh: không có hộp thư để đếm và không mở kênh Realtime.
+  const inboxOn = pages.has('inbox') && !ctx.preview
+  const unread = inboxOn ? await getUnreadCount() : 0
   // loading.tsx làm mã trả về bị chốt 200 trước khi trang kịp gọi notFound(); nên chặn trang bị cô tắt ở đây,
   // ngoài vùng chờ, để mở thẳng link vẫn trả 404 thật. Không có header thì để từng trang tự chặn (requireStudentPage).
   const pageId = studentPageForPath((await headers()).get(PATHNAME_HEADER) ?? '')
   if (pageId && !pages.has(pageId)) notFound()
   const subtitle = `Lớp ${data?.cls.class_name ?? ''} · ${formatVietnameseDate(new Date())}`
   return (
+    <InboxProvider initialCount={unread} classId={ctx.classId} enabled={inboxOn} fetchCount={fetchUnreadCount}>
     <AppShell
       testId="student-shell"
       theme={data?.cls.theme}
@@ -36,6 +43,7 @@ export default async function StudentLayout({ children }: { children: ReactNode 
           name={profile?.fullName ?? data?.user.displayName ?? ''}
           avatar={profile?.avatar ?? data?.avatar ?? null}
           showBell={pages.has('news')}
+          showInbox={inboxOn}
           canChangePassword={!ctx.preview}
         />
         {ctx.preview && (
@@ -53,5 +61,6 @@ export default async function StudentLayout({ children }: { children: ReactNode 
         <main id="main" tabIndex={-1} className="flex min-w-0 flex-col gap-5 outline-none">{children}</main>
       </div>
     </AppShell>
+    </InboxProvider>
   )
 }

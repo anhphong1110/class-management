@@ -7,6 +7,7 @@ import { AvatarImage, type AvatarValue } from '@/components/avatar/AvatarImage'
 import { Icon, ICONS } from '@/components/ui/Icon'
 import { LinkPendingIcon } from '@/components/ui/LinkPendingIcon'
 import { brandLines } from '@/lib/classes/brand'
+import { InboxCountChip } from '@/components/inbox/InboxBadge'
 import { BrandBlocks, NavIconChip } from './NavParts'
 import { TEACHER_NAV, TEACHER_NAV_META } from './nav'
 
@@ -164,6 +165,7 @@ export function Sidebar({ active, teacher, classLogoUrl, schoolLogoUrl, classNam
                     <NavIconChip icon={it.icon} on={on} tone={meta?.tone ?? 'blue'} />
                   )}
                   {it.label}
+                  {it.id === 'inbox' && <InboxCountChip />}
                 </Link>
               </li>
             )

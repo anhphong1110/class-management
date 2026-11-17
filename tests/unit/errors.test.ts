@@ -55,6 +55,9 @@ describe('toVietnameseMessage', () => {
     ['completion_not_found', 'Không tìm thấy lượt hoàn thành này.'],
     ['before_school_year', 'Ngày này trước khi năm học bắt đầu.'],
     ['invalid_backup', 'File sao lưu không hợp lệ.'],
+    ['rate_limited', 'Nhắn nhanh quá rồi, chờ một lát rồi gửi tiếp nhé.'],
+    ['message_invalid', 'Tin nhắn cần có nội dung và không quá 2000 ký tự nhé.'],
+    ['conversation_not_found', 'Không tìm thấy cuộc trò chuyện này.'],
     ['khong_biet', 'Có lỗi xảy ra, vui lòng thử lại.'],
   ]
   it.each(cases)('%s', (key, msg) => {

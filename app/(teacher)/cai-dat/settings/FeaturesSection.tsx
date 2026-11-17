@@ -16,6 +16,9 @@ const VIEWS: [FlagKey, string][] = [
   ['student_can_view_timetable', 'Thời khóa biểu'],
   ['student_can_view_news', 'Thông báo'],
 ]
+const ACTIONS: [FlagKey, string, string][] = [
+  ['student_can_message', 'Học sinh được nhắn tin cho cô', 'Tắt thì học sinh không thấy Hộp thư và không gửi được tin'],
+]
 
 export function FeaturesSection({
   settings,
@@ -37,6 +40,10 @@ export function FeaturesSection({
       <h2 className={`${h2} mt-2.5`}>Học sinh được xem</h2>
       {VIEWS.map(([k, label]) => (
         <SwitchRow key={k} flagKey={k} label={label} settings={settings} pending={pending} onFlip={onFlip} />
+      ))}
+      <h2 className={`${h2} mt-2.5`}>Học sinh được làm</h2>
+      {ACTIONS.map(([k, label, hint]) => (
+        <SwitchRow key={k} flagKey={k} label={label} hint={hint} settings={settings} pending={pending} onFlip={onFlip} />
       ))}
     </section>
   )
