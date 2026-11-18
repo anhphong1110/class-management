@@ -15,6 +15,7 @@ import { formatRelative } from '@/lib/domain/relative-time'
 import type { RewardRequestStatus, RewardRequestView, RewardView } from '@/lib/rewards/queries'
 import { STAT } from '@/lib/rewards/status'
 import { approveRequest, deleteReward, deliverRequest, rejectRequest, setRewardHidden } from './actions'
+import { BlindBagPanel } from './BlindBagPanel'
 import { RewardEditor } from './RewardEditor'
 
 type Editing = { kind: 'new' } | { kind: 'edit'; id: string } | null
@@ -34,10 +35,12 @@ export function RewardsClient({
   rewards,
   requests,
   now,
+  blindBagOn = false,
 }: {
   rewards: RewardView[]
   requests: RewardRequestView[]
   now: string
+  blindBagOn?: boolean
 }) {
   const [editing, setEditing] = useState<Editing>(null)
   const [msg, setMsg] = useState<Msg>(null)
@@ -110,6 +113,8 @@ export function RewardsClient({
           + Thêm phần thưởng
         </Button>
       </div>
+
+      <BlindBagPanel rewards={rewards} enabled={blindBagOn} />
 
       {editing && (editing.kind === 'new' || editingReward) && (
         <RewardEditor
@@ -235,7 +240,12 @@ export function RewardsClient({
                     <span className="text-xs font-semibold text-muted">{formatRelative(new Date(q.createdAt), nowDate)}</span>
                   </div>
                 </div>
-                <div className="text-[15px] font-bold">{q.rewardName}</div>
+                <div className="text-[15px] font-bold">
+                  {q.rewardName}
+                  {q.fromBlindBag && (
+                    <span className="ml-2 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-extrabold text-primary-ink">Túi mù</span>
+                  )}
+                </div>
                 <div className="text-[15px] font-extrabold text-star-ink">{q.cost} sao</div>
                 <div>
                   <Badge tone={badge.tone}>

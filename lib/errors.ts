@@ -41,6 +41,7 @@ const MESSAGES: Record<string, string> = {
   insufficient_stars: 'Không đủ sao khả dụng.',
   reward_not_found: 'Quà này không còn trong trạm.',
   out_of_stock: 'Quà này đã hết.',
+  blind_bag_unavailable: 'Túi mù đang tạm đóng, em quay lại sau nhé.',
   weekly_limit: 'Em đã đổi đủ số lượt trong tuần này.',
   already_processed: 'Yêu cầu này đã được xử lý.',
   reward_has_requests: 'Quà này đã có lịch sử đổi nên không xóa được. Cô dùng nút Ẩn để quà không còn hiện nữa nhé.',

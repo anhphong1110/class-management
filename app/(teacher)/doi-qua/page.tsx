@@ -11,7 +11,7 @@ export default async function Page() {
   const [rewards, requests, settingsRes] = await Promise.all([
     getRewards(user.classId, { includeHidden: true }),
     getRewardRequests(user.classId, 50),
-    supabase.from('class_settings').select('feature_rewards').eq('class_id', user.classId).maybeSingle(),
+    supabase.from('class_settings').select('feature_rewards, feature_blind_bag').eq('class_id', user.classId).maybeSingle(),
   ])
   if (settingsRes.error) throw new Error(settingsRes.error.message)
   // Cờ tắt chỉ ẩn trang quà với học sinh; cô vẫn quản lý quà và yêu cầu được.
@@ -26,7 +26,7 @@ export default async function Page() {
           </Card>
         </div>
       )}
-      <RewardsClient rewards={rewards} requests={requests} now={new Date().toISOString()} />
+      <RewardsClient rewards={rewards} requests={requests} now={new Date().toISOString()} blindBagOn={settingsRes.data?.feature_blind_bag ?? false} />
     </>
   )
 }

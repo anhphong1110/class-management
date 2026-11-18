@@ -180,3 +180,28 @@ export async function rejectRequest(id: string): Promise<Result> {
 export async function deliverRequest(id: string): Promise<Result> {
   return decide('deliver_reward_request', id, ({ name }) => `Đã ghi nhận trao quà cho ${name}.`)
 }
+
+const bagItemsInput = z.array(uuid).max(500)
+
+export async function setBlindBagEnabled(on: boolean): Promise<Result> {
+  await requireTeacher()
+  if (!z.boolean().safeParse(on).success) return invalid()
+  const supabase = await createServerSupabase()
+  const { error } = await supabase.rpc('set_blind_bag_enabled', { p_on: on })
+  if (error) return { error: toVietnameseMessage(error.message) }
+  refresh()
+  revalidatePath('/em/doi-qua')
+  return { message: on ? 'Đã bật túi mù cho học sinh.' : 'Đã tắt túi mù.' }
+}
+
+export async function setBlindBagItems(ids: string[]): Promise<Result> {
+  await requireTeacher()
+  const parsed = bagItemsInput.safeParse(ids)
+  if (!parsed.success) return invalid()
+  const supabase = await createServerSupabase()
+  const { error } = await supabase.rpc('set_blind_bag_items', { p_reward_ids: parsed.data })
+  if (error) return { error: toVietnameseMessage(error.message) }
+  refresh()
+  revalidatePath('/em/doi-qua')
+  return { message: 'Đã lưu các món trong túi mù.' }
+}

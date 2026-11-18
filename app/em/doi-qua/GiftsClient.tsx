@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import { BlindBagStage, type TearResult } from '@/components/blind-bag/BlindBagStage'
 import { RewardVisual } from '@/components/rewards/RewardVisual'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -10,8 +12,8 @@ import { Icon, ICONS } from '@/components/ui/Icon'
 import { Notice } from '@/components/ui/Notice'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { giftButton, requestSuccessMessage } from '@/lib/student/gifts'
-import type { GiftView } from '@/lib/student/queries'
-import { requestReward } from './actions'
+import type { BlindBagView, GiftView } from '@/lib/student/queries'
+import { openBlindBag, requestReward } from './actions'
 
 type Msg = { tone: 'success' | 'error'; text: string }
 
@@ -21,13 +23,19 @@ export function GiftsClient({
   reserve,
   enforceStars,
   preview,
+  blindBag = null,
 }: {
   gifts: GiftView[]
   available: number
   reserve: boolean
   enforceStars: boolean
   preview: boolean
+  blindBag?: BlindBagView | null
 }) {
+  const router = useRouter()
+  const [askBag, setAskBag] = useState(false)
+  const [stageOpen, setStageOpen] = useState(false)
+  const bagResult = useRef<{ name: string; approved: boolean; price: number } | null>(null)
   const [asking, setAsking] = useState<GiftView | null>(null)
   const [msg, setMsg] = useState<Msg | null>(null)
   const [pending, start] = useTransition()
@@ -48,8 +56,45 @@ export function GiftsClient({
     })
   }
 
+  const tearBag = useCallback(async (): Promise<TearResult> => {
+    const res = await openBlindBag()
+    if (res.error !== undefined) return { error: res.error }
+    bagResult.current = { name: res.gift.name, approved: res.approved, price: res.price }
+    return { gift: res.gift }
+  }, [])
+  const closeStage = useCallback(
+    (opened: boolean) => {
+      setStageOpen(false)
+      if (opened) {
+        const r = bagResult.current
+        if (r) setMsg({ tone: 'success', text: requestSuccessMessage(r.name, r.price, reserve, r.approved) })
+        // Làm mới sau khi xé xong để số sao và danh sách yêu cầu mới hiện, không lộ kết quả sớm.
+        router.refresh()
+      }
+      bagResult.current = null
+    },
+    [reserve, router],
+  )
+  const bagButton = blindBag ? giftButton({ left: 1, cost: blindBag.price }, available, enforceStars) : null
+
   return (
     <>
+      <BlindBagStage open={stageOpen} onTear={tearBag} onClose={closeStage} onError={(text) => setMsg({ tone: 'error', text })} />
+      {blindBag && (
+        <ConfirmDialog
+          open={askBag}
+          title="Mở túi mù?"
+          message={`Em muốn mở túi mù với ${blindBag.price} sao? Món quà được bốc ngẫu nhiên khi em xé túi, và chỉ trừ sao khi em đã xé.`}
+          confirmLabel="Mở túi"
+          cancelLabel="Hủy"
+          onConfirm={() => {
+            setAskBag(false)
+            setMsg(null)
+            setStageOpen(true)
+          }}
+          onCancel={() => setAskBag(false)}
+        />
+      )}
       {msg && (
         <div ref={msgRef} className="scroll-mt-24">
           <Notice tone={msg.tone}>{msg.text}</Notice>
@@ -67,6 +112,41 @@ export function GiftsClient({
           if (!pending) setAsking(null)
         }}
       />
+      {blindBag && bagButton && (
+        <div data-testid="blind-bag-card" className="clay-card flex flex-col gap-3 bg-[linear-gradient(135deg,var(--primary-soft),var(--color-star-soft))] p-3.5 sm:flex-row sm:items-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/blind-bag/bag-front.webp" alt="" className="mx-auto h-[150px] w-auto flex-none drop-shadow-[0_8px_8px_rgba(35,31,77,0.25)]" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="font-display text-2xl font-extrabold leading-[1.2]">Túi mù bí ẩn</div>
+              <Badge tone="star">
+                <Icon d={ICONS.star} size={14} />
+                {blindBag.price} sao
+              </Badge>
+            </div>
+            <div className="text-base leading-[1.4] text-muted">Xé túi để nhận một món quà bất ngờ. Món càng nhiều sao thì càng khó ra!</div>
+            <div className="flex flex-wrap gap-1.5" aria-label="Các món có thể ra">
+              {blindBag.items.map((it) => (
+                <span key={it.name} className="rounded-full bg-white/70 px-2.5 py-0.5 text-[15px] font-bold text-ink">
+                  {it.name}
+                </span>
+              ))}
+            </div>
+            <Button
+              size="lg"
+              variant={bagButton.disabled ? 'secondary' : 'primary'}
+              disabled={bagButton.disabled || preview || pending || stageOpen}
+              onClick={() => {
+                setMsg(null)
+                setAskBag(true)
+              }}
+              className={`w-full text-center leading-tight sm:w-auto ${bagButton.disabled ? 'border-edge! text-muted! disabled:opacity-100!' : ''}`}
+            >
+              {bagButton.disabled ? bagButton.label : 'Mở túi mù'}
+            </Button>
+          </div>
+        </div>
+      )}
       {gifts.length === 0 && (
         <EmptyState title="Chưa có món quà nào." icon={ICONS.gift}>
           Cô giáo sẽ sớm thêm quà để em đổi nhé.

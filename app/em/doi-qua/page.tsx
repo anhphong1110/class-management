@@ -17,7 +17,7 @@ const STATUS_ICON: Record<RewardRequestStatus, string> = {
 export default async function GiftsPage() {
   const ctx = await requireStudentPage('gifts')
   const profile = await getStudentProfile()
-  const { gifts, requests, reserveOnRequest, enforceStars, requireApproval } = await getGiftsData(ctx)
+  const { gifts, requests, reserveOnRequest, enforceStars, requireApproval, blindBag } = await getGiftsData(ctx)
   const available = profile?.availableStars ?? 0
   return (
     <div className="flex flex-col gap-5">
@@ -31,7 +31,7 @@ export default async function GiftsPage() {
           <div className="text-base font-semibold text-muted">{giftsHeroHint(requireApproval)}</div>
         </div>
       </div>
-      <GiftsClient gifts={gifts} available={available} reserve={reserveOnRequest} enforceStars={enforceStars} preview={ctx.preview} />
+      <GiftsClient gifts={gifts} available={available} reserve={reserveOnRequest} enforceStars={enforceStars} preview={ctx.preview} blindBag={blindBag} />
       <section className="clay-card flex flex-col gap-3 px-6 py-[22px] max-sm:px-4" aria-labelledby="req-h">
         <h2 id="req-h" className="m-0 font-display text-[22px] font-extrabold">
           Yêu cầu đổi quà của em
@@ -47,6 +47,9 @@ export default async function GiftsPage() {
             <div key={q.id} data-testid="my-request" className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-bg px-4 py-3">
               <span className="text-base font-extrabold">
                 {q.rewardName} <span className="text-star-ink">· {q.cost} sao</span>
+                {q.fromBlindBag && (
+                  <span className="ml-2 rounded-full bg-primary-soft px-2 py-0.5 text-sm font-extrabold text-primary-ink">Túi mù</span>
+                )}
               </span>
               <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full px-3.5 text-[15px] font-extrabold" style={{ background: tint, color: ink }}>
                 <Icon d={STATUS_ICON[q.status]} size={16} />
