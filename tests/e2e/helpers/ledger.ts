@@ -112,7 +112,7 @@ export async function resetRewards() {
     commit;
   `)
   for (const [name, description, cost, icon, id, stock] of SEED_REWARDS) {
-    sql(`update public.rewards set stock = ${stock}, hidden = false, image_path = null, name = '${name}', description = '${description}', cost = ${cost}, icon = '${icon}' where id = '00000000-0000-0000-0000-0000000${id}'`)
+    sql(`update public.rewards set stock = ${stock}, hidden = false, in_blind_bag = false, image_path = null, name = '${name}', description = '${description}', cost = ${cost}, icon = '${icon}' where id = '00000000-0000-0000-0000-0000000${id}'`)
   }
 }
 

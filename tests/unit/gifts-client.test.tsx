@@ -5,7 +5,10 @@ import type { GiftView } from '@/lib/student/queries'
 let release: (v: { approved?: boolean }) => void = () => {}
 vi.mock('@/app/em/doi-qua/actions', () => ({
   requestReward: vi.fn(() => new Promise((resolve) => (release = resolve))),
+  openBlindBag: vi.fn(),
 }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
+vi.mock('@/components/blind-bag/BlindBagStage', () => ({ BlindBagStage: () => null }))
 vi.mock('@/components/rewards/RewardVisual', () => ({ RewardVisual: () => null }))
 
 import { GiftsClient } from '@/app/em/doi-qua/GiftsClient'

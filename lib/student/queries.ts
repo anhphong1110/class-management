@@ -271,7 +271,8 @@ export type GiftView = {
   visual: RewardVisualValue
 }
 type AvailRow = { reward_id: string; name: string; cost: number; description: string; icon: string | null; image_path: string | null; left_count: number }
-export type MyRequestView = { id: string; rewardName: string; cost: number; status: RewardRequestStatus }
+export type MyRequestView = { id: string; rewardName: string; cost: number; status: RewardRequestStatus; fromBlindBag: boolean }
+export type BlindBagView = { price: number; items: { name: string; visual: RewardVisualValue }[] }
 
 export async function getGiftsData(ctx: StudentContext): Promise<{
   gifts: GiftView[]
@@ -280,9 +281,11 @@ export async function getGiftsData(ctx: StudentContext): Promise<{
   /** only_enough || reserve_on_request: khi đó request_reward chặn yêu cầu thiếu sao. */
   enforceStars: boolean
   requireApproval: boolean
+  /** Null khi túi mù tắt hoặc còn dưới 2 món hợp lệ. Không có tỉ lệ: học sinh không được biết. */
+  blindBag: BlindBagView | null
 }> {
   const supabase = await createServerSupabase()
-  const [availRes, settingRes, reqRes] = await Promise.all([
+  const [availRes, settingRes, reqRes, bagRes] = await Promise.all([
     supabase.rpc('reward_availability'),
     supabase
       .from('class_settings')
@@ -293,17 +296,19 @@ export async function getGiftsData(ctx: StudentContext): Promise<{
       ? ctx.studentId
         ? supabase
             .from('reward_requests')
-            .select('id, cost, status, created_at, rewards(name)')
+            .select('id, cost, status, created_at, from_blind_bag, rewards(name)')
             .eq('student_id', ctx.studentId)
             .order('created_at', { ascending: false })
         : Promise.resolve({ data: [], error: null })
       : supabase.rpc('my_reward_requests'),
+    supabase.rpc('blind_bag_info'),
   ])
-  for (const r of [availRes, settingRes, reqRes]) if (r.error) throw new Error(r.error.message)
+  for (const r of [availRes, settingRes, reqRes, bagRes]) if (r.error) throw new Error(r.error.message)
   const rows = (availRes.data ?? []) as AvailRow[]
+  const bagInfo = bagRes.data as { enabled: boolean; price: number; items: { name: string; icon: string | null; image_path: string | null }[] } | null
   const urls = await signAvatarPaths(
     supabase,
-    rows.map((r) => r.image_path).filter((p): p is string => !!p),
+    [...rows.map((r) => r.image_path), ...(bagInfo?.items.map((i) => i.image_path) ?? [])].filter((p): p is string => !!p),
   )
   const gifts = rows.map((r) => {
     const url = r.image_path ? urls.get(r.image_path) : undefined
@@ -320,17 +325,19 @@ export async function getGiftsData(ctx: StudentContext): Promise<{
   })
   const rawReqs = (reqRes.data ?? []) as unknown[]
   const requests: MyRequestView[] = ctx.preview
-    ? (rawReqs as { id: string; cost: number; status: RewardRequestStatus; rewards: { name: string } | null }[]).map((r) => ({
+    ? (rawReqs as { id: string; cost: number; status: RewardRequestStatus; from_blind_bag: boolean; rewards: { name: string } | null }[]).map((r) => ({
         id: r.id,
         rewardName: r.rewards?.name ?? '',
         cost: r.cost,
         status: r.status,
+        fromBlindBag: r.from_blind_bag,
       }))
-    : (rawReqs as { id: string; reward_name: string; cost: number; status: RewardRequestStatus }[]).map((r) => ({
+    : (rawReqs as { id: string; reward_name: string; cost: number; status: RewardRequestStatus; from_blind_bag: boolean }[]).map((r) => ({
         id: r.id,
         rewardName: r.reward_name,
         cost: r.cost,
         status: r.status,
+        fromBlindBag: r.from_blind_bag,
       }))
   const cfg = settingRes.data
   return {
@@ -339,5 +346,15 @@ export async function getGiftsData(ctx: StudentContext): Promise<{
     reserveOnRequest: cfg?.reserve_on_request ?? false,
     enforceStars: (cfg?.only_enough ?? true) || (cfg?.reserve_on_request ?? true),
     requireApproval: cfg?.require_approval ?? true,
+    blindBag:
+      bagInfo?.enabled && !ctx.preview
+        ? {
+            price: bagInfo.price,
+            items: bagInfo.items.map((i) => {
+              const url = i.image_path ? urls.get(i.image_path) : undefined
+              return { name: i.name, visual: url ? ({ kind: 'image', url } as const) : ({ kind: 'preset', key: getRewardPreset(i.icon)?.key ?? 'star' } as const) }
+            }),
+          }
+        : null,
   }
 }
